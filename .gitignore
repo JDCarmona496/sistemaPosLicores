@@ -112,8 +112,3 @@ $RECYCLE.BIN/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
-# Project documentation (sensitive)
-opencode/*.sql
-opencode/*.md
-!opencode/README.md
