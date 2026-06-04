@@ -198,10 +198,17 @@ flutter build windows --release
 
 ## Documentación
 
-- [Requerimientos completos](opencode/licoreria-requerimientos.md)
-- [Schema de base de datos](opencode/licoreria-database-schema.sql)
-- [Guía de uso de BD](opencode/licoreria-database-guide.md)
-- [Estructura del proyecto Flutter](opencode/flutter-project-structure.md)
+Toda la documentación del proyecto está consolidada en un solo archivo:
+
+📄 **[Documentación Completa](opencode/documentacion-completa.md)**
+
+Este documento incluye:
+- Requerimientos funcionales completos
+- Arquitectura del proyecto Flutter
+- Guía de configuración de Supabase
+- Queries SQL comunes
+- Guía de desarrollo y comandos útiles
+- Próximos pasos del proyecto
 
 ## Licencia
 
