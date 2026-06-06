@@ -92,6 +92,29 @@ final GoRouter router = GoRouter(
       path: '/customers',
       name: 'customers',
       builder: (context, state) => const CustomersView(),
+      routes: [
+        GoRoute(
+          path: 'create',
+          name: 'customer-create',
+          builder: (context, state) => const CustomerFormView(),
+        ),
+        GoRoute(
+          path: 'edit/:id',
+          name: 'customer-edit',
+          builder: (context, state) {
+            final id = state.pathParameters['id']!;
+            return CustomerFormView(customerId: id);
+          },
+        ),
+        GoRoute(
+          path: ':id',
+          name: 'customer-detail',
+          builder: (context, state) {
+            final id = state.pathParameters['id']!;
+            return CustomerDetailView(customerId: id);
+          },
+        ),
+      ],
     ),
     GoRoute(
       path: '/delivery',

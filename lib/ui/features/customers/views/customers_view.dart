@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../../data/providers/customer_providers.dart';
 import '../../../../domain/models/customer.dart';
 
@@ -30,7 +31,9 @@ class _CustomersViewState extends ConsumerState<CustomersView> {
         title: const Text('Clientes'),
         actions: [
           IconButton(
-            icon: Icon(_showFilters ? Icons.filter_alt : Icons.filter_alt_outlined),
+            icon: Icon(_showFilters
+                ? Icons.filter_alt
+                : Icons.filter_alt_outlined),
             onPressed: () {
               setState(() => _showFilters = !_showFilters);
             },
@@ -45,14 +48,16 @@ class _CustomersViewState extends ConsumerState<CustomersView> {
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Buscar por nombre, teléfono o identificación...',
+                hintText: 'Buscar por nombre, cédula o teléfono...',
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
                         icon: const Icon(Icons.clear),
                         onPressed: () {
                           _searchController.clear();
-                          ref.read(customersProvider.notifier).setSearch(null);
+                          ref
+                              .read(customersProvider.notifier)
+                              .setSearch(null);
                         },
                       )
                     : null,
@@ -61,7 +66,9 @@ class _CustomersViewState extends ConsumerState<CustomersView> {
                 ),
               ),
               onChanged: (value) {
-                ref.read(customersProvider.notifier).setSearch(value.isEmpty ? null : value);
+                ref
+                    .read(customersProvider.notifier)
+                    .setSearch(value.isEmpty ? null : value);
               },
             ),
           ),
@@ -71,9 +78,10 @@ class _CustomersViewState extends ConsumerState<CustomersView> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/customers/create'),
-        child: const Icon(Icons.add),
+        icon: const Icon(Icons.person_add),
+        label: const Text('Nuevo Cliente'),
       ),
     );
   }
@@ -92,20 +100,21 @@ class _CustomersViewState extends ConsumerState<CustomersView> {
           Row(
             children: [
               Expanded(
-                child: DropdownButtonFormField<String?>(
+                child: DropdownButtonFormField<CustomerType?>(
                   value: state.selectedType,
                   decoration: const InputDecoration(
                     labelText: 'Tipo',
                     border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
-                  items: const [
-                    DropdownMenuItem<String?>(value: null, child: Text('Todos')),
-                    DropdownMenuItem<String?>(value: 'occasional', child: Text('Ocasional')),
-                    DropdownMenuItem<String?>(value: 'frequent', child: Text('Frecuente')),
-                    DropdownMenuItem<String?>(value: 'wholesale', child: Text('Mayorista')),
-                    DropdownMenuItem<String?>(value: 'credit', child: Text('Crédito')),
-                    DropdownMenuItem<String?>(value: 'consignment', child: Text('Consignación')),
+                  items: [
+                    const DropdownMenuItem<CustomerType?>(
+                        value: null, child: Text('Todos')),
+                    ...CustomerType.values.map((type) => DropdownMenuItem(
+                          value: type,
+                          child: Text(type.label),
+                        )),
                   ],
                   onChanged: (value) {
                     ref.read(customersProvider.notifier).setType(value);
@@ -114,18 +123,21 @@ class _CustomersViewState extends ConsumerState<CustomersView> {
               ),
               const SizedBox(width: 16),
               Expanded(
-                child: DropdownButtonFormField<String?>(
+                child: DropdownButtonFormField<CustomerStatus?>(
                   value: state.selectedStatus,
                   decoration: const InputDecoration(
                     labelText: 'Estado',
                     border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
-                  items: const [
-                    DropdownMenuItem<String?>(value: null, child: Text('Todos')),
-                    DropdownMenuItem<String?>(value: 'active', child: Text('Activo')),
-                    DropdownMenuItem<String?>(value: 'inactive', child: Text('Inactivo')),
-                    DropdownMenuItem<String?>(value: 'blocked', child: Text('Bloqueado')),
+                  items: [
+                    const DropdownMenuItem<CustomerStatus?>(
+                        value: null, child: Text('Todos')),
+                    ...CustomerStatus.values.map((status) => DropdownMenuItem(
+                          value: status,
+                          child: Text(status.label),
+                        )),
                   ],
                   onChanged: (value) {
                     ref.read(customersProvider.notifier).setStatus(value);
@@ -134,7 +146,6 @@ class _CustomersViewState extends ConsumerState<CustomersView> {
               ),
             ],
           ),
-          const SizedBox(height: 8),
           if (state.selectedType != null || state.selectedStatus != null)
             Align(
               alignment: Alignment.centerRight,
@@ -170,7 +181,8 @@ class _CustomersViewState extends ConsumerState<CustomersView> {
             ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
-              onPressed: () => ref.read(customersProvider.notifier).loadCustomers(),
+              onPressed: () =>
+                  ref.read(customersProvider.notifier).loadCustomers(),
               icon: const Icon(Icons.refresh),
               label: const Text('Reintentar'),
             ),
@@ -192,13 +204,17 @@ class _CustomersViewState extends ConsumerState<CustomersView> {
             ),
             const SizedBox(height: 8),
             Text(
-              state.searchQuery != null || state.selectedType != null || state.selectedStatus != null
+              state.searchQuery != null ||
+                      state.selectedType != null ||
+                      state.selectedStatus != null
                   ? 'No se encontraron clientes con los filtros aplicados'
                   : 'Agrega tu primer cliente',
               style: TextStyle(color: Colors.grey.shade500),
               textAlign: TextAlign.center,
             ),
-            if (state.searchQuery != null || state.selectedType != null || state.selectedStatus != null) ...[
+            if (state.searchQuery != null ||
+                state.selectedType != null ||
+                state.selectedStatus != null) ...[
               const SizedBox(height: 16),
               ElevatedButton.icon(
                 onPressed: () {
@@ -235,80 +251,87 @@ class _CustomersViewState extends ConsumerState<CustomersView> {
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              CircleAvatar(
-                radius: 30,
-                backgroundColor: _getStatusColor(customer.status),
-                child: Text(
-                  customer.fullName.isNotEmpty ? customer.fullName[0].toUpperCase() : '?',
-                  style: const TextStyle(
-                    fontSize: 24,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      customer.fullName,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+              Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: _getTypeColor(customer.type).shade100,
+                    child: Icon(
+                      _getTypeIcon(customer.type),
+                      color: _getTypeColor(customer.type).shade700,
                     ),
-                    const SizedBox(height: 4),
-                    Row(
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.phone, size: 16, color: Colors.grey.shade600),
-                        const SizedBox(width: 4),
+                        Text(
+                          customer.fullName,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (customer.identification != null)
+                          Text(
+                            'CC: ${customer.identification}',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
                         Text(
                           customer.phone,
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: 13,
                             color: Colors.grey.shade600,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        _buildTypeChip(customer.customerType),
-                        const SizedBox(width: 8),
-                        _buildStatusChip(customer.status),
-                      ],
-                    ),
-                  ],
-                ),
+                  ),
+                  _buildStatusBadge(customer.status),
+                ],
               ),
-              if (customer.currentBalance > 0)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      'Saldo',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildInfoChip(
+                      icon: _getTypeIcon(customer.type),
+                      label: customer.type.label,
+                      color: _getTypeColor(customer.type),
+                    ),
+                  ),
+                  if (customer.type == CustomerType.credit &&
+                      customer.currentBalance > 0) ...[
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _buildInfoChip(
+                        icon: Icons.account_balance_wallet,
+                        label:
+                            'Deuda: \$${customer.currentBalance.toStringAsFixed(0)}',
+                        color: Colors.red,
                       ),
                     ),
-                    Text(
-                      '\$${customer.currentBalance.toStringAsFixed(0)}',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.red.shade700,
+                  ] else if (customer.creditLimit > 0) ...[
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _buildInfoChip(
+                        icon: Icons.credit_card,
+                        label:
+                            'Cupo: \$${customer.creditLimit.toStringAsFixed(0)}',
+                        color: Colors.blue,
                       ),
                     ),
                   ],
-                ),
+                ],
+              ),
             ],
           ),
         ),
@@ -316,96 +339,98 @@ class _CustomersViewState extends ConsumerState<CustomersView> {
     );
   }
 
-  Widget _buildTypeChip(CustomerType type) {
-    Color color;
-    String label;
-
-    switch (type) {
-      case CustomerType.occasional:
-        color = Colors.grey;
-        label = 'Ocasional';
-        break;
-      case CustomerType.frequent:
-        color = Colors.blue;
-        label = 'Frecuente';
-        break;
-      case CustomerType.wholesale:
-        color = Colors.purple;
-        label = 'Mayorista';
-        break;
-      case CustomerType.credit:
-        color = Colors.orange;
-        label = 'Crédito';
-        break;
-      case CustomerType.consignment:
-        color = Colors.teal;
-        label = 'Consignación';
-        break;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          color: color,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatusChip(CustomerStatus status) {
-    Color color;
-    String label;
-
+  Widget _buildStatusBadge(CustomerStatus status) {
+    MaterialColor color;
     switch (status) {
       case CustomerStatus.active:
         color = Colors.green;
-        label = 'Activo';
         break;
       case CustomerStatus.inactive:
         color = Colors.grey;
-        label = 'Inactivo';
         break;
       case CustomerStatus.blocked:
         color = Colors.red;
-        label = 'Bloqueado';
         break;
     }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.shade100,
         borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Text(
-        label,
+        status.label,
         style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          color: color.shade700,
         ),
       ),
     );
   }
 
-  Color _getStatusColor(CustomerStatus status) {
-    switch (status) {
-      case CustomerStatus.active:
-        return Colors.green;
-      case CustomerStatus.inactive:
+  Widget _buildInfoChip({
+    required IconData icon,
+    required String label,
+    required MaterialColor color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.shade50,
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.shade200),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color.shade700),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: color.shade700,
+                fontWeight: FontWeight.w500,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  MaterialColor _getTypeColor(CustomerType type) {
+    switch (type) {
+      case CustomerType.occasional:
         return Colors.grey;
-      case CustomerStatus.blocked:
-        return Colors.red;
+      case CustomerType.frequent:
+        return Colors.blue;
+      case CustomerType.wholesale:
+        return Colors.purple;
+      case CustomerType.credit:
+        return Colors.orange;
+      case CustomerType.consignment:
+        return Colors.teal;
+    }
+  }
+
+  IconData _getTypeIcon(CustomerType type) {
+    switch (type) {
+      case CustomerType.occasional:
+        return Icons.person;
+      case CustomerType.frequent:
+        return Icons.person_outline;
+      case CustomerType.wholesale:
+        return Icons.business;
+      case CustomerType.credit:
+        return Icons.account_balance_wallet;
+      case CustomerType.consignment:
+        return Icons.inventory;
     }
   }
 }

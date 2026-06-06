@@ -7,19 +7,53 @@ enum CustomerType { occasional, frequent, wholesale, credit, consignment }
 
 enum CustomerStatus { active, inactive, blocked }
 
+extension CustomerTypeX on CustomerType {
+  String get label {
+    switch (this) {
+      case CustomerType.occasional:
+        return 'Ocasional';
+      case CustomerType.frequent:
+        return 'Frecuente';
+      case CustomerType.wholesale:
+        return 'Mayorista';
+      case CustomerType.credit:
+        return 'Crédito';
+      case CustomerType.consignment:
+        return 'Consignatario';
+    }
+  }
+
+  String get dbValue => name;
+}
+
+extension CustomerStatusX on CustomerStatus {
+  String get label {
+    switch (this) {
+      case CustomerStatus.active:
+        return 'Activo';
+      case CustomerStatus.inactive:
+        return 'Inactivo';
+      case CustomerStatus.blocked:
+        return 'Bloqueado';
+    }
+  }
+
+  String get dbValue => name;
+}
+
 @freezed
 class Customer with _$Customer {
   const factory Customer({
     required String id,
+    String? identification,
     required String fullName,
     required String phone,
-    required CustomerType customerType,
-    required CustomerStatus status,
-    String? identification,
     String? email,
     String? address,
     double? latitude,
     double? longitude,
+    @Default(CustomerType.occasional) CustomerType type,
+    @Default(CustomerStatus.active) CustomerStatus status,
     @Default(0) double creditLimit,
     @Default(0) double currentBalance,
     String? notes,
@@ -30,45 +64,4 @@ class Customer with _$Customer {
 
   factory Customer.fromJson(Map<String, dynamic> json) =>
       _$CustomerFromJson(json);
-
-  Map<String, dynamic> toSupabaseJson() {
-    final json = <String, dynamic>{
-      'full_name': fullName,
-      'phone': phone,
-      'customer_type': customerType.name,
-      'status': status.name,
-      'credit_limit': creditLimit,
-      'current_balance': currentBalance,
-    };
-
-    if (identification != null && identification!.isNotEmpty) {
-      json['identification'] = identification;
-    }
-
-    if (email != null && email!.isNotEmpty) {
-      json['email'] = email;
-    }
-
-    if (address != null && address!.isNotEmpty) {
-      json['address'] = address;
-    }
-
-    if (latitude != null) {
-      json['latitude'] = latitude;
-    }
-
-    if (longitude != null) {
-      json['longitude'] = longitude;
-    }
-
-    if (notes != null && notes!.isNotEmpty) {
-      json['notes'] = notes;
-    }
-
-    if (createdBy != null && createdBy!.isNotEmpty) {
-      json['created_by'] = createdBy;
-    }
-
-    return json;
-  }
 }

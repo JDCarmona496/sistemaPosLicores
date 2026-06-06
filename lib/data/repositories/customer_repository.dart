@@ -1,15 +1,16 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../config/supabase_config.dart';
 import '../../domain/models/customer.dart';
-import '../../domain/models/customer_basket.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../domain/models/customer_extensions.dart';
 
 class CustomerRepository {
   SupabaseClient get _client => SupabaseConfig.client;
 
   Future<List<Customer>> getAll({
     String? search,
-    String? customerType,
-    String? status,
+    CustomerType? type,
+    CustomerStatus? status,
     int limit = 50,
     int offset = 0,
   }) async {
@@ -17,25 +18,32 @@ class CustomerRepository {
 
     if (search != null && search.isNotEmpty) {
       query = query.or(
-          'full_name.ilike.%$search%,phone.ilike.%$search%,identification.ilike.%$search%');
+        'full_name.ilike.%$search%,identification.ilike.%$search%,phone.ilike.%$search%',
+      );
     }
 
-    if (customerType != null) {
-      query = query.eq('customer_type', customerType);
+    if (type != null) {
+      query = query.eq('customer_type', type.dbValue);
     }
 
     if (status != null) {
-      query = query.eq('status', status);
+      query = query.eq('status', status.dbValue);
     }
 
-    final data = await query.order('full_name').range(offset, offset + limit - 1);
+    final data = await query
+        .order('full_name')
+        .range(offset, offset + limit - 1);
 
     return data.map((json) => Customer.fromJson(json)).toList();
   }
 
   Future<Customer?> getById(String id) async {
     try {
-      final data = await _client.from('customers').select().eq('id', id).maybeSingle();
+      final data = await _client
+          .from('customers')
+          .select()
+          .eq('id', id)
+          .maybeSingle();
 
       if (data == null) return null;
       return Customer.fromJson(data);
@@ -61,8 +69,11 @@ class CustomerRepository {
 
   Future<Customer?> getByPhone(String phone) async {
     try {
-      final data =
-          await _client.from('customers').select().eq('phone', phone).maybeSingle();
+      final data = await _client
+          .from('customers')
+          .select()
+          .eq('phone', phone)
+          .maybeSingle();
 
       if (data == null) return null;
       return Customer.fromJson(data);
@@ -72,9 +83,13 @@ class CustomerRepository {
   }
 
   Future<Customer> create(Customer customer) async {
-    final data = customer.toSupabaseJson();
+    final data = customer.toSupabaseJson()..remove('id');
 
-    final result = await _client.from('customers').insert(data).select().single();
+    final result = await _client
+        .from('customers')
+        .insert(data)
+        .select()
+        .single();
 
     return Customer.fromJson(result);
   }
@@ -82,8 +97,12 @@ class CustomerRepository {
   Future<Customer> update(Customer customer) async {
     final data = customer.toSupabaseJson();
 
-    final result =
-        await _client.from('customers').update(data).eq('id', customer.id).select().single();
+    final result = await _client
+        .from('customers')
+        .update(data)
+        .eq('id', customer.id)
+        .select()
+        .single();
 
     return Customer.fromJson(result);
   }
@@ -92,87 +111,59 @@ class CustomerRepository {
     await _client.from('customers').delete().eq('id', id);
   }
 
-  Future<List<Map<String, dynamic>>> getCustomerOrders(String customerId,
-      {int limit = 20}) async {
-    try {
-      final data = await _client
-          .from('orders')
-          .select()
-          .eq('customer_id', customerId)
-          .order('created_at', ascending: false)
-          .limit(limit);
-
-      return data;
-    } catch (e) {
-      return [];
-    }
+  Future<void> updateBalance(String customerId, double newBalance) async {
+    await _client
+        .from('customers')
+        .update({'current_balance': newBalance})
+        .eq('id', customerId);
   }
 
-  Future<List<CustomerBasket>> getCustomerBaskets(String customerId) async {
-    try {
-      final data = await _client
-          .from('customer_baskets')
-          .select()
-          .eq('customer_id', customerId)
-          .order('created_at', ascending: false);
-
-      return data.map((json) => CustomerBasket.fromJson(json)).toList();
-    } catch (e) {
-      return [];
-    }
+  Future<void> updateStatus(String customerId, CustomerStatus status) async {
+    await _client
+        .from('customers')
+        .update({'status': status.dbValue})
+        .eq('id', customerId);
   }
 
-  Future<CustomerBasket> createBasket(CustomerBasket basket) async {
-    final data = basket.toSupabaseJson();
+  Future<List<Map<String, dynamic>>> getOrdersHistory(
+    String customerId, {
+    int limit = 50,
+    int offset = 0,
+  }) async {
+    final data = await _client
+        .from('orders')
+        .select('id, order_number, status, sale_type, total, created_at')
+        .eq('customer_id', customerId)
+        .order('created_at', ascending: false)
+        .range(offset, offset + limit - 1);
 
-    final result =
-        await _client.from('customer_baskets').insert(data).select().single();
-
-    return CustomerBasket.fromJson(result);
-  }
-
-  Future<CustomerBasket> updateBasket(CustomerBasket basket) async {
-    final data = basket.toSupabaseJson();
-
-    final result = await _client
-        .from('customer_baskets')
-        .update(data)
-        .eq('id', basket.id)
-        .select()
-        .single();
-
-    return CustomerBasket.fromJson(result);
-  }
-
-  Future<void> deleteBasket(String id) async {
-    await _client.from('customer_baskets').delete().eq('id', id);
+    return List<Map<String, dynamic>>.from(data);
   }
 
   Future<Map<String, dynamic>> getCustomerStats(String customerId) async {
-    try {
-      final orders = await _client
-          .from('orders')
-          .select('id, total, status')
-          .eq('customer_id', customerId);
+    final orders = await _client
+        .from('orders')
+        .select('id, total, status, sale_type')
+        .eq('customer_id', customerId);
 
-      final totalOrders = orders.length;
-      final totalSpent = orders.fold<double>(
-          0, (sum, order) => sum + (order['total'] as num? ?? 0).toDouble());
+    final completedOrders = orders
+        .where((o) => o['status'] == 'delivered' || o['status'] == 'completed')
+        .toList();
 
-      final pendingOrders =
-          orders.where((o) => o['status'] != 'delivered' && o['status'] != 'cancelled').length;
+    final totalSpent = completedOrders.fold<double>(
+      0,
+      (sum, o) => sum + (o['total'] as num).toDouble(),
+    );
 
-      return {
-        'total_orders': totalOrders,
-        'total_spent': totalSpent,
-        'pending_orders': pendingOrders,
-      };
-    } catch (e) {
-      return {
-        'total_orders': 0,
-        'total_spent': 0.0,
-        'pending_orders': 0,
-      };
-    }
+    final creditOrders = orders
+        .where((o) => o['sale_type'] == 'credit')
+        .toList();
+
+    return {
+      'total_orders': orders.length,
+      'completed_orders': completedOrders.length,
+      'total_spent': totalSpent,
+      'credit_orders': creditOrders.length,
+    };
   }
 }

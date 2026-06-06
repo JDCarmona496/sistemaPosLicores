@@ -1,10 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../data/repositories/customer_repository.dart';
+
 import '../../domain/models/customer.dart';
-import '../../domain/models/customer_basket.dart';
+import '../repositories/customer_basket_repository.dart';
+import '../repositories/customer_repository.dart';
 
 final customerRepositoryProvider = Provider<CustomerRepository>((ref) {
   return CustomerRepository();
+});
+
+final customerBasketRepositoryProvider =
+    Provider<CustomerBasketRepository>((ref) {
+  return CustomerBasketRepository();
 });
 
 final customersProvider =
@@ -18,8 +24,8 @@ class CustomersState {
   final bool isLoading;
   final String? error;
   final String? searchQuery;
-  final String? selectedType;
-  final String? selectedStatus;
+  final CustomerType? selectedType;
+  final CustomerStatus? selectedStatus;
 
   const CustomersState({
     this.customers = const [],
@@ -35,8 +41,8 @@ class CustomersState {
     bool? isLoading,
     String? error,
     String? searchQuery,
-    String? selectedType,
-    String? selectedStatus,
+    CustomerType? selectedType,
+    CustomerStatus? selectedStatus,
     bool clearSearch = false,
     bool clearType = false,
     bool clearStatus = false,
@@ -48,7 +54,8 @@ class CustomersState {
       error: clearError ? null : (error ?? this.error),
       searchQuery: clearSearch ? null : (searchQuery ?? this.searchQuery),
       selectedType: clearType ? null : (selectedType ?? this.selectedType),
-      selectedStatus: clearStatus ? null : (selectedStatus ?? this.selectedStatus),
+      selectedStatus:
+          clearStatus ? null : (selectedStatus ?? this.selectedStatus),
     );
   }
 }
@@ -66,7 +73,7 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
     try {
       final customers = await _repository.getAll(
         search: state.searchQuery,
-        customerType: state.selectedType,
+        type: state.selectedType,
         status: state.selectedStatus,
       );
 
@@ -87,7 +94,7 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
     loadCustomers();
   }
 
-  void setType(String? type) {
+  void setType(CustomerType? type) {
     state = state.copyWith(
       selectedType: type,
       clearType: type == null,
@@ -95,7 +102,7 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
     loadCustomers();
   }
 
-  void setStatus(String? status) {
+  void setStatus(CustomerStatus? status) {
     state = state.copyWith(
       selectedStatus: status,
       clearStatus: status == null,
@@ -126,7 +133,8 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
     try {
       final updated = await _repository.update(customer);
       state = state.copyWith(
-        customers: state.customers.map((c) => c.id == updated.id ? updated : c).toList(),
+        customers:
+            state.customers.map((c) => c.id == updated.id ? updated : c).toList(),
       );
       return updated;
     } catch (e) {
@@ -145,6 +153,21 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
     }
   }
 
+  Future<void> updateStatus(String id, CustomerStatus status) async {
+    try {
+      await _repository.updateStatus(id, status);
+      state = state.copyWith(
+        customers: state.customers
+            .map((c) => c.id == id
+                ? c.copyWith(status: status, updatedAt: DateTime.now())
+                : c)
+            .toList(),
+      );
+    } catch (e) {
+      throw Exception('Error al cambiar estado: ${e.toString()}');
+    }
+  }
+
   Future<Customer?> getByIdentification(String identification) async {
     return await _repository.getByIdentification(identification);
   }
@@ -154,25 +177,32 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
   }
 }
 
-final customerByIdProvider = FutureProvider.family<Customer?, String>((ref, id) async {
+final customerByIdProvider =
+    FutureProvider.family<Customer?, String>((ref, id) async {
   final repository = ref.watch(customerRepositoryProvider);
   return await repository.getById(id);
 });
 
-final customerOrdersProvider =
-    FutureProvider.family<List<Map<String, dynamic>>, String>((ref, customerId) async {
+final customerOrdersHistoryProvider = FutureProvider.family<
+    List<Map<String, dynamic>>, String>((ref, customerId) async {
   final repository = ref.watch(customerRepositoryProvider);
-  return await repository.getCustomerOrders(customerId);
-});
-
-final customerBasketsProvider =
-    FutureProvider.family<List<CustomerBasket>, String>((ref, customerId) async {
-  final repository = ref.watch(customerRepositoryProvider);
-  return await repository.getCustomerBaskets(customerId);
+  return await repository.getOrdersHistory(customerId);
 });
 
 final customerStatsProvider =
     FutureProvider.family<Map<String, dynamic>, String>((ref, customerId) async {
   final repository = ref.watch(customerRepositoryProvider);
   return await repository.getCustomerStats(customerId);
+});
+
+final customerBasketsProvider =
+    FutureProvider.family<List<dynamic>, String>((ref, customerId) async {
+  final repository = ref.watch(customerBasketRepositoryProvider);
+  return await repository.getByCustomer(customerId);
+});
+
+final customerBasketStatsProvider = FutureProvider.family<
+    Map<String, dynamic>, String>((ref, customerId) async {
+  final repository = ref.watch(customerBasketRepositoryProvider);
+  return await repository.getBasketStats(customerId);
 });

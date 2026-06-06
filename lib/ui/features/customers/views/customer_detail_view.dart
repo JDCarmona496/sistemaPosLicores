@@ -1,62 +1,43 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../../data/providers/customer_providers.dart';
 import '../../../../domain/models/customer.dart';
 
-class CustomerDetailView extends ConsumerWidget {
+class CustomerDetailView extends ConsumerStatefulWidget {
   final String customerId;
 
   const CustomerDetailView({super.key, required this.customerId});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final customerAsync = ref.watch(customerByIdProvider(customerId));
-    final statsAsync = ref.watch(customerStatsProvider(customerId));
-    final basketsAsync = ref.watch(customerBasketsProvider(customerId));
+  ConsumerState<CustomerDetailView> createState() => _CustomerDetailViewState();
+}
+
+class _CustomerDetailViewState extends ConsumerState<CustomerDetailView>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final customerAsync = ref.watch(customerByIdProvider(widget.customerId));
+    final statsAsync = ref.watch(customerStatsProvider(widget.customerId));
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Detalle del Cliente'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () => customerAsync.whenOrNull(
-              data: (customer) {
-                if (customer != null) {
-                  context.push('/customers/edit/${customer.id}').then((result) {
-                    if (result == true && context.mounted) {
-                      ref.invalidate(customerByIdProvider(customerId));
-                    }
-                  });
-                }
-              },
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete),
-            onPressed: () => _showDeleteDialog(context, ref),
-          ),
-        ],
-      ),
       body: customerAsync.when(
-        data: (customer) => customer == null
-            ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.error_outline, size: 64, color: Colors.red),
-                    const SizedBox(height: 16),
-                    const Text('Cliente no encontrado'),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () => context.pop(),
-                      child: const Text('Volver'),
-                    ),
-                  ],
-                ),
-              )
-            : _buildCustomerDetail(context, ref, customer, statsAsync, basketsAsync),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
           child: Column(
@@ -66,45 +47,159 @@ class CustomerDetailView extends ConsumerWidget {
               const SizedBox(height: 16),
               Text('Error: $error'),
               const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: () => ref.invalidate(customerByIdProvider(customerId)),
-                icon: const Icon(Icons.refresh),
-                label: const Text('Reintentar'),
+              ElevatedButton(
+                onPressed: () => context.pop(),
+                child: const Text('Volver'),
               ),
             ],
           ),
         ),
+        data: (customer) {
+          if (customer == null) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.person_off, size: 64, color: Colors.grey),
+                  const SizedBox(height: 16),
+                  const Text('Cliente no encontrado'),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => context.pop(),
+                    child: const Text('Volver'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return NestedScrollView(
+            headerSliverBuilder: (context, innerBoxIsScrolled) => [
+              SliverAppBar(
+                expandedHeight: 240,
+                pinned: true,
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.edit),
+                    onPressed: () =>
+                        context.push('/customers/edit/${customer.id}'),
+                    tooltip: 'Editar',
+                  ),
+                  PopupMenuButton<String>(
+                    onSelected: (value) =>
+                        _handleMenuAction(value, customer),
+                    itemBuilder: (context) => [
+                      if (customer.status == CustomerStatus.active)
+                        const PopupMenuItem(
+                          value: 'deactivate',
+                          child: Row(
+                            children: [
+                              Icon(Icons.block, color: Colors.orange),
+                              SizedBox(width: 8),
+                              Text('Desactivar'),
+                            ],
+                          ),
+                        )
+                      else
+                        const PopupMenuItem(
+                          value: 'activate',
+                          child: Row(
+                            children: [
+                              Icon(Icons.check_circle, color: Colors.green),
+                              SizedBox(width: 8),
+                              Text('Activar'),
+                            ],
+                          ),
+                        ),
+                      if (customer.status != CustomerStatus.blocked)
+                        const PopupMenuItem(
+                          value: 'block',
+                          child: Row(
+                            children: [
+                              Icon(Icons.lock, color: Colors.red),
+                              SizedBox(width: 8),
+                              Text('Bloquear'),
+                            ],
+                          ),
+                        ),
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete, color: Colors.red),
+                            SizedBox(width: 8),
+                            Text('Eliminar'),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                flexibleSpace: FlexibleSpaceBar(
+                  title: Text(
+                    customer.fullName,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  background: _buildHeader(customer, statsAsync),
+                ),
+                bottom: TabBar(
+                  controller: _tabController,
+                  tabs: const [
+                    Tab(icon: Icon(Icons.info), text: 'Información'),
+                    Tab(icon: Icon(Icons.receipt_long), text: 'Pedidos'),
+                    Tab(icon: Icon(Icons.inventory_2), text: 'Canastas'),
+                  ],
+                ),
+              ),
+            ],
+            body: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildInfoTab(customer),
+                _buildOrdersTab(widget.customerId),
+                _buildBasketsTab(widget.customerId),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildCustomerDetail(
-    BuildContext context,
-    WidgetRef ref,
+  Widget _buildHeader(
     Customer customer,
     AsyncValue<Map<String, dynamic>> statsAsync,
-    AsyncValue<List> basketsAsync,
   ) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            _getTypeColor(customer.type).shade400,
+            _getTypeColor(customer.type).shade700,
+          ],
+        ),
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 60),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Row(
                 children: [
                   CircleAvatar(
-                    radius: 40,
-                    backgroundColor: _getStatusColor(customer.status),
-                    child: Text(
-                      customer.fullName.isNotEmpty ? customer.fullName[0].toUpperCase() : '?',
-                      style: const TextStyle(
-                        fontSize: 32,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    radius: 32,
+                    backgroundColor: Colors.white,
+                    child: Icon(
+                      _getTypeIcon(customer.type),
+                      size: 32,
+                      color: _getTypeColor(customer.type).shade700,
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -115,263 +210,323 @@ class CustomerDetailView extends ConsumerWidget {
                         Text(
                           customer.fullName,
                           style: const TextStyle(
+                            color: Colors.white,
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            _buildTypeChip(customer.customerType),
-                            const SizedBox(width: 8),
-                            _buildStatusChip(customer.status),
-                          ],
+                        Text(
+                          customer.type.label,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.9),
+                            fontSize: 14,
+                          ),
                         ),
                       ],
                     ),
                   ),
                 ],
               ),
-            ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoTab(Customer customer) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSection(
+            'Información de Contacto',
+            Icons.contact_phone,
+            [
+              _buildInfoRow('Teléfono', customer.phone, copyable: true),
+              if (customer.email != null)
+                _buildInfoRow('Email', customer.email!, copyable: true),
+              if (customer.identification != null)
+                _buildInfoRow('Identificación', customer.identification!,
+                    copyable: true),
+            ],
           ),
           const SizedBox(height: 16),
-          statsAsync.when(
-            data: (stats) => _buildStatsCard(stats),
-            loading: () => const Card(
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: Center(child: CircularProgressIndicator()),
-              ),
-            ),
-            error: (_, __) => const SizedBox.shrink(),
-          ),
-          const SizedBox(height: 8),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Información de Contacto',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+          if (customer.address != null)
+            _buildSection(
+              'Dirección',
+              Icons.location_on,
+              [
+                _buildInfoRow('Dirección', customer.address!),
+                if (customer.latitude != null && customer.longitude != null)
+                  _buildInfoRow(
+                    'Coordenadas',
+                    '${customer.latitude!.toStringAsFixed(6)}, ${customer.longitude!.toStringAsFixed(6)}',
                   ),
-                  const SizedBox(height: 12),
-                  if (customer.identification != null)
-                    _buildInfoRow('Identificación', customer.identification!, Icons.badge),
-                  _buildInfoRow('Teléfono', customer.phone, Icons.phone),
-                  if (customer.email != null)
-                    _buildInfoRow('Email', customer.email!, Icons.email),
-                  if (customer.address != null)
-                    _buildInfoRow('Dirección', customer.address!, Icons.location_on),
-                ],
-              ),
+              ],
             ),
+          if (customer.address != null) const SizedBox(height: 16),
+          _buildSection(
+            'Información Comercial',
+            Icons.business_center,
+            [
+              _buildInfoRow('Tipo de Cliente', customer.type.label),
+              _buildInfoRow('Estado', customer.status.label),
+              _buildInfoRow('Cupo de Crédito',
+                  '\$${customer.creditLimit.toStringAsFixed(0)}'),
+              if (customer.type == CustomerType.credit)
+                _buildInfoRow(
+                  'Saldo Actual',
+                  '\$${customer.currentBalance.toStringAsFixed(0)}',
+                  valueColor: customer.currentBalance > 0
+                      ? Colors.red
+                      : Colors.green,
+                ),
+            ],
           ),
-          const SizedBox(height: 8),
-          if (customer.customerType == CustomerType.credit) ...[
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Información de Crédito',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        _buildCreditInfo('Límite', customer.creditLimit, Colors.blue),
-                        _buildCreditInfo('Saldo', customer.currentBalance, Colors.red),
-                        _buildCreditInfo(
-                          'Disponible',
-                          customer.creditLimit - customer.currentBalance,
-                          Colors.green,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    LinearProgressIndicator(
-                      value: customer.creditLimit > 0
-                          ? (customer.currentBalance / customer.creditLimit).clamp(0.0, 1.0)
-                          : 0,
-                      backgroundColor: Colors.grey.shade200,
-                      color: customer.currentBalance > customer.creditLimit * 0.8
-                          ? Colors.red
-                          : Colors.green,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-          ],
           if (customer.notes != null && customer.notes!.isNotEmpty) ...[
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Notas',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(customer.notes!),
-                  ],
+            const SizedBox(height: 16),
+            _buildSection(
+              'Notas',
+              Icons.note,
+              [
+                Text(
+                  customer.notes!,
+                  style: const TextStyle(fontSize: 14),
                 ),
-              ),
+              ],
             ),
-            const SizedBox(height: 8),
           ],
-          basketsAsync.when(
-            data: (baskets) => baskets.isNotEmpty ? _buildBasketsCard(baskets) : const SizedBox.shrink(),
-            loading: () => const SizedBox.shrink(),
-            error: (_, __) => const SizedBox.shrink(),
+          const SizedBox(height: 16),
+          _buildSection(
+            'Información del Sistema',
+            Icons.info_outline,
+            [
+              if (customer.createdAt != null)
+                _buildInfoRow(
+                  'Creado',
+                  _formatDate(customer.createdAt!),
+                ),
+              if (customer.updatedAt != null)
+                _buildInfoRow(
+                  'Actualizado',
+                  _formatDate(customer.updatedAt!),
+                ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStatsCard(Map<String, dynamic> stats) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Estadísticas',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+  Widget _buildOrdersTab(String customerId) {
+    final ordersAsync = ref.watch(customerOrdersHistoryProvider(customerId));
+
+    return ordersAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, _) => Center(child: Text('Error: $error')),
+      data: (orders) {
+        if (orders.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.receipt_long_outlined,
+                    size: 64, color: Colors.grey.shade400),
+                const SizedBox(height: 16),
+                Text(
+                  'Sin pedidos',
+                  style: TextStyle(
+                      fontSize: 18, color: Colors.grey.shade600),
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
-            Row(
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: orders.length,
+          itemBuilder: (context, index) {
+            final order = orders[index];
+            return Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: _getOrderStatusColor(order['status']),
+                  child: Icon(
+                    _getOrderStatusIcon(order['status']),
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+                title: Text(
+                  'Pedido #${order['order_number']}',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(_formatOrderStatus(order['status'])),
+                    Text(
+                      _formatDate(DateTime.parse(order['created_at'])),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+                trailing: Text(
+                  '\$${(order['total'] as num).toStringAsFixed(0)}',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildBasketsTab(String customerId) {
+    final basketsAsync = ref.watch(customerBasketsProvider(customerId));
+    final statsAsync = ref.watch(customerBasketStatsProvider(customerId));
+
+    return Column(
+      children: [
+        statsAsync.when(
+          loading: () => const SizedBox.shrink(),
+          error: (_, __) => const SizedBox.shrink(),
+          data: (stats) => Container(
+            padding: const EdgeInsets.all(16),
+            color: Colors.grey.shade50,
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildStatItem(
-                  'Pedidos',
-                  '${stats['total_orders'] ?? 0}',
-                  Icons.shopping_cart,
+                  'Salidas',
+                  '${stats['total_out'] ?? 0}',
+                  Icons.outbox,
                   Colors.blue,
                 ),
                 _buildStatItem(
-                  'Total Gastado',
-                  '\$${(stats['total_spent'] as num? ?? 0).toStringAsFixed(0)}',
-                  Icons.attach_money,
+                  'Devueltas',
+                  '${stats['total_returned'] ?? 0}',
+                  Icons.inbox,
                   Colors.green,
                 ),
                 _buildStatItem(
                   'Pendientes',
-                  '${stats['pending_orders'] ?? 0}',
+                  '${stats['total_pending'] ?? 0}',
                   Icons.pending,
                   Colors.orange,
                 ),
+                _buildStatItem(
+                  'Depósito',
+                  '\$${(stats['total_deposit'] ?? 0).toStringAsFixed(0)}',
+                  Icons.attach_money,
+                  Colors.purple,
+                ),
               ],
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatItem(String label, String value, IconData icon, Color color) {
-    return Column(
-      children: [
-        Icon(icon, color: color, size: 32),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: color,
           ),
         ),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey.shade600,
+        Expanded(
+          child: basketsAsync.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (error, _) => Center(child: Text('Error: $error')),
+            data: (baskets) {
+              if (baskets.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.inventory_2_outlined,
+                          size: 64, color: Colors.grey.shade400),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Sin canastas',
+                        style: TextStyle(
+                            fontSize: 18, color: Colors.grey.shade600),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              return ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: baskets.length,
+                itemBuilder: (context, index) {
+                  final basket = baskets[index];
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: _getBasketStatusColor(basket.status),
+                        child: Icon(
+                          _getBasketStatusIcon(basket.status),
+                          color: Colors.white,
+                        ),
+                      ),
+                      title: Text(
+                        'Canasta #${basket.id.substring(0, 8)}',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${basket.quantityReturned}/${basket.quantityOut} devueltas',
+                          ),
+                          if (basket.depositAmount > 0)
+                            Text(
+                              'Depósito: \$${basket.depositAmount.toStringAsFixed(0)}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                        ],
+                      ),
+                      trailing: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color:
+                              _getBasketStatusColor(basket.status).shade100,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          _getBasketStatusLabel(basket.status),
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color:
+                                _getBasketStatusColor(basket.status).shade700,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
           ),
         ),
       ],
     );
   }
 
-  Widget _buildInfoRow(String label, String value, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: Colors.grey.shade600),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCreditInfo(String label, double value, Color color) {
-    return Column(
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey.shade600,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          '\$${value.toStringAsFixed(0)}',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildBasketsCard(List baskets) {
+  Widget _buildSection(String title, IconData icon, List<Widget> children) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -379,187 +534,296 @@ class CustomerDetailView extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Canastas Retornables',
-                  style: TextStyle(
-                    fontSize: 18,
+                Icon(icon, color: Colors.grey.shade700),
+                const SizedBox(width: 8),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.shade100,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    '${baskets.length}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.orange.shade700,
-                    ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 12),
-            ...baskets.take(3).map((basket) => ListTile(
-                  leading: const Icon(Icons.shopping_basket, color: Colors.orange),
-                  title: Text('Canasta #${basket.id.substring(0, 8)}'),
-                  subtitle: Text('Estado: ${basket.status}'),
-                  trailing: Text('${basket.quantityOut} unidades'),
-                )),
-            if (baskets.length > 3)
-              TextButton(
-                onPressed: () {
-                  // TODO: Navegar a vista completa de canastas
-                },
-                child: const Text('Ver todas'),
-              ),
+            ...children,
           ],
         ),
       ),
     );
   }
 
-  Widget _buildTypeChip(CustomerType type) {
-    Color color;
-    String label;
-
-    switch (type) {
-      case CustomerType.occasional:
-        color = Colors.grey;
-        label = 'Ocasional';
-        break;
-      case CustomerType.frequent:
-        color = Colors.blue;
-        label = 'Frecuente';
-        break;
-      case CustomerType.wholesale:
-        color = Colors.purple;
-        label = 'Mayorista';
-        break;
-      case CustomerType.credit:
-        color = Colors.orange;
-        label = 'Crédito';
-        break;
-      case CustomerType.consignment:
-        color = Colors.teal;
-        label = 'Consignación';
-        break;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          color: color,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatusChip(CustomerStatus status) {
-    Color color;
-    String label;
-
-    switch (status) {
-      case CustomerStatus.active:
-        color = Colors.green;
-        label = 'Activo';
-        break;
-      case CustomerStatus.inactive:
-        color = Colors.grey;
-        label = 'Inactivo';
-        break;
-      case CustomerStatus.blocked:
-        color = Colors.red;
-        label = 'Bloqueado';
-        break;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          color: color,
-        ),
-      ),
-    );
-  }
-
-  Color _getStatusColor(CustomerStatus status) {
-    switch (status) {
-      case CustomerStatus.active:
-        return Colors.green;
-      case CustomerStatus.inactive:
-        return Colors.grey;
-      case CustomerStatus.blocked:
-        return Colors.red;
-    }
-  }
-
-  void _showDeleteDialog(BuildContext context, WidgetRef ref) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Eliminar Cliente'),
-        content: const Text(
-            '¿Estás seguro de que deseas eliminar este cliente? Esta acción no se puede deshacer.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancelar'),
+  Widget _buildInfoRow(String label, String value,
+      {bool copyable = false, Color? valueColor}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.grey.shade600,
+              ),
+            ),
           ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(dialogContext);
-              try {
-                await ref.read(customersProvider.notifier).deleteCustomer(customerId);
-                if (context.mounted) {
-                  context.pop(true);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Cliente eliminado correctamente'),
-                      backgroundColor: Colors.green,
+          Expanded(
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    value,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: valueColor,
                     ),
-                  );
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Error al eliminar: $e'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              }
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Eliminar'),
+                  ),
+                ),
+                if (copyable)
+                  IconButton(
+                    icon: const Icon(Icons.copy, size: 16),
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: value));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Copiado al portapapeles'),
+                          duration: Duration(seconds: 1),
+                        ),
+                      );
+                    },
+                    visualDensity: VisualDensity.compact,
+                  ),
+              ],
+            ),
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildStatItem(
+      String label, String value, IconData icon, MaterialColor color) {
+    return Column(
+      children: [
+        Icon(icon, color: color.shade600),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: color.shade700,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            color: Colors.grey.shade600,
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _handleMenuAction(String action, Customer customer) async {
+    switch (action) {
+      case 'activate':
+        await ref
+            .read(customersProvider.notifier)
+            .updateStatus(customer.id, CustomerStatus.active);
+        ref.invalidate(customerByIdProvider(customer.id));
+        _showSnack('Cliente activado');
+        break;
+      case 'deactivate':
+        await ref
+            .read(customersProvider.notifier)
+            .updateStatus(customer.id, CustomerStatus.inactive);
+        ref.invalidate(customerByIdProvider(customer.id));
+        _showSnack('Cliente desactivado');
+        break;
+      case 'block':
+        await ref
+            .read(customersProvider.notifier)
+            .updateStatus(customer.id, CustomerStatus.blocked);
+        ref.invalidate(customerByIdProvider(customer.id));
+        _showSnack('Cliente bloqueado');
+        break;
+      case 'delete':
+        final confirm = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Eliminar Cliente'),
+            content: Text(
+                '¿Estás seguro de eliminar a ${customer.fullName}? Esta acción no se puede deshacer.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancelar'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                child: const Text('Eliminar'),
+              ),
+            ],
+          ),
+        );
+        if (confirm == true) {
+          try {
+            await ref
+                .read(customersProvider.notifier)
+                .deleteCustomer(customer.id);
+            if (mounted) context.pop();
+            _showSnack('Cliente eliminado');
+          } catch (e) {
+            _showSnack('Error al eliminar: $e', isError: true);
+          }
+        }
+        break;
+    }
+  }
+
+  void _showSnack(String message, {bool isError = false}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? Colors.red : null,
+      ),
+    );
+  }
+
+  MaterialColor _getTypeColor(CustomerType type) {
+    switch (type) {
+      case CustomerType.occasional:
+        return Colors.grey;
+      case CustomerType.frequent:
+        return Colors.blue;
+      case CustomerType.wholesale:
+        return Colors.purple;
+      case CustomerType.credit:
+        return Colors.orange;
+      case CustomerType.consignment:
+        return Colors.teal;
+    }
+  }
+
+  IconData _getTypeIcon(CustomerType type) {
+    switch (type) {
+      case CustomerType.occasional:
+        return Icons.person;
+      case CustomerType.frequent:
+        return Icons.person_outline;
+      case CustomerType.wholesale:
+        return Icons.business;
+      case CustomerType.credit:
+        return Icons.account_balance_wallet;
+      case CustomerType.consignment:
+        return Icons.inventory;
+    }
+  }
+
+  Color _getOrderStatusColor(String status) {
+    switch (status) {
+      case 'delivered':
+      case 'completed':
+        return Colors.green;
+      case 'pending':
+        return Colors.orange;
+      case 'cancelled':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  IconData _getOrderStatusIcon(String status) {
+    switch (status) {
+      case 'delivered':
+      case 'completed':
+        return Icons.check_circle;
+      case 'pending':
+        return Icons.schedule;
+      case 'cancelled':
+        return Icons.cancel;
+      default:
+        return Icons.help_outline;
+    }
+  }
+
+  String _formatOrderStatus(String status) {
+    switch (status) {
+      case 'pending':
+        return 'Pendiente';
+      case 'confirmed':
+        return 'Confirmado';
+      case 'preparing':
+        return 'Preparando';
+      case 'in_route':
+        return 'En ruta';
+      case 'delivered':
+        return 'Entregado';
+      case 'completed':
+        return 'Completado';
+      case 'cancelled':
+        return 'Cancelado';
+      default:
+        return status;
+    }
+  }
+
+  MaterialColor _getBasketStatusColor(String status) {
+    switch (status) {
+      case 'outstanding':
+        return Colors.orange;
+      case 'returned':
+        return Colors.green;
+      case 'charged':
+        return Colors.red;
+      case 'deposit_held':
+        return Colors.purple;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  IconData _getBasketStatusIcon(String status) {
+    switch (status) {
+      case 'outstanding':
+        return Icons.outbox;
+      case 'returned':
+        return Icons.inbox;
+      case 'charged':
+        return Icons.attach_money;
+      case 'deposit_held':
+        return Icons.savings;
+      default:
+        return Icons.help_outline;
+    }
+  }
+
+  String _getBasketStatusLabel(String status) {
+    switch (status) {
+      case 'outstanding':
+        return 'Pendiente';
+      case 'returned':
+        return 'Devuelta';
+      case 'charged':
+        return 'Cobrada';
+      case 'deposit_held':
+        return 'Depósito';
+      default:
+        return status;
+    }
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }
 }
