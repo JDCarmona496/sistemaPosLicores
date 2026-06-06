@@ -1,26 +1,33 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 import '../../config/supabase_config.dart';
 import '../../domain/models/user.dart';
 
 class AuthService {
   SupabaseClient get _client => SupabaseConfig.client;
 
-  User? get currentUser {
+  Future<User?> getCurrentUser() async {
     final session = _client.auth.currentSession;
     if (session == null) return null;
 
-    final userData = session.user.userMetadata;
-    if (userData == null) return null;
+    try {
+      final profile = await _client
+          .from('profiles')
+          .select()
+          .eq('id', session.user.id)
+          .single();
 
-    return User(
-      id: session.user.id,
-      email: session.user.email ?? '',
-      fullName: userData['full_name'] ?? '',
-      role: UserRole.values.firstWhere(
-        (r) => r.name == userData['role'],
-        orElse: () => UserRole.seller,
-      ),
-    );
+      return User(
+        id: profile['id'],
+        email: profile['email'],
+        fullName: profile['full_name'],
+        role: UserRole.values.firstWhere(
+          (r) => r.name == profile['role'],
+          orElse: () => UserRole.seller,
+        ),
+      );
+    } catch (e) {
+      return null;
+    }
   }
 
   Future<User> signIn({
@@ -36,13 +43,18 @@ class AuthService {
       throw Exception('Error al iniciar sesión');
     }
 
-    final userData = response.user!.userMetadata;
+    final profile = await _client
+        .from('profiles')
+        .select()
+        .eq('id', response.user!.id)
+        .single();
+
     return User(
-      id: response.user!.id,
-      email: response.user!.email ?? '',
-      fullName: userData?['full_name'] ?? '',
+      id: profile['id'],
+      email: profile['email'],
+      fullName: profile['full_name'],
       role: UserRole.values.firstWhere(
-        (r) => r.name == userData?['role'],
+        (r) => r.name == profile['role'],
         orElse: () => UserRole.seller,
       ),
     );

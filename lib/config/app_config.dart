@@ -2,15 +2,9 @@ class AppConfig {
   static const String appName = 'Licorería';
   static const String appVersion = '0.1.0';
   
-  static const String supabaseUrl = String.fromEnvironment(
-    'SUPABASE_URL',
-    defaultValue: 'TU_SUPABASE_URL',
-  );
+  static const String supabaseUrl = 'https://afmmyqzkbhpgljdqitzl.supabase.co';
   
-  static const String supabaseAnonKey = String.fromEnvironment(
-    'SUPABASE_ANON_KEY',
-    defaultValue: 'TU_SUPABASE_ANON_KEY',
-  );
+  static const String supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmbW15cXprYmhwZ2xqZHFpdHpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NDYzNjksImV4cCI6MjA5NjAyMjM2OX0.-cuGYai4pMJlRhJ0Fw9wVSu0QvO8LILTFLURqQLHw8w';
 
   static const int defaultPageSize = 20;
   

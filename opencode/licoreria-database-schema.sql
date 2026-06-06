@@ -8,6 +8,120 @@
 -- ============================================================================
 
 -- ============================================================================
+-- LIMPIEZA TOTAL - ELIMINAR TODO ANTES DE CREAR DESDE CERO
+-- ============================================================================
+-- Esta sección elimina TODAS las tablas, funciones, triggers, tipos y datos
+-- existentes para permitir una ejecución limpia sin errores.
+-- ============================================================================
+
+-- Deshabilitar triggers temporalmente para evitar errores al hacer DROP
+set session_replication_role = 'replica';
+
+-- Eliminar triggers de auditoría
+drop trigger if exists audit_products on public.products;
+drop trigger if exists audit_orders on public.orders;
+drop trigger if exists audit_customers on public.customers;
+drop trigger if exists audit_inventory_movements on public.inventory_movements;
+drop trigger if exists audit_payments on public.payments;
+
+-- Eliminar triggers de actualización de timestamps
+drop trigger if exists on_profile_updated on public.profiles;
+drop trigger if exists on_brand_updated on public.brands;
+drop trigger if exists on_category_updated on public.categories;
+drop trigger if exists on_product_updated on public.products;
+drop trigger if exists on_customer_updated on public.customers;
+drop trigger if exists on_customer_basket_updated on public.customer_baskets;
+drop trigger if exists on_order_updated on public.orders;
+drop trigger if exists on_supplier_updated on public.suppliers;
+drop trigger if exists on_supplier_invoice_updated on public.supplier_invoices;
+drop trigger if exists on_promotion_updated on public.promotions;
+
+-- Eliminar triggers de negocio
+drop trigger if exists on_auth_user_created on auth.users;
+drop trigger if exists on_inventory_movement on public.inventory_movements;
+drop trigger if exists on_order_delivered on public.orders;
+drop trigger if exists on_credit_payment on public.payments;
+
+-- Eliminar tablas en orden inverso de dependencias
+drop table if exists public.audit_logs cascade;
+drop table if exists public.messages cascade;
+drop table if exists public.scheduled_order_items cascade;
+drop table if exists public.scheduled_orders cascade;
+drop table if exists public.loyalty_points cascade;
+drop table if exists public.coupons cascade;
+drop table if exists public.promotions cascade;
+drop table if exists public.expenses cascade;
+drop table if exists public.weekly_closings cascade;
+drop table if exists public.daily_closings cascade;
+drop table if exists public.cash_transactions cascade;
+drop table if exists public.shifts cascade;
+drop table if exists public.cash_registers cascade;
+drop table if exists public.supplier_invoice_items cascade;
+drop table if exists public.supplier_invoices cascade;
+drop table if exists public.suppliers cascade;
+drop table if exists public.payments cascade;
+drop table if exists public.order_reminders cascade;
+drop table if exists public.order_item_cancellations cascade;
+drop table if exists public.order_edits cascade;
+drop table if exists public.order_items cascade;
+drop table if exists public.orders cascade;
+drop table if exists public.customer_baskets cascade;
+drop table if exists public.customers cascade;
+drop table if exists public.inventory_movements cascade;
+drop table if exists public.price_history cascade;
+drop table if exists public.product_lots cascade;
+drop table if exists public.products cascade;
+drop table if exists public.categories cascade;
+drop table if exists public.brands cascade;
+drop table if exists public.profiles cascade;
+
+-- Eliminar funciones del schema público
+drop function if exists public.handle_updated_at() cascade;
+drop function if exists public.handle_new_user() cascade;
+
+-- Eliminar funciones del schema privado
+drop function if exists private.get_current_user_role() cascade;
+drop function if exists private.is_admin() cascade;
+drop function if exists private.is_seller_or_admin() cascade;
+drop function if exists private.log_audit() cascade;
+drop function if exists private.update_product_stock() cascade;
+drop function if exists private.update_customer_balance() cascade;
+drop function if exists private.mark_items_delivered(uuid, jsonb) cascade;
+drop function if exists private.get_pending_orders_summary() cascade;
+drop function if exists private.create_order_reminder(uuid, text, uuid, text, integer, jsonb) cascade;
+drop function if exists private.cancel_order(uuid, text, uuid) cascade;
+drop function if exists private.edit_order_item(uuid, uuid, numeric, uuid, text) cascade;
+drop function if exists private.get_pending_reminders(uuid) cascade;
+drop function if exists private.create_order_with_items(uuid, uuid, sale_type, delivery_type, jsonb, text, text, numeric, numeric, numeric) cascade;
+
+-- Eliminar tipos enumerados
+drop type if exists public.app_role cascade;
+drop type if exists public.product_status cascade;
+drop type if exists public.packaging_type cascade;
+drop type if exists public.order_status cascade;
+drop type if exists public.sale_type cascade;
+drop type if exists public.delivery_type cascade;
+drop type if exists public.payment_status cascade;
+drop type if exists public.payment_method cascade;
+drop type if exists public.inventory_movement_type cascade;
+drop type if exists public.customer_status cascade;
+drop type if exists public.customer_type cascade;
+drop type if exists public.basket_status cascade;
+drop type if exists public.cash_transaction_type cascade;
+drop type if exists public.cash_register_status cascade;
+drop type if exists public.expense_category cascade;
+drop type if exists public.supplier_invoice_status cascade;
+drop type if exists public.message_status cascade;
+drop type if exists public.promotion_status cascade;
+drop type if exists public.discount_type cascade;
+
+-- Eliminar schema privado
+drop schema if exists private cascade;
+
+-- Rehabilitar triggers
+set session_replication_role = 'origin';
+
+-- ============================================================================
 -- EXTENSIONES
 -- ============================================================================
 create extension if not exists "uuid-ossp";

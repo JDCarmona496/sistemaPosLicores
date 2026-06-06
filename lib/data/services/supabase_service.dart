@@ -20,12 +20,12 @@ class SupabaseService {
       });
     }
 
-    if (orderBy != null) {
-      query = query.order(orderBy, ascending: ascending);
-    }
-
-    if (limit != null) {
-      query = query.limit(limit);
+    if (limit != null && orderBy != null) {
+      return await query.order(orderBy, ascending: ascending).limit(limit);
+    } else if (limit != null) {
+      return await query.limit(limit);
+    } else if (orderBy != null) {
+      return await query.order(orderBy, ascending: ascending);
     }
 
     return await query;
@@ -97,17 +97,15 @@ class SupabaseService {
   Stream<List<Map<String, dynamic>>> subscribe(
     String table, {
     String? filter,
-  }) {
-    return _client
-        .channel(table)
-        .postgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: table,
-          filter: filter != null ? PostgresChangeFilter.from(filter) : null,
-          callback: (payload) {},
-        )
-        .stream
-        .map((_) => []);
+  }) async* {
+    final channel = _client.channel(table);
+    channel.onPostgresChanges(
+      event: PostgresChangeEvent.all,
+      schema: 'public',
+      table: table,
+      callback: (payload) {},
+    );
+    channel.subscribe();
+    yield [];
   }
 }
