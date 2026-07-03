@@ -1,5 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'json_helpers.dart';
+
 part 'customer.freezed.dart';
 part 'customer.g.dart';
 
@@ -41,6 +43,20 @@ extension CustomerStatusX on CustomerStatus {
   String get dbValue => name;
 }
 
+CustomerType? _customerTypeFromDb(String value) {
+  return CustomerType.values.cast<CustomerType?>().firstWhere(
+        (e) => e?.name == value,
+        orElse: () => null,
+      );
+}
+
+CustomerStatus? _customerStatusFromDb(String value) {
+  return CustomerStatus.values.cast<CustomerStatus?>().firstWhere(
+        (e) => e?.name == value,
+        orElse: () => null,
+      );
+}
+
 @freezed
 class Customer with _$Customer {
   const factory Customer({
@@ -65,40 +81,32 @@ class Customer with _$Customer {
   factory Customer.fromJson(Map<String, dynamic> json) =>
       Customer._fromJson(json);
 
-  static CustomerType _typeFromDb(dynamic value) {
-    final str = value?.toString() ?? '';
-    return CustomerType.values.firstWhere(
-      (e) => e.name == str,
-      orElse: () => CustomerType.occasional,
-    );
-  }
-
-  static CustomerStatus _statusFromDb(dynamic value) {
-    final str = value?.toString() ?? '';
-    return CustomerStatus.values.firstWhere(
-      (e) => e.name == str,
-      orElse: () => CustomerStatus.active,
-    );
-  }
-
   static Customer _fromJson(Map<String, dynamic> json) {
     return _$CustomerFromJson({
       ...json,
-      'fullName': json['full_name'],
-      'identification': json['identification'],
-      'phone': json['phone'],
-      'email': json['email'],
-      'address': json['address'],
-      'latitude': (json['latitude'] as num?)?.toDouble(),
-      'longitude': (json['longitude'] as num?)?.toDouble(),
-      'type': _typeFromDb(json['customer_type']).name,
-      'status': _statusFromDb(json['status']).name,
-      'creditLimit': (json['credit_limit'] as num?)?.toDouble() ?? 0,
-      'currentBalance': (json['current_balance'] as num?)?.toDouble() ?? 0,
-      'notes': json['notes'],
-      'createdBy': json['created_by'],
-      'createdAt': json['created_at'],
-      'updatedAt': json['updated_at'],
+      'fullName': jsonStringRequired(json['full_name']),
+      'identification': jsonString(json['identification']),
+      'phone': jsonStringRequired(json['phone']),
+      'email': jsonString(json['email']),
+      'address': jsonString(json['address']),
+      'latitude': jsonDouble(json['latitude']),
+      'longitude': jsonDouble(json['longitude']),
+      'type': jsonEnum(
+        json['customer_type'],
+        _customerTypeFromDb,
+        defaultValue: CustomerType.occasional,
+      ).name,
+      'status': jsonEnum(
+        json['status'],
+        _customerStatusFromDb,
+        defaultValue: CustomerStatus.active,
+      ).name,
+      'creditLimit': jsonDouble(json['credit_limit']),
+      'currentBalance': jsonDouble(json['current_balance']),
+      'notes': jsonString(json['notes']),
+      'createdBy': jsonString(json['created_by']),
+      'createdAt': jsonDateTime(json['created_at']),
+      'updatedAt': jsonDateTime(json['updated_at']),
     });
   }
 }

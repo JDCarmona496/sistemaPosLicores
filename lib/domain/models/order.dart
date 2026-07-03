@@ -1,5 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'json_helpers.dart';
+
 part 'order.freezed.dart';
 part 'order.g.dart';
 
@@ -48,18 +50,17 @@ extension OrderStatusX on OrderStatus {
   }
 }
 
-OrderStatus _orderStatusFromDb(dynamic value) {
-  final str = value?.toString() ?? '';
-  switch (str) {
+OrderStatus? _orderStatusFromDb(String value) {
+  switch (value) {
     case 'in_transit':
       return OrderStatus.inTransit;
     case 'partially_delivered':
       return OrderStatus.partiallyDelivered;
     default:
-      return OrderStatus.values.firstWhere(
-        (e) => e.name == str,
-        orElse: () => OrderStatus.pending,
-      );
+      return OrderStatus.values.cast<OrderStatus?>().firstWhere(
+            (e) => e?.name == value,
+            orElse: () => null,
+          );
   }
 }
 
@@ -76,6 +77,13 @@ extension SaleTypeX on SaleType {
   }
 
   String get dbValue => name;
+}
+
+SaleType? _saleTypeFromDb(String value) {
+  return SaleType.values.cast<SaleType?>().firstWhere(
+        (e) => e?.name == value,
+        orElse: () => null,
+      );
 }
 
 enum DeliveryType { inStore, delivery }
@@ -100,15 +108,14 @@ extension DeliveryTypeX on DeliveryType {
   }
 }
 
-DeliveryType _deliveryTypeFromDb(dynamic value) {
-  final str = value?.toString() ?? '';
-  switch (str) {
+DeliveryType? _deliveryTypeFromDb(String value) {
+  switch (value) {
     case 'in_store':
       return DeliveryType.inStore;
     case 'delivery':
       return DeliveryType.delivery;
     default:
-      return DeliveryType.inStore;
+      return null;
   }
 }
 
@@ -151,34 +158,46 @@ class Order with _$Order {
   static Order _fromJson(Map<String, dynamic> json) {
     return _$OrderFromJson({
       ...json,
-      'orderNumber': json['order_number'],
-      'customerId': json['customer_id'],
-      'sellerId': json['seller_id'],
-      'deliveryPersonId': json['delivery_person_id'],
-      'status': _orderStatusFromDb(json['status']).name,
-      'saleType': json['sale_type'],
-      'deliveryType': _deliveryTypeFromDb(json['delivery_type']).name,
-      'subtotal': (json['subtotal'] as num?)?.toDouble() ?? 0,
-      'discountAmount': (json['discount_amount'] as num?)?.toDouble() ?? 0,
-      'taxAmount': (json['tax_amount'] as num?)?.toDouble() ?? 0,
-      'deliveryFee': (json['delivery_fee'] as num?)?.toDouble() ?? 0,
-      'total': (json['total'] as num?)?.toDouble() ?? 0,
-      'notes': json['notes'],
-      'deliveryAddress': json['delivery_address'],
-      'deliveryLatitude': (json['delivery_latitude'] as num?)?.toDouble(),
-      'deliveryLongitude': (json['delivery_longitude'] as num?)?.toDouble(),
-      'deliveryPhotoUrl': json['delivery_photo_url'],
-      'deliverySignature': json['delivery_signature'],
-      'deliveredAt': json['delivered_at'],
-      'cancelledReason': json['cancelled_reason'],
-      'cancelledBy': json['cancelled_by'],
-      'cancelledAt': json['cancelled_at'],
-      'editCount': json['edit_count'] ?? 0,
-      'customerName': json['customer_name'],
-      'customerPhone': json['customer_phone'],
-      'customerAddress': json['customer_address'],
-      'createdAt': json['created_at'],
-      'updatedAt': json['updated_at'],
+      'orderNumber': jsonInt(json['order_number']),
+      'customerId': jsonString(json['customer_id']),
+      'sellerId': jsonStringRequired(json['seller_id']),
+      'deliveryPersonId': jsonString(json['delivery_person_id']),
+      'status': jsonEnum(
+        json['status'],
+        _orderStatusFromDb,
+        defaultValue: OrderStatus.pending,
+      ).name,
+      'saleType': jsonEnum(
+        json['sale_type'],
+        _saleTypeFromDb,
+        defaultValue: SaleType.cash,
+      ).name,
+      'deliveryType': jsonEnum(
+        json['delivery_type'],
+        _deliveryTypeFromDb,
+        defaultValue: DeliveryType.inStore,
+      ).name,
+      'subtotal': jsonDouble(json['subtotal']),
+      'discountAmount': jsonDouble(json['discount_amount']),
+      'taxAmount': jsonDouble(json['tax_amount']),
+      'deliveryFee': jsonDouble(json['delivery_fee']),
+      'total': jsonDouble(json['total']),
+      'notes': jsonString(json['notes']),
+      'deliveryAddress': jsonString(json['delivery_address']),
+      'deliveryLatitude': jsonDouble(json['delivery_latitude']),
+      'deliveryLongitude': jsonDouble(json['delivery_longitude']),
+      'deliveryPhotoUrl': jsonString(json['delivery_photo_url']),
+      'deliverySignature': jsonString(json['delivery_signature']),
+      'deliveredAt': jsonDateTime(json['delivered_at']),
+      'cancelledReason': jsonString(json['cancelled_reason']),
+      'cancelledBy': jsonString(json['cancelled_by']),
+      'cancelledAt': jsonDateTime(json['cancelled_at']),
+      'editCount': jsonInt(json['edit_count']),
+      'customerName': jsonString(json['customer_name']),
+      'customerPhone': jsonString(json['customer_phone']),
+      'customerAddress': jsonString(json['customer_address']),
+      'createdAt': jsonDateTime(json['created_at']),
+      'updatedAt': jsonDateTime(json['updated_at']),
     });
   }
 }

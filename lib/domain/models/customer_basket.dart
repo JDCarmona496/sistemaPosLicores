@@ -1,5 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'json_helpers.dart';
+
 part 'customer_basket.freezed.dart';
 part 'customer_basket.g.dart';
 
@@ -33,14 +35,15 @@ extension BasketStatusX on BasketStatus {
   }
 }
 
-String _basketStatusFromDb(dynamic value) {
-  if (value == null) return 'outstanding';
-  final str = value.toString();
-  switch (str) {
+BasketStatus? _basketStatusFromDb(String value) {
+  switch (value) {
     case 'deposit_held':
-      return 'depositHeld';
+      return BasketStatus.depositHeld;
     default:
-      return str;
+      return BasketStatus.values.cast<BasketStatus?>().firstWhere(
+            (e) => e?.name == value,
+            orElse: () => null,
+          );
   }
 }
 
@@ -66,16 +69,20 @@ class CustomerBasket with _$CustomerBasket {
   static CustomerBasket _fromJson(Map<String, dynamic> json) {
     return _$CustomerBasketFromJson({
       ...json,
-      'customerId': json['customer_id'],
-      'productId': json['product_id'],
-      'quantityOut': json['quantity_out'] ?? 0,
-      'quantityReturned': json['quantity_returned'] ?? 0,
-      'depositAmount': (json['deposit_amount'] as num?)?.toDouble() ?? 0,
-      'status': _basketStatusFromDb(json['status']),
-      'orderId': json['order_id'],
-      'returnedAt': json['returned_at'],
-      'createdAt': json['created_at'],
-      'updatedAt': json['updated_at'],
+      'customerId': jsonStringRequired(json['customer_id']),
+      'productId': jsonStringRequired(json['product_id']),
+      'quantityOut': jsonInt(json['quantity_out']),
+      'quantityReturned': jsonInt(json['quantity_returned']),
+      'depositAmount': jsonDouble(json['deposit_amount']),
+      'status': jsonEnum(
+        json['status'],
+        _basketStatusFromDb,
+        defaultValue: BasketStatus.outstanding,
+      ).name,
+      'orderId': jsonString(json['order_id']),
+      'returnedAt': jsonDateTime(json['returned_at']),
+      'createdAt': jsonDateTime(json['created_at']),
+      'updatedAt': jsonDateTime(json['updated_at']),
     });
   }
 }

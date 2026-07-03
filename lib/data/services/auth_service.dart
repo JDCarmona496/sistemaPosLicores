@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart' hide User;
+
 import '../../config/supabase_config.dart';
 import '../../domain/models/user.dart';
 
@@ -16,15 +17,7 @@ class AuthService {
           .eq('id', session.user.id)
           .single();
 
-      return User(
-        id: profile['id'],
-        email: profile['email'],
-        fullName: profile['full_name'],
-        role: UserRole.values.firstWhere(
-          (r) => r.name == profile['role'],
-          orElse: () => UserRole.seller,
-        ),
-      );
+      return User.fromJson(profile);
     } catch (e) {
       return null;
     }
@@ -49,15 +42,7 @@ class AuthService {
         .eq('id', response.user!.id)
         .single();
 
-    return User(
-      id: profile['id'],
-      email: profile['email'],
-      fullName: profile['full_name'],
-      role: UserRole.values.firstWhere(
-        (r) => r.name == profile['role'],
-        orElse: () => UserRole.seller,
-      ),
-    );
+    return User.fromJson(profile);
   }
 
   Future<void> signOut() async {

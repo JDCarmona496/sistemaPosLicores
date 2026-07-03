@@ -1,5 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'json_helpers.dart';
+
 part 'product.freezed.dart';
 part 'product.g.dart';
 
@@ -26,17 +28,25 @@ String packagingTypeToDb(PackagingType type) {
   }
 }
 
-String convertPackagingTypeFromDb(dynamic value) {
-  if (value == null) return 'unit';
-  final str = value.toString();
-  switch (str) {
+PackagingType? _packagingTypeFromDb(String value) {
+  switch (value) {
     case 'pack_cigarettes':
-      return 'packCigarettes';
+      return PackagingType.packCigarettes;
     case 'half_pack':
-      return 'halfPack';
+      return PackagingType.halfPack;
     default:
-      return str;
+      return PackagingType.values.cast<PackagingType?>().firstWhere(
+            (e) => e?.name == value,
+            orElse: () => null,
+          );
   }
+}
+
+ProductStatus? _productStatusFromDb(String value) {
+  return ProductStatus.values.cast<ProductStatus?>().firstWhere(
+        (e) => e?.name == value,
+        orElse: () => null,
+      );
 }
 
 @freezed
@@ -74,24 +84,34 @@ class Product with _$Product {
   static Product _fromJson(Map<String, dynamic> json) {
     return _$ProductFromJson({
       ...json,
-      'packagingType': convertPackagingTypeFromDb(json['packaging_type']),
-      'priceRetail': (json['price_retail'] as num?)?.toDouble() ?? 0,
-      'priceWholesale': (json['price_wholesale'] as num?)?.toDouble() ?? 0,
-      'priceWholesaleFractional': (json['price_wholesale_fractional'] as num?)?.toDouble(),
-      'returnableDeposit': (json['returnable_deposit'] as num?)?.toDouble() ?? 0,
-      'cost': (json['cost'] as num?)?.toDouble() ?? 0,
-      'unitsPerPackage': json['units_per_package'] ?? 1,
-      'stockCurrent': json['stock_current'] ?? 0,
-      'stockMin': json['stock_min'] ?? 5,
-      'stockMax': json['stock_max'] ?? 100,
-      'volumeMl': json['volume_ml'],
-      'isCold': json['is_cold'] ?? false,
-      'isReturnable': json['is_returnable'] ?? false,
-      'imageUrl': json['image_url'],
-      'brandId': json['brand_id'],
-      'categoryId': json['category_id'],
-      'createdAt': json['created_at'],
-      'updatedAt': json['updated_at'],
+      'packagingType': jsonEnum(
+        json['packaging_type'],
+        _packagingTypeFromDb,
+        defaultValue: PackagingType.unit,
+      ).name,
+      'priceRetail': jsonDouble(json['price_retail']),
+      'priceWholesale': jsonDouble(json['price_wholesale']),
+      'priceWholesaleFractional':
+          jsonDouble(json['price_wholesale_fractional']),
+      'returnableDeposit': jsonDouble(json['returnable_deposit']),
+      'cost': jsonDouble(json['cost']),
+      'unitsPerPackage': jsonInt(json['units_per_package'], defaultValue: 1),
+      'stockCurrent': jsonInt(json['stock_current']),
+      'stockMin': jsonInt(json['stock_min'], defaultValue: 5),
+      'stockMax': jsonInt(json['stock_max'], defaultValue: 100),
+      'volumeMl': json['volume_ml'] == null ? null : jsonInt(json['volume_ml']),
+      'isCold': jsonBool(json['is_cold']),
+      'isReturnable': jsonBool(json['is_returnable']),
+      'status': jsonEnum(
+        json['status'],
+        _productStatusFromDb,
+        defaultValue: ProductStatus.active,
+      ).name,
+      'imageUrl': jsonString(json['image_url']),
+      'brandId': jsonStringRequired(json['brand_id']),
+      'categoryId': jsonStringRequired(json['category_id']),
+      'createdAt': jsonDateTime(json['created_at']),
+      'updatedAt': jsonDateTime(json['updated_at']),
     });
   }
 }
