@@ -235,6 +235,30 @@ class OrderRepository {
     }
   }
 
+  Future<void> markItemsDelivered({
+    required String orderId,
+    required List<({String orderItemId, double quantityDelivered})> items,
+  }) async {
+    try {
+      await _client.rpc(
+        'mark_items_delivered',
+        params: {
+          'p_order_id': orderId,
+          'p_delivered_items': items
+              .map((i) => {
+                    'order_item_id': i.orderItemId,
+                    'quantity_delivered': i.quantityDelivered,
+                  })
+              .toList(),
+        },
+      );
+    } on PostgrestException catch (e) {
+      throw _handlePostgrestError(e, 'registrar entrega');
+    } catch (e) {
+      throw Exception('Error inesperado al registrar entrega: $e');
+    }
+  }
+
   Future<void> assignDeliveryPerson(String orderId, String deliveryPersonId) async {
     try {
       await _client

@@ -179,6 +179,41 @@ class OrdersNotifier extends StateNotifier<OrdersState> {
     }
   }
 
+  Future<void> assignDeliveryPerson({
+    required String orderId,
+    required String deliveryPersonId,
+  }) async {
+    try {
+      await _repository.assignDeliveryPerson(orderId, deliveryPersonId);
+      state = state.copyWith(
+        orders: state.orders
+            .map((o) => o.id == orderId
+                ? o.copyWith(
+                    deliveryPersonId: deliveryPersonId,
+                    status: OrderStatus.inTransit,
+                    updatedAt: DateTime.now(),
+                  )
+                : o)
+            .toList(),
+      );
+    } catch (e) {
+      throw Exception('Error al asignar domiciliario: ${e.toString()}');
+    }
+  }
+
+  Future<void> markItemsDelivered({
+    required String orderId,
+    required List<({String orderItemId, double quantityDelivered})> items,
+  }) async {
+    try {
+      await _repository.markItemsDelivered(orderId: orderId, items: items);
+      // Invalidar para recargar estado actualizado desde BD
+      await loadOrders();
+    } catch (e) {
+      throw Exception('Error al registrar entrega: ${e.toString()}');
+    }
+  }
+
   Future<void> cancelOrder({
     required String id,
     required String reason,
