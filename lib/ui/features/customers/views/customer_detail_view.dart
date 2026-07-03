@@ -404,7 +404,7 @@ class _CustomerDetailViewState extends ConsumerState<CustomerDetailView>
       children: [
         statsAsync.when(
           loading: () => const SizedBox.shrink(),
-          error: (_, __) => const SizedBox.shrink(),
+          error: (_, _) => const SizedBox.shrink(),
           data: (stats) => Container(
             padding: const EdgeInsets.all(16),
             color: Colors.grey.shade50,
@@ -637,21 +637,21 @@ class _CustomerDetailViewState extends ConsumerState<CustomerDetailView>
         await ref
             .read(customersProvider.notifier)
             .updateStatus(customer.id, CustomerStatus.active);
-        ref.invalidate(customerByIdProvider(customer.id));
+        _invalidateCustomerProviders(customer.id);
         _showSnack('Cliente activado');
         break;
       case 'deactivate':
         await ref
             .read(customersProvider.notifier)
             .updateStatus(customer.id, CustomerStatus.inactive);
-        ref.invalidate(customerByIdProvider(customer.id));
+        _invalidateCustomerProviders(customer.id);
         _showSnack('Cliente desactivado');
         break;
       case 'block':
         await ref
             .read(customersProvider.notifier)
             .updateStatus(customer.id, CustomerStatus.blocked);
-        ref.invalidate(customerByIdProvider(customer.id));
+        _invalidateCustomerProviders(customer.id);
         _showSnack('Cliente bloqueado');
         break;
       case 'delete':
@@ -679,6 +679,7 @@ class _CustomerDetailViewState extends ConsumerState<CustomerDetailView>
             await ref
                 .read(customersProvider.notifier)
                 .deleteCustomer(customer.id);
+            _invalidateCustomerProviders(customer.id);
             if (mounted) context.pop();
             _showSnack('Cliente eliminado');
           } catch (e) {
@@ -687,6 +688,13 @@ class _CustomerDetailViewState extends ConsumerState<CustomerDetailView>
         }
         break;
     }
+  }
+
+  void _invalidateCustomerProviders(String customerId) {
+    ref.invalidate(customerByIdProvider(customerId));
+    ref.invalidate(customerStatsProvider(customerId));
+    ref.invalidate(customerBasketsProvider(customerId));
+    ref.invalidate(customerBasketStatsProvider(customerId));
   }
 
   void _showSnack(String message, {bool isError = false}) {

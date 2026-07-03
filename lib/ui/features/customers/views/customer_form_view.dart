@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../data/providers/customer_providers.dart';
+import '../../../../data/services/auth_service.dart';
 import '../../../../domain/models/customer.dart';
 
 class CustomerFormView extends ConsumerStatefulWidget {
@@ -32,13 +33,22 @@ class _CustomerFormViewState extends ConsumerState<CustomerFormView> {
   CustomerStatus _status = CustomerStatus.active;
   bool _isLoading = false;
   bool _isEditing = false;
+  String? _currentUserId;
 
   @override
   void initState() {
     super.initState();
+    _loadCurrentUser();
     if (widget.customerId != null) {
       _isEditing = true;
       _loadCustomer();
+    }
+  }
+
+  Future<void> _loadCurrentUser() async {
+    final user = await AuthService().getCurrentUser();
+    if (mounted) {
+      setState(() => _currentUserId = user?.id);
     }
   }
 
@@ -110,16 +120,38 @@ class _CustomerFormViewState extends ConsumerState<CustomerFormView> {
       return;
     }
 
+    final identification = _identificationController.text.trim();
+    final phone = _phoneController.text.trim();
+
     setState(() => _isLoading = true);
 
     try {
+      if (identification.isNotEmpty) {
+        final existing = await ref
+            .read(customersProvider.notifier)
+            .getByIdentification(identification);
+        if (existing != null && existing.id != (widget.customerId ?? '')) {
+          _showSnack('Ya existe un cliente con esta identificación',
+              isError: true);
+          setState(() => _isLoading = false);
+          return;
+        }
+      }
+
+      final existingPhone = await ref
+          .read(customersProvider.notifier)
+          .getByPhone(phone);
+      if (existingPhone != null && existingPhone.id != (widget.customerId ?? '')) {
+        _showSnack('Ya existe un cliente con este teléfono', isError: true);
+        setState(() => _isLoading = false);
+        return;
+      }
+
       final customer = Customer(
         id: widget.customerId ?? '',
         fullName: _fullNameController.text.trim(),
-        identification: _identificationController.text.trim().isEmpty
-            ? null
-            : _identificationController.text.trim(),
-        phone: _phoneController.text.trim(),
+        identification: identification.isEmpty ? null : identification,
+        phone: phone,
         email: _emailController.text.trim().isEmpty
             ? null
             : _emailController.text.trim(),
@@ -136,6 +168,7 @@ class _CustomerFormViewState extends ConsumerState<CustomerFormView> {
         notes: _notesController.text.trim().isEmpty
             ? null
             : _notesController.text.trim(),
+        createdBy: _isEditing ? null : _currentUserId,
       );
 
       if (_isEditing) {
@@ -358,7 +391,7 @@ class _CustomerFormViewState extends ConsumerState<CustomerFormView> {
               Icons.business_center,
               [
                 DropdownButtonFormField<CustomerType>(
-                  value: _type,
+                  initialValue: _type,
                   decoration: const InputDecoration(
                     labelText: 'Tipo de Cliente',
                     prefixIcon: Icon(Icons.category),
@@ -385,7 +418,7 @@ class _CustomerFormViewState extends ConsumerState<CustomerFormView> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<CustomerStatus>(
-                  value: _status,
+                  initialValue: _status,
                   decoration: const InputDecoration(
                     labelText: 'Estado',
                     prefixIcon: Icon(Icons.flag),

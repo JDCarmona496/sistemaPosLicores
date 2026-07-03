@@ -101,7 +101,7 @@ class _CustomersViewState extends ConsumerState<CustomersView> {
             children: [
               Expanded(
                 child: DropdownButtonFormField<CustomerType?>(
-                  value: state.selectedType,
+                  initialValue: state.selectedType,
                   decoration: const InputDecoration(
                     labelText: 'Tipo',
                     border: OutlineInputBorder(),
@@ -124,7 +124,7 @@ class _CustomersViewState extends ConsumerState<CustomersView> {
               const SizedBox(width: 16),
               Expanded(
                 child: DropdownButtonFormField<CustomerStatus?>(
-                  value: state.selectedStatus,
+                  initialValue: state.selectedStatus,
                   decoration: const InputDecoration(
                     labelText: 'Estado',
                     border: OutlineInputBorder(),

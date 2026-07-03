@@ -65,6 +65,22 @@ class Customer with _$Customer {
   factory Customer.fromJson(Map<String, dynamic> json) =>
       Customer._fromJson(json);
 
+  static CustomerType _typeFromDb(dynamic value) {
+    final str = value?.toString() ?? '';
+    return CustomerType.values.firstWhere(
+      (e) => e.name == str,
+      orElse: () => CustomerType.occasional,
+    );
+  }
+
+  static CustomerStatus _statusFromDb(dynamic value) {
+    final str = value?.toString() ?? '';
+    return CustomerStatus.values.firstWhere(
+      (e) => e.name == str,
+      orElse: () => CustomerStatus.active,
+    );
+  }
+
   static Customer _fromJson(Map<String, dynamic> json) {
     return _$CustomerFromJson({
       ...json,
@@ -75,8 +91,8 @@ class Customer with _$Customer {
       'address': json['address'],
       'latitude': (json['latitude'] as num?)?.toDouble(),
       'longitude': (json['longitude'] as num?)?.toDouble(),
-      'type': json['customer_type'],
-      'status': json['status'],
+      'type': _typeFromDb(json['customer_type']).name,
+      'status': _statusFromDb(json['status']).name,
       'creditLimit': (json['credit_limit'] as num?)?.toDouble() ?? 0,
       'currentBalance': (json['current_balance'] as num?)?.toDouble() ?? 0,
       'notes': json['notes'],
