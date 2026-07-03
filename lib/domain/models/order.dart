@@ -188,7 +188,7 @@ class Order with _$Order {
       'deliveryLongitude': jsonDouble(json['delivery_longitude']),
       'deliveryPhotoUrl': jsonString(json['delivery_photo_url']),
       'deliverySignature': jsonString(json['delivery_signature']),
-      'deliveredAt': jsonDateTime(json['delivered_at']),
+      'deliveredAt': jsonDateTime(json['delivered_at'])?.toIso8601String(),
       'cancelledReason': jsonString(json['cancelled_reason']),
       'cancelledBy': jsonString(json['cancelled_by']),
       'cancelledAt': jsonDateTime(json['cancelled_at'])?.toIso8601String(),

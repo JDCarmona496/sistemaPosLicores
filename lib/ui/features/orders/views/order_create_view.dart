@@ -40,9 +40,15 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
   }
 
   Future<void> _loadCurrentUser() async {
-    final user = await AuthService().getCurrentUser();
-    if (mounted) {
-      setState(() => _currentUserId = user?.id);
+    try {
+      final user = await AuthService().getCurrentUser();
+      if (mounted) {
+        setState(() => _currentUserId = user.id);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _currentUserId = null);
+      }
     }
   }
 
@@ -518,34 +524,53 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
   }
 
   Future<void> _selectCustomer() async {
-    final selected = await showDialog<Customer>(
+    final selected = await showDialog<Customer?>(
       context: context,
       builder: (context) => const _CustomerSelectorDialog(),
     );
 
-    if (selected != null) {
+    if (selected == null) {
+      // Cliente ocasional
       ref.read(currentOrderCartProvider.notifier).setCustomer(
-            id: selected.id,
-            name: selected.fullName,
-            type: selected.type,
-            address: selected.address,
+            id: null,
+            name: null,
+            type: null,
+            address: null,
           );
+      _addressController.clear();
+      ref.read(currentOrderCartProvider.notifier).setDeliveryAddress('');
 
-      if (selected.address != null && selected.address!.isNotEmpty) {
-        _addressController.text = selected.address!;
-        ref
-            .read(currentOrderCartProvider.notifier)
-            .setDeliveryAddress(selected.address!);
-      }
-
-      if (selected.type == CustomerType.occasional &&
-          ref.read(currentOrderCartProvider).saleType == SaleType.credit) {
+      if (ref.read(currentOrderCartProvider).saleType == SaleType.credit) {
         ref.read(currentOrderCartProvider.notifier).setSaleType(SaleType.cash);
         _showSnack(
           'Cliente ocasional: se cambió la venta a contado',
           isError: true,
         );
       }
+      return;
+    }
+
+    ref.read(currentOrderCartProvider.notifier).setCustomer(
+          id: selected.id,
+          name: selected.fullName,
+          type: selected.type,
+          address: selected.address,
+        );
+
+    if (selected.address != null && selected.address!.isNotEmpty) {
+      _addressController.text = selected.address!;
+      ref
+          .read(currentOrderCartProvider.notifier)
+          .setDeliveryAddress(selected.address!);
+    }
+
+    if (selected.type == CustomerType.occasional &&
+        ref.read(currentOrderCartProvider).saleType == SaleType.credit) {
+      ref.read(currentOrderCartProvider.notifier).setSaleType(SaleType.cash);
+      _showSnack(
+        'Cliente ocasional: se cambió la venta a contado',
+        isError: true,
+      );
     }
   }
 
@@ -694,9 +719,21 @@ class _CustomerSelectorDialogState
               child: customersState.isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : ListView.builder(
-                      itemCount: customersState.customers.length,
+                      itemCount: customersState.customers.length + 1,
                       itemBuilder: (context, index) {
-                        final customer = customersState.customers[index];
+                        if (index == 0) {
+                          return ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: Colors.grey.shade200,
+                              child: Icon(Icons.person_outline,
+                                  color: Colors.grey.shade700),
+                            ),
+                            title: const Text('Cliente ocasional'),
+                            subtitle: const Text('Venta sin cliente registrado'),
+                            onTap: () => Navigator.pop(context, null),
+                          );
+                        }
+                        final customer = customersState.customers[index - 1];
                         return ListTile(
                           leading: CircleAvatar(
                             child: Text(customer.fullName[0].toUpperCase()),

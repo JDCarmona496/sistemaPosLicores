@@ -24,8 +24,12 @@ dependencies:
   # Navigation
   go_router: ^14.8.1
 
-  # Impresión Bluetooth
+  # Impresión térmica ESC/POS
   flutter_thermal_printer: ^0.0.9
+  esc_pos_utils_plus: ^2.0.4
+
+  # Puerto serial Windows (COM) para impresoras térmicas
+  serial_port_win32: ^2.3.0
 
   # Escaneo de códigos de barras
   mobile_scanner: ^6.0.2
@@ -68,11 +72,15 @@ dev_dependencies:
   flutter_lints: ^6.0.0
 
   # Code Generation
-  build_runner: ^2.4.14
+  build_runner: ^2.5.4
+  build_resolvers: ^2.5.4
   freezed: ^2.5.8
   json_serializable: ^6.9.0
-  riverpod_generator: ^2.6.3
+  riverpod_generator: ^2.6.4
   drift_dev: ^2.22.1
+
+dependency_overrides:
+  analyzer: ^7.7.0
 
   # Testing
   mocktail: ^1.0.4

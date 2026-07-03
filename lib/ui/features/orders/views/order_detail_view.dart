@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../data/providers/order_providers.dart';
+import '../../../../data/providers/printer_provider.dart';
 import '../../../../data/services/auth_service.dart';
+import '../../../../data/services/printer/esc_pos_receipt_generator.dart';
 import '../../../../domain/models/order.dart';
 import '../../../../domain/models/order_item.dart';
 
@@ -26,9 +28,15 @@ class _OrderDetailViewState extends ConsumerState<OrderDetailView> {
   }
 
   Future<void> _loadCurrentUser() async {
-    final user = await AuthService().getCurrentUser();
-    if (mounted) {
-      setState(() => _currentUserId = user?.id);
+    try {
+      final user = await AuthService().getCurrentUser();
+      if (mounted) {
+        setState(() => _currentUserId = user.id);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _currentUserId = null);
+      }
     }
   }
 
@@ -471,10 +479,39 @@ class _OrderDetailViewState extends ConsumerState<OrderDetailView> {
                   ),
                 ],
               ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => _printReceipt(order),
+                  icon: const Icon(Icons.print),
+                  label: const Text('Imprimir recibo'),
+                ),
+              ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Future<void> _printReceipt(Order order) async {
+    final itemsAsync = ref.read(orderItemsProvider(order.id));
+    final items = itemsAsync.valueOrNull ?? [];
+
+    final bytes = await const EscPosReceiptGenerator(paperWidthMm: 58)
+        .generateOrderReceipt(
+      order: order,
+      items: items,
+      businessName: 'Licorería',
+    );
+
+    final result = await ref.read(printTicketProvider)(bytes);
+
+    if (!mounted) return;
+    _showSnack(
+      result.success ? result.message : result.message,
+      isError: !result.success,
     );
   }
 
