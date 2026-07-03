@@ -1,18 +1,37 @@
 -- ============================================================================
--- REPARAR USUARIOS DE PRUEBA (script auto-contenido)
+-- REPARAR USUARIOS DE PRUEBA (script auto-contenido, versión robusta)
 -- ============================================================================
 -- Ejecuta este script en el SQL Editor de Supabase si al iniciar sesión
 -- aparece "Error al cargar usuario" o "Email o contraseña incorrectos".
 --
 -- Hace lo siguiente:
--- 1. Crea o actualiza los 3 usuarios de prueba en auth.users.
--- 2. Fuerza la contraseña a: Test123456
--- 3. Confirma el email.
--- 4. Crea o repara los perfiles en public.profiles.
+-- 1. Asegura la tabla public.profiles y su clave primaria.
+-- 2. Crea o actualiza los 3 usuarios de prueba en auth.users.
+-- 3. Fuerza la contraseña a: Test123456
+-- 4. Confirma el email.
+-- 5. Crea o repara los perfiles en public.profiles.
 -- ============================================================================
 
 -- Asegurar que la extensión pgcrypto esté disponible
 create extension if not exists pgcrypto;
+
+-- ============================================================================
+-- 0. ASEGURAR QUE public.profiles TENGA CLAVE PRIMARIA EN id
+-- ============================================================================
+-- Si el schema no se aplicó correctamente, esta restricción puede faltar y
+-- causa el error: "there is no unique or exclusion constraint matching the
+-- ON CONFLICT specification".
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conrelid = 'public.profiles'::regclass
+      and contype = 'p'
+  ) then
+    alter table public.profiles add primary key (id);
+  end if;
+end $$;
 
 -- ============================================================================
 -- 1. ADMIN
@@ -120,26 +139,39 @@ on conflict (email) do update set
   updated_at         = now();
 
 -- ============================================================================
--- 4. CREAR/REPARAR PERFILES
+-- 4. CREAR/REPARAR PERFILES (usando PL/pgSQL para evitar problemas de ON CONFLICT)
 -- ============================================================================
-insert into public.profiles (id, email, full_name, role, is_active)
-select
-  u.id,
-  u.email,
-  coalesce(u.raw_user_meta_data->>'full_name', split_part(u.email, '@', 1)),
-  coalesce((u.raw_user_meta_data->>'role')::public.app_role, 'seller'),
-  true
-from auth.users u
-where u.email in (
-  'admin@licoreria.com',
-  'vendedor@licoreria.com',
-  'domiciliario@licoreria.com'
-)
-on conflict (id) do update set
-  email     = excluded.email,
-  full_name = excluded.full_name,
-  role      = excluded.role,
-  is_active = true;
+do $$
+declare
+  v_user record;
+begin
+  for v_user in
+    select
+      u.id,
+      u.email,
+      coalesce(u.raw_user_meta_data->>'full_name', split_part(u.email, '@', 1)) as full_name,
+      coalesce((u.raw_user_meta_data->>'role')::public.app_role, 'seller') as role
+    from auth.users u
+    where u.email in (
+      'admin@licoreria.com',
+      'vendedor@licoreria.com',
+      'domiciliario@licoreria.com'
+    )
+  loop
+    if exists (select 1 from public.profiles where id = v_user.id) then
+      update public.profiles
+      set
+        email     = v_user.email,
+        full_name = v_user.full_name,
+        role      = v_user.role,
+        is_active = true
+      where id = v_user.id;
+    else
+      insert into public.profiles (id, email, full_name, role, is_active)
+      values (v_user.id, v_user.email, v_user.full_name, v_user.role, true);
+    end if;
+  end loop;
+end $$;
 
 -- ============================================================================
 -- 5. VERIFICACIÓN FINAL
