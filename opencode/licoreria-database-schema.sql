@@ -1812,10 +1812,10 @@ declare
   v_product_stock integer;
 begin
   -- Obtener siguiente número de pedido
-  select coalesce(max(order_number), 0) + 1 into v_order_number from orders;
+  select coalesce(max(order_number), 0) + 1 into v_order_number from public.orders;
 
   -- Crear pedido
-  insert into orders (
+  insert into public.orders (
     order_number, customer_id, seller_id, sale_type, delivery_type,
     subtotal, discount_amount, delivery_fee, total, notes,
     delivery_address, delivery_latitude, delivery_longitude
@@ -1840,7 +1840,7 @@ begin
     end if;
 
     -- Insertar item
-    insert into order_items (order_id, product_id, quantity, unit_price, discount_amount, subtotal)
+    insert into public.order_items (order_id, product_id, quantity, unit_price, discount_amount, subtotal)
     values (
       v_order_id,
       (v_item->>'product_id')::uuid,
@@ -1859,7 +1859,7 @@ begin
     where id = (v_item->>'product_id')::uuid;
 
     -- Registrar movimiento de inventario
-    insert into inventory_movements (product_id, movement_type, quantity, reference_id, reference_type, created_by)
+    insert into public.inventory_movements (product_id, movement_type, quantity, reference_id, reference_type, created_by)
     values (
       (v_item->>'product_id')::uuid,
       'sale',
@@ -1873,7 +1873,7 @@ begin
   v_total := v_subtotal - v_discount + p_delivery_fee;
 
   -- Actualizar totales del pedido
-  update orders
+  update public.orders
   set
     subtotal = v_subtotal,
     discount_amount = v_discount,
