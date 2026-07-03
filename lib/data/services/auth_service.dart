@@ -6,20 +6,37 @@ import '../../domain/models/user.dart';
 class AuthService {
   SupabaseClient get _client => SupabaseConfig.client;
 
-  Future<User?> getCurrentUser() async {
+  /// Devuelve el usuario actual con su perfil extendido.
+  /// Lanza excepciones descriptivas si no hay sesión o si falla la carga.
+  Future<User> getCurrentUser() async {
     final session = _client.auth.currentSession;
-    if (session == null) return null;
+    if (session == null) {
+      throw Exception('No hay sesión activa. Inicia sesión nuevamente.');
+    }
+
+    final authUserId = session.user.id;
 
     try {
       final profile = await _client
           .from('profiles')
           .select()
-          .eq('id', session.user.id)
-          .single();
+          .eq('id', authUserId)
+          .maybeSingle();
+
+      if (profile == null) {
+        throw Exception(
+          'No se encontró el perfil para el usuario $authUserId. '
+          'Ejecuta el SQL de diagnóstico para crearlo.',
+        );
+      }
 
       return User.fromJson(profile);
+    } on AuthException catch (e) {
+      throw Exception('Error de autenticación al cargar perfil: ${e.message}');
+    } on PostgrestException catch (e) {
+      throw Exception('Error de base de datos al cargar perfil: ${e.message}');
     } catch (e) {
-      return null;
+      throw Exception('Error al cargar usuario: $e');
     }
   }
 
@@ -27,22 +44,22 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    final response = await _client.auth.signInWithPassword(
-      email: email,
-      password: password,
-    );
+    try {
+      final response = await _client.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
 
-    if (response.user == null) {
-      throw Exception('Error al iniciar sesión');
+      if (response.user == null) {
+        throw Exception('Credenciales inválidas');
+      }
+
+      return await getCurrentUser();
+    } on AuthException catch (e) {
+      throw Exception(e.message);
+    } catch (e) {
+      throw Exception('Error al iniciar sesión: $e');
     }
-
-    final profile = await _client
-        .from('profiles')
-        .select()
-        .eq('id', response.user!.id)
-        .single();
-
-    return User.fromJson(profile);
   }
 
   Future<void> signOut() async {

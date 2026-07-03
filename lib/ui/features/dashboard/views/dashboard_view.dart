@@ -14,6 +14,7 @@ class _DashboardViewState extends State<DashboardView> {
   final _authService = AuthService();
   User? _user;
   bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -22,11 +23,23 @@ class _DashboardViewState extends State<DashboardView> {
   }
 
   Future<void> _loadUser() async {
-    final user = await _authService.getCurrentUser();
     setState(() {
-      _user = user;
-      _isLoading = false;
+      _isLoading = true;
+      _errorMessage = null;
     });
+
+    try {
+      final user = await _authService.getCurrentUser();
+      setState(() {
+        _user = user;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = e.toString().replaceFirst('Exception: ', '');
+        _isLoading = false;
+      });
+    }
   }
 
   Future<void> _handleLogout() async {
@@ -51,8 +64,45 @@ class _DashboardViewState extends State<DashboardView> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _user == null
-              ? const Center(child: Text('Error al cargar usuario'))
+              ? _buildError()
               : _buildContent(),
+    );
+  }
+
+  Widget _buildError() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 64, color: Colors.red.shade300),
+            const SizedBox(height: 16),
+            Text(
+              'Error al cargar usuario',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _errorMessage ?? 'No se pudo obtener la información del usuario.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey.shade700),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: _loadUser,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Reintentar'),
+            ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: _handleLogout,
+              icon: const Icon(Icons.logout),
+              label: const Text('Cerrar sesión'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

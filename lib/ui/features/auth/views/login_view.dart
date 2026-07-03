@@ -55,7 +55,7 @@ class _LoginViewState extends State<LoginView> {
       context.go('/dashboard');
     } catch (e) {
       setState(() {
-        _errorMessage = 'Email o contraseña incorrectos';
+        _errorMessage = e.toString().replaceFirst('Exception: ', '');
         _isLoading = false;
       });
     }
