@@ -145,9 +145,20 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
                 title: Text(cartState.customerName ?? 'Cliente'),
                 trailing: IconButton(
                   icon: const Icon(Icons.close),
-                  onPressed: () => ref
-                      .read(currentOrderCartProvider.notifier)
-                      .setCustomer(null, null),
+                  onPressed: () {
+                    ref.read(currentOrderCartProvider.notifier).setCustomer(
+                          id: null,
+                          name: null,
+                          type: null,
+                          address: null,
+                        );
+                    _addressController.clear();
+                    if (cartState.saleType == SaleType.credit) {
+                      ref
+                          .read(currentOrderCartProvider.notifier)
+                          .setSaleType(SaleType.cash);
+                    }
+                  },
                 ),
               ),
           ],
@@ -176,22 +187,44 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
                 Expanded(
                   child: DropdownButtonFormField<SaleType>(
                     initialValue: cartState.saleType,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Tipo de Venta',
-                      border: OutlineInputBorder(),
+                      border: const OutlineInputBorder(),
+                      helperText: cartState.isOccasionalCustomer
+                          ? 'Solo contado para cliente ocasional'
+                          : null,
                     ),
                     items: SaleType.values
                         .map((type) => DropdownMenuItem(
                               value: type,
-                              child: Text(type.label),
+                              enabled: !cartState.isOccasionalCustomer ||
+                                  type == SaleType.cash,
+                              child: Text(
+                                type.label,
+                                style: TextStyle(
+                                  color: cartState.isOccasionalCustomer &&
+                                          type == SaleType.credit
+                                      ? Colors.grey
+                                      : null,
+                                ),
+                              ),
                             ))
                         .toList(),
                     onChanged: (value) {
-                      if (value != null) {
-                        ref
-                            .read(currentOrderCartProvider.notifier)
-                            .setSaleType(value);
+                      if (value == null) return;
+
+                      if (value == SaleType.credit &&
+                          cartState.isOccasionalCustomer) {
+                        _showSnack(
+                          'No se puede vender a crédito a un cliente ocasional',
+                          isError: true,
+                        );
+                        return;
                       }
+
+                      ref
+                          .read(currentOrderCartProvider.notifier)
+                          .setSaleType(value);
                     },
                   ),
                 ),
@@ -491,9 +524,28 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
     );
 
     if (selected != null) {
-      ref
-          .read(currentOrderCartProvider.notifier)
-          .setCustomer(selected.id, selected.fullName);
+      ref.read(currentOrderCartProvider.notifier).setCustomer(
+            id: selected.id,
+            name: selected.fullName,
+            type: selected.type,
+            address: selected.address,
+          );
+
+      if (selected.address != null && selected.address!.isNotEmpty) {
+        _addressController.text = selected.address!;
+        ref
+            .read(currentOrderCartProvider.notifier)
+            .setDeliveryAddress(selected.address!);
+      }
+
+      if (selected.type == CustomerType.occasional &&
+          ref.read(currentOrderCartProvider).saleType == SaleType.credit) {
+        ref.read(currentOrderCartProvider.notifier).setSaleType(SaleType.cash);
+        _showSnack(
+          'Cliente ocasional: se cambió la venta a contado',
+          isError: true,
+        );
+      }
     }
   }
 
@@ -524,6 +576,15 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
 
     if (_currentUserId == null) {
       _showSnack('No se pudo identificar el vendedor', isError: true);
+      return;
+    }
+
+    if (cartState.saleType == SaleType.credit &&
+        cartState.isOccasionalCustomer) {
+      _showSnack(
+        'No se puede vender a crédito a un cliente ocasional. Selecciona un cliente registrado o cambia a contado.',
+        isError: true,
+      );
       return;
     }
 

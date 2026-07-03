@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../domain/models/customer.dart';
 import '../../domain/models/order.dart';
 import '../../domain/models/order_item.dart';
 import '../repositories/order_repository.dart';
@@ -232,6 +233,8 @@ final currentOrderCartProvider =
 class CurrentOrderCartState {
   final String? customerId;
   final String? customerName;
+  final CustomerType? customerType;
+  final String? customerAddress;
   final List<OrderItem> items;
   final SaleType saleType;
   final DeliveryType deliveryType;
@@ -242,6 +245,8 @@ class CurrentOrderCartState {
   const CurrentOrderCartState({
     this.customerId,
     this.customerName,
+    this.customerType,
+    this.customerAddress,
     this.items = const [],
     this.saleType = SaleType.cash,
     this.deliveryType = DeliveryType.inStore,
@@ -256,10 +261,14 @@ class CurrentOrderCartState {
       items.fold(0, (sum, item) => sum + item.discountAmount);
   double get total => subtotal - discountAmount + deliveryFee;
   int get itemCount => items.length;
+  bool get isOccasionalCustomer =>
+      customerId == null || customerType == CustomerType.occasional;
 
   CurrentOrderCartState copyWith({
     String? customerId,
     String? customerName,
+    CustomerType? customerType,
+    String? customerAddress,
     List<OrderItem>? items,
     SaleType? saleType,
     DeliveryType? deliveryType,
@@ -273,6 +282,9 @@ class CurrentOrderCartState {
     return CurrentOrderCartState(
       customerId: clearCustomer ? null : (customerId ?? this.customerId),
       customerName: clearCustomer ? null : (customerName ?? this.customerName),
+      customerType: clearCustomer ? null : (customerType ?? this.customerType),
+      customerAddress:
+          clearCustomer ? null : (customerAddress ?? this.customerAddress),
       items: items ?? this.items,
       saleType: saleType ?? this.saleType,
       deliveryType: deliveryType ?? this.deliveryType,
@@ -289,8 +301,18 @@ class CurrentOrderCartNotifier
     extends StateNotifier<CurrentOrderCartState> {
   CurrentOrderCartNotifier() : super(const CurrentOrderCartState());
 
-  void setCustomer(String? id, String? name) {
-    state = state.copyWith(customerId: id, customerName: name);
+  void setCustomer({
+    String? id,
+    String? name,
+    CustomerType? type,
+    String? address,
+  }) {
+    state = state.copyWith(
+      customerId: id,
+      customerName: name,
+      customerType: type,
+      customerAddress: address,
+    );
   }
 
   void setSaleType(SaleType saleType) {

@@ -40,7 +40,7 @@ class OrderItem with _$OrderItem {
       'notes': json['notes'],
       'deliveredAt': json['delivered_at'],
       'productName': json['product_name'],
-      'productCode': json['product_code'],
+      'productCode': json['product_code']?.toString(),
       'productPresentation': json['product_presentation'],
       'createdAt': json['created_at'],
     });
