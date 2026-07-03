@@ -3,6 +3,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../ui/features/auth/views/login_view.dart';
 import '../ui/features/dashboard/views/dashboard_view.dart';
 import '../ui/features/orders/views/orders_view.dart';
+import '../ui/features/orders/views/order_detail_view.dart';
+import '../ui/features/orders/views/order_create_view.dart';
 import '../ui/features/products/views/products_view.dart';
 import '../ui/features/products/views/product_detail_view.dart';
 import '../ui/features/products/views/product_form_view.dart';
@@ -54,6 +56,21 @@ final GoRouter router = GoRouter(
       path: '/orders',
       name: 'orders',
       builder: (context, state) => const OrdersView(),
+      routes: [
+        GoRoute(
+          path: 'create',
+          name: 'order-create',
+          builder: (context, state) => const OrderCreateView(),
+        ),
+        GoRoute(
+          path: ':id',
+          name: 'order-detail',
+          builder: (context, state) {
+            final id = state.pathParameters['id']!;
+            return OrderDetailView(orderId: id);
+          },
+        ),
+      ],
     ),
     GoRoute(
       path: '/products',

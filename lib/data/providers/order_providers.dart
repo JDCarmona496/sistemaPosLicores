@@ -1,0 +1,391 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../domain/models/order.dart';
+import '../../domain/models/order_item.dart';
+import '../repositories/order_repository.dart';
+
+final orderRepositoryProvider = Provider<OrderRepository>((ref) {
+  return OrderRepository();
+});
+
+final ordersProvider =
+    StateNotifierProvider<OrdersNotifier, OrdersState>((ref) {
+  final repository = ref.watch(orderRepositoryProvider);
+  return OrdersNotifier(repository);
+});
+
+class OrdersState {
+  final List<Order> orders;
+  final bool isLoading;
+  final String? error;
+  final String? searchQuery;
+  final OrderStatus? selectedStatus;
+  final SaleType? selectedSaleType;
+  final DeliveryType? selectedDeliveryType;
+
+  const OrdersState({
+    this.orders = const [],
+    this.isLoading = false,
+    this.error,
+    this.searchQuery,
+    this.selectedStatus,
+    this.selectedSaleType,
+    this.selectedDeliveryType,
+  });
+
+  OrdersState copyWith({
+    List<Order>? orders,
+    bool? isLoading,
+    String? error,
+    String? searchQuery,
+    OrderStatus? selectedStatus,
+    SaleType? selectedSaleType,
+    DeliveryType? selectedDeliveryType,
+    bool clearSearch = false,
+    bool clearStatus = false,
+    bool clearSaleType = false,
+    bool clearDeliveryType = false,
+    bool clearError = false,
+  }) {
+    return OrdersState(
+      orders: orders ?? this.orders,
+      isLoading: isLoading ?? this.isLoading,
+      error: clearError ? null : (error ?? this.error),
+      searchQuery: clearSearch ? null : (searchQuery ?? this.searchQuery),
+      selectedStatus: clearStatus ? null : (selectedStatus ?? this.selectedStatus),
+      selectedSaleType:
+          clearSaleType ? null : (selectedSaleType ?? this.selectedSaleType),
+      selectedDeliveryType: clearDeliveryType
+          ? null
+          : (selectedDeliveryType ?? this.selectedDeliveryType),
+    );
+  }
+}
+
+class OrdersNotifier extends StateNotifier<OrdersState> {
+  final OrderRepository _repository;
+
+  OrdersNotifier(this._repository) : super(const OrdersState()) {
+    loadOrders();
+  }
+
+  Future<void> loadOrders() async {
+    state = state.copyWith(isLoading: true, clearError: true);
+
+    try {
+      final orders = await _repository.getAll(
+        search: state.searchQuery,
+        status: state.selectedStatus,
+        saleType: state.selectedSaleType,
+        deliveryType: state.selectedDeliveryType,
+      );
+
+      state = state.copyWith(orders: orders, isLoading: false);
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Error al cargar pedidos: ${e.toString()}',
+      );
+    }
+  }
+
+  void setSearch(String? query) {
+    state = state.copyWith(
+      searchQuery: query,
+      clearSearch: query == null || query.isEmpty,
+    );
+    loadOrders();
+  }
+
+  void setStatus(OrderStatus? status) {
+    state = state.copyWith(
+      selectedStatus: status,
+      clearStatus: status == null,
+    );
+    loadOrders();
+  }
+
+  void setSaleType(SaleType? saleType) {
+    state = state.copyWith(
+      selectedSaleType: saleType,
+      clearSaleType: saleType == null,
+    );
+    loadOrders();
+  }
+
+  void setDeliveryType(DeliveryType? deliveryType) {
+    state = state.copyWith(
+      selectedDeliveryType: deliveryType,
+      clearDeliveryType: deliveryType == null,
+    );
+    loadOrders();
+  }
+
+  void clearFilters() {
+    state = state.copyWith(
+      clearSearch: true,
+      clearStatus: true,
+      clearSaleType: true,
+      clearDeliveryType: true,
+    );
+    loadOrders();
+  }
+
+  Future<Order> createOrder({
+    required String sellerId,
+    String? customerId,
+    required SaleType saleType,
+    required DeliveryType deliveryType,
+    required List<OrderItem> items,
+    String? notes,
+    String? deliveryAddress,
+    double? deliveryLatitude,
+    double? deliveryLongitude,
+    double deliveryFee = 0,
+  }) async {
+    try {
+      final created = await _repository.create(
+        sellerId: sellerId,
+        customerId: customerId,
+        saleType: saleType,
+        deliveryType: deliveryType,
+        items: items,
+        notes: notes,
+        deliveryAddress: deliveryAddress,
+        deliveryLatitude: deliveryLatitude,
+        deliveryLongitude: deliveryLongitude,
+        deliveryFee: deliveryFee,
+      );
+      state = state.copyWith(orders: [created, ...state.orders]);
+      return created;
+    } catch (e) {
+      throw Exception('Error al crear pedido: ${e.toString()}');
+    }
+  }
+
+  Future<void> updateStatus(String id, OrderStatus status) async {
+    try {
+      await _repository.updateStatus(id, status);
+      state = state.copyWith(
+        orders: state.orders
+            .map((o) => o.id == id
+                ? o.copyWith(status: status, updatedAt: DateTime.now())
+                : o)
+            .toList(),
+      );
+    } catch (e) {
+      throw Exception('Error al actualizar estado: ${e.toString()}');
+    }
+  }
+
+  Future<void> cancelOrder({
+    required String id,
+    required String reason,
+    required String cancelledBy,
+  }) async {
+    try {
+      await _repository.cancel(
+        orderId: id,
+        reason: reason,
+        cancelledBy: cancelledBy,
+      );
+      state = state.copyWith(
+        orders: state.orders
+            .map((o) => o.id == id
+                ? o.copyWith(
+                    status: OrderStatus.cancelled,
+                    cancelledReason: reason,
+                    cancelledBy: cancelledBy,
+                    cancelledAt: DateTime.now(),
+                    updatedAt: DateTime.now(),
+                  )
+                : o)
+            .toList(),
+      );
+    } catch (e) {
+      throw Exception('Error al cancelar pedido: ${e.toString()}');
+    }
+  }
+}
+
+final orderByIdProvider =
+    FutureProvider.family<Order?, String>((ref, id) async {
+  final repository = ref.watch(orderRepositoryProvider);
+  return await repository.getById(id);
+});
+
+final orderItemsProvider =
+    FutureProvider.family<List<OrderItem>, String>((ref, orderId) async {
+  final repository = ref.watch(orderRepositoryProvider);
+  return await repository.getItems(orderId);
+});
+
+// ============================================================================
+// CARRITO DE PEDIDO ACTUAL
+// ============================================================================
+
+final currentOrderCartProvider =
+    StateNotifierProvider<CurrentOrderCartNotifier, CurrentOrderCartState>((ref) {
+  return CurrentOrderCartNotifier();
+});
+
+class CurrentOrderCartState {
+  final String? customerId;
+  final String? customerName;
+  final List<OrderItem> items;
+  final SaleType saleType;
+  final DeliveryType deliveryType;
+  final double deliveryFee;
+  final String? notes;
+  final String? deliveryAddress;
+
+  const CurrentOrderCartState({
+    this.customerId,
+    this.customerName,
+    this.items = const [],
+    this.saleType = SaleType.cash,
+    this.deliveryType = DeliveryType.inStore,
+    this.deliveryFee = 0,
+    this.notes,
+    this.deliveryAddress,
+  });
+
+  double get subtotal => items.fold(0, (sum, item) => sum + item.subtotal);
+  double get discountAmount =>
+      items.fold(0, (sum, item) => sum + item.discountAmount);
+  double get total => subtotal - discountAmount + deliveryFee;
+  int get itemCount => items.length;
+
+  CurrentOrderCartState copyWith({
+    String? customerId,
+    String? customerName,
+    List<OrderItem>? items,
+    SaleType? saleType,
+    DeliveryType? deliveryType,
+    double? deliveryFee,
+    String? notes,
+    String? deliveryAddress,
+    bool clearCustomer = false,
+    bool clearNotes = false,
+    bool clearDeliveryAddress = false,
+  }) {
+    return CurrentOrderCartState(
+      customerId: clearCustomer ? null : (customerId ?? this.customerId),
+      customerName: clearCustomer ? null : (customerName ?? this.customerName),
+      items: items ?? this.items,
+      saleType: saleType ?? this.saleType,
+      deliveryType: deliveryType ?? this.deliveryType,
+      deliveryFee: deliveryFee ?? this.deliveryFee,
+      notes: clearNotes ? null : (notes ?? this.notes),
+      deliveryAddress: clearDeliveryAddress
+          ? null
+          : (deliveryAddress ?? this.deliveryAddress),
+    );
+  }
+}
+
+class CurrentOrderCartNotifier
+    extends StateNotifier<CurrentOrderCartState> {
+  CurrentOrderCartNotifier() : super(const CurrentOrderCartState());
+
+  void setCustomer(String? id, String? name) {
+    state = state.copyWith(customerId: id, customerName: name);
+  }
+
+  void setSaleType(SaleType saleType) {
+    state = state.copyWith(saleType: saleType);
+  }
+
+  void setDeliveryType(DeliveryType deliveryType) {
+    state = state.copyWith(deliveryType: deliveryType);
+  }
+
+  void setDeliveryFee(double fee) {
+    state = state.copyWith(deliveryFee: fee);
+  }
+
+  void setNotes(String? notes) {
+    state = state.copyWith(notes: notes);
+  }
+
+  void setDeliveryAddress(String? address) {
+    state = state.copyWith(deliveryAddress: address);
+  }
+
+  void addItem({
+    required String productId,
+    required String productName,
+    required double price,
+    required double quantity,
+    bool isWholesalePrice = false,
+    double discountAmount = 0,
+  }) {
+    final existingIndex = state.items.indexWhere(
+      (item) => item.productId == productId && item.isWholesalePrice == isWholesalePrice,
+    );
+
+    if (existingIndex >= 0) {
+      final existing = state.items[existingIndex];
+      final newQuantity = existing.quantity + quantity;
+      updateItemQuantity(existing.id, newQuantity);
+      return;
+    }
+
+    final newItem = OrderItem(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      orderId: '',
+      productId: productId,
+      quantity: quantity,
+      unitPrice: price,
+      discountAmount: discountAmount,
+      subtotal: (price * quantity) - discountAmount,
+      isWholesalePrice: isWholesalePrice,
+    );
+
+    state = state.copyWith(items: [...state.items, newItem]);
+  }
+
+  void updateItemQuantity(String itemId, double quantity) {
+    if (quantity <= 0) {
+      removeItem(itemId);
+      return;
+    }
+
+    state = state.copyWith(
+      items: state.items.map((item) {
+        if (item.id == itemId) {
+          return item.copyWith(
+            quantity: quantity,
+            subtotal: (item.unitPrice * quantity) - item.discountAmount,
+          );
+        }
+        return item;
+      }).toList(),
+    );
+  }
+
+  void updateItemDiscount(String itemId, double discountAmount) {
+    state = state.copyWith(
+      items: state.items.map((item) {
+        if (item.id == itemId) {
+          final effectiveDiscount = discountAmount.clamp(0, item.unitPrice * item.quantity).toDouble();
+          return item.copyWith(
+            discountAmount: effectiveDiscount,
+            subtotal: (item.unitPrice * item.quantity) - effectiveDiscount,
+          );
+        }
+        return item;
+      }).toList(),
+    );
+  }
+
+  void removeItem(String itemId) {
+    state = state.copyWith(
+      items: state.items.where((item) => item.id != itemId).toList(),
+    );
+  }
+
+  void clearCart() {
+    state = const CurrentOrderCartState();
+  }
+}
