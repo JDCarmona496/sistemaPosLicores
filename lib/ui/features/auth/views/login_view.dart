@@ -189,17 +189,13 @@ class _LoginViewState extends State<LoginView> {
   }
 
   Widget _buildUserChip(String email) {
-    final passwords = {
-      'admin@licoreria.com': 'Admin123!',
-      'vendedor@licoreria.com': 'Vendedor123!',
-      'domiciliario@licoreria.com': 'Domiciliario123!',
-    };
+    const defaultPassword = 'Test123456';
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: InkWell(
         onTap: () {
           _emailController.text = email;
-          _passwordController.text = passwords[email] ?? '';
+          _passwordController.text = defaultPassword;
         },
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
