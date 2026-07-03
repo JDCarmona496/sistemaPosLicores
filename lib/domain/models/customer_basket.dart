@@ -80,9 +80,9 @@ class CustomerBasket with _$CustomerBasket {
         defaultValue: BasketStatus.outstanding,
       ).name,
       'orderId': jsonString(json['order_id']),
-      'returnedAt': jsonDateTime(json['returned_at']),
-      'createdAt': jsonDateTime(json['created_at']),
-      'updatedAt': jsonDateTime(json['updated_at']),
+      'returnedAt': jsonDateTime(json['returned_at'])?.toIso8601String(),
+      'createdAt': jsonDateTime(json['created_at'])?.toIso8601String(),
+      'updatedAt': jsonDateTime(json['updated_at'])?.toIso8601String(),
     });
   }
 }

@@ -191,13 +191,13 @@ class Order with _$Order {
       'deliveredAt': jsonDateTime(json['delivered_at']),
       'cancelledReason': jsonString(json['cancelled_reason']),
       'cancelledBy': jsonString(json['cancelled_by']),
-      'cancelledAt': jsonDateTime(json['cancelled_at']),
+      'cancelledAt': jsonDateTime(json['cancelled_at'])?.toIso8601String(),
       'editCount': jsonInt(json['edit_count']),
       'customerName': jsonString(json['customer_name']),
       'customerPhone': jsonString(json['customer_phone']),
       'customerAddress': jsonString(json['customer_address']),
-      'createdAt': jsonDateTime(json['created_at']),
-      'updatedAt': jsonDateTime(json['updated_at']),
+      'createdAt': jsonDateTime(json['created_at'])?.toIso8601String(),
+      'updatedAt': jsonDateTime(json['updated_at'])?.toIso8601String(),
     });
   }
 }

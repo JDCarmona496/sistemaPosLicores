@@ -40,11 +40,11 @@ class OrderItem with _$OrderItem {
       'subtotal': jsonDouble(json['subtotal']),
       'isWholesalePrice': jsonBool(json['is_wholesale_price']),
       'notes': jsonString(json['notes']),
-      'deliveredAt': jsonDateTime(json['delivered_at']),
+      'deliveredAt': jsonDateTime(json['delivered_at'])?.toIso8601String(),
       'productName': jsonString(json['product_name']),
       'productCode': jsonString(json['product_code']),
       'productPresentation': jsonString(json['product_presentation']),
-      'createdAt': jsonDateTime(json['created_at']),
+      'createdAt': jsonDateTime(json['created_at'])?.toIso8601String(),
     });
   }
 }

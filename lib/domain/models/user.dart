@@ -57,8 +57,8 @@ class User with _$User {
       'phone': jsonString(json['phone']),
       'avatarUrl': jsonString(json['avatar_url']),
       'isActive': jsonBool(json['is_active'], defaultValue: true),
-      'createdAt': jsonDateTime(json['created_at']),
-      'updatedAt': jsonDateTime(json['updated_at']),
+      'createdAt': jsonDateTime(json['created_at'])?.toIso8601String(),
+      'updatedAt': jsonDateTime(json['updated_at'])?.toIso8601String(),
     });
   }
 }

@@ -110,8 +110,8 @@ class Product with _$Product {
       'imageUrl': jsonString(json['image_url']),
       'brandId': jsonStringRequired(json['brand_id']),
       'categoryId': jsonStringRequired(json['category_id']),
-      'createdAt': jsonDateTime(json['created_at']),
-      'updatedAt': jsonDateTime(json['updated_at']),
+      'createdAt': jsonDateTime(json['created_at'])?.toIso8601String(),
+      'updatedAt': jsonDateTime(json['updated_at'])?.toIso8601String(),
     });
   }
 }

@@ -105,8 +105,8 @@ class Customer with _$Customer {
       'currentBalance': jsonDouble(json['current_balance']),
       'notes': jsonString(json['notes']),
       'createdBy': jsonString(json['created_by']),
-      'createdAt': jsonDateTime(json['created_at']),
-      'updatedAt': jsonDateTime(json['updated_at']),
+      'createdAt': jsonDateTime(json['created_at'])?.toIso8601String(),
+      'updatedAt': jsonDateTime(json['updated_at'])?.toIso8601String(),
     });
   }
 }
