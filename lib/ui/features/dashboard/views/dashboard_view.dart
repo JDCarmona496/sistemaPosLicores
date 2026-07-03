@@ -34,7 +34,9 @@ class _DashboardViewState extends State<DashboardView> {
         _user = user;
         _isLoading = false;
       });
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('[DashboardView] Error cargando usuario: $e');
+      debugPrint(st.toString());
       setState(() {
         _errorMessage = e.toString().replaceFirst('Exception: ', '');
         _isLoading = false;
