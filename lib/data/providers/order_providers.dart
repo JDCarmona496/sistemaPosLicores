@@ -250,7 +250,8 @@ class CurrentOrderCartState {
     this.deliveryAddress,
   });
 
-  double get subtotal => items.fold(0, (sum, item) => sum + item.subtotal);
+  double get subtotal =>
+      items.fold(0, (sum, item) => sum + (item.unitPrice * item.quantity));
   double get discountAmount =>
       items.fold(0, (sum, item) => sum + item.discountAmount);
   double get total => subtotal - discountAmount + deliveryFee;

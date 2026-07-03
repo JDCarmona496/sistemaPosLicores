@@ -114,9 +114,9 @@ class _OrderDetailViewState extends ConsumerState<OrderDetailView> {
         },
       ),
       bottomNavigationBar: orderAsync.when(
-        data: (order) => order != null ? _buildBottomBar(order) : null,
-        loading: () => null,
-        error: (_, _) => null,
+        data: (order) => order != null ? _buildBottomBar(order) : const SizedBox.shrink(),
+        loading: () => const SizedBox.shrink(),
+        error: (_, _) => const SizedBox.shrink(),
       ),
     );
   }
@@ -190,6 +190,7 @@ class _OrderDetailViewState extends ConsumerState<OrderDetailView> {
           );
       ref.invalidate(orderByIdProvider(order.id));
       ref.invalidate(orderItemsProvider(order.id));
+      ref.invalidate(ordersProvider);
       _showSnack('Pedido cancelado');
     } catch (e) {
       _showSnack('Error al cancelar: $e', isError: true);

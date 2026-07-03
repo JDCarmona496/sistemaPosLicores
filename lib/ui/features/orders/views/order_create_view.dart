@@ -55,7 +55,7 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
         title: const Text('Nuevo Pedido'),
         actions: [
           TextButton.icon(
-            onPressed: _isLoading ? null : _saveOrder,
+            onPressed: _isLoading || _currentUserId == null ? null : _saveOrder,
             icon: _isLoading
                 ? const SizedBox(
                     width: 16,
@@ -457,23 +457,27 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
               ],
             ),
             const SizedBox(height: 8),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _isLoading ? null : _saveOrder,
-                icon: _isLoading
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.check),
-                label: const Text('CREAR PEDIDO'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _isLoading || _currentUserId == null
+                      ? null
+                      : _saveOrder,
+                  icon: _isLoading
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.check),
+                  label: _currentUserId == null
+                      ? const Text('CARGANDO USUARIO...')
+                      : const Text('CREAR PEDIDO'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
                 ),
               ),
-            ),
           ],
         ),
       ),
@@ -763,7 +767,8 @@ class _ProductSelectorDialogState
                               labelText: 'Cantidad',
                               border: OutlineInputBorder(),
                             ),
-                            keyboardType: TextInputType.number,
+                            keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true),
                           ),
                         ),
                         const SizedBox(width: 16),
