@@ -63,5 +63,26 @@ class Customer with _$Customer {
   }) = _Customer;
 
   factory Customer.fromJson(Map<String, dynamic> json) =>
-      _$CustomerFromJson(json);
+      Customer._fromJson(json);
+
+  static Customer _fromJson(Map<String, dynamic> json) {
+    return _$CustomerFromJson({
+      ...json,
+      'fullName': json['full_name'],
+      'identification': json['identification'],
+      'phone': json['phone'],
+      'email': json['email'],
+      'address': json['address'],
+      'latitude': (json['latitude'] as num?)?.toDouble(),
+      'longitude': (json['longitude'] as num?)?.toDouble(),
+      'type': json['customer_type'],
+      'status': json['status'],
+      'creditLimit': (json['credit_limit'] as num?)?.toDouble() ?? 0,
+      'currentBalance': (json['current_balance'] as num?)?.toDouble() ?? 0,
+      'notes': json['notes'],
+      'createdBy': json['created_by'],
+      'createdAt': json['created_at'],
+      'updatedAt': json['updated_at'],
+    });
+  }
 }

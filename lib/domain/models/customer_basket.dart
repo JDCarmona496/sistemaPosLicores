@@ -33,6 +33,17 @@ extension BasketStatusX on BasketStatus {
   }
 }
 
+String _basketStatusFromDb(dynamic value) {
+  if (value == null) return 'outstanding';
+  final str = value.toString();
+  switch (str) {
+    case 'deposit_held':
+      return 'depositHeld';
+    default:
+      return str;
+  }
+}
+
 @freezed
 class CustomerBasket with _$CustomerBasket {
   const factory CustomerBasket({
@@ -50,5 +61,21 @@ class CustomerBasket with _$CustomerBasket {
   }) = _CustomerBasket;
 
   factory CustomerBasket.fromJson(Map<String, dynamic> json) =>
-      _$CustomerBasketFromJson(json);
+      CustomerBasket._fromJson(json);
+
+  static CustomerBasket _fromJson(Map<String, dynamic> json) {
+    return _$CustomerBasketFromJson({
+      ...json,
+      'customerId': json['customer_id'],
+      'productId': json['product_id'],
+      'quantityOut': json['quantity_out'] ?? 0,
+      'quantityReturned': json['quantity_returned'] ?? 0,
+      'depositAmount': (json['deposit_amount'] as num?)?.toDouble() ?? 0,
+      'status': _basketStatusFromDb(json['status']),
+      'orderId': json['order_id'],
+      'returnedAt': json['returned_at'],
+      'createdAt': json['created_at'],
+      'updatedAt': json['updated_at'],
+    });
+  }
 }
