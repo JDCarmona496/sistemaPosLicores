@@ -249,6 +249,13 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
                 icon: const Icon(Icons.clear_all),
                 label: const Text('Limpiar filtros'),
               ),
+            ] else ...[
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: () => context.push('/orders/create'),
+                icon: const Icon(Icons.add_shopping_cart),
+                label: const Text('Crear primer pedido'),
+              ),
             ],
           ],
         ),

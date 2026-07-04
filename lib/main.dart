@@ -5,19 +5,21 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'config/supabase_config.dart';
 import 'config/router.dart';
 import 'config/theme.dart';
+import 'data/services/window_size/window_size_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   await SupabaseConfig.initialize();
-  
+
   // En web, Supabase necesita un momento para restaurar la sesión desde
   // localStorage. Esperamos el evento inicial antes de construir el router,
   // de lo contrario currentSession puede ser null en el primer frame.
   if (kIsWeb) {
     await _waitForInitialSession();
+    await WindowSizeService.instance.initialize();
   }
-  
+
   runApp(
     const ProviderScope(
       child: LicoreriaApp(),

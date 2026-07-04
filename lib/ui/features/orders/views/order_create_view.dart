@@ -8,6 +8,7 @@ import '../../../../data/providers/customer_providers.dart';
 import '../../../../data/providers/order_providers.dart';
 import '../../../../data/providers/product_providers.dart';
 
+import '../../../../core/responsive.dart';
 import '../../../../data/services/auth_service.dart';
 import '../../../../domain/models/customer.dart';
 import '../../../../domain/models/order.dart';
@@ -209,12 +210,22 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
   Widget _buildHeader(CurrentOrderCartState cartState) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-      child: Column(
-        children: [
-          _buildCustomerSection(cartState),
-          const SizedBox(height: 12),
-          _buildTypeSection(cartState),
-        ],
+      child: ResponsiveBuilder(
+        mobile: (context) => Column(
+          children: [
+            _buildCustomerSection(cartState),
+            const SizedBox(height: 12),
+            _buildTypeSection(cartState),
+          ],
+        ),
+        desktop: (context) => Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: _buildCustomerSection(cartState)),
+            const SizedBox(width: 16),
+            Expanded(child: _buildTypeSection(cartState)),
+          ],
+        ),
       ),
     );
   }
