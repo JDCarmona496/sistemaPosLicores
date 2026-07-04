@@ -359,7 +359,7 @@ create table public.products (
   returnable_deposit numeric(12,2) default 0, -- valor del envase retornable
   price_retail numeric(12,2) not null, -- precio al detal
   price_wholesale numeric(12,2) not null, -- precio al por mayor
-  price_wholesale_fractional numeric(12,2), -- precio mayorista fraccionado por unidad
+  price_cold numeric(12,2), -- precio frio por unidad (venta suelta de paquete)
   cost numeric(12,2) not null default 0, -- costo de compra (para rentabilidad)
   stock_current integer not null default 0, -- stock actual
   stock_min integer not null default 5, -- stock mínimo
@@ -371,7 +371,7 @@ create table public.products (
 );
 
 comment on table public.products is 'Catálogo de productos';
-comment on column public.products.price_wholesale_fractional is 'Precio mayorista por unidad cuando se vende fraccionado (ej: media canasta)';
+comment on column public.products.price_cold is 'Precio frio por unidad, usado para venta suelta de un paquete (ej: 15 unidades de una canasta de 30)';
 
 -- Índices
 create index idx_products_code on public.products(code);
@@ -568,7 +568,7 @@ create table public.order_items (
   id uuid primary key default uuid_generate_v4(),
   order_id uuid not null references public.orders(id) on delete cascade,
   product_id uuid not null references public.products(id) on delete restrict,
-  quantity numeric(10,2) not null, -- cantidad (puede ser decimal para fraccionado)
+  quantity integer not null, -- cantidad entera (no se parten botellas/cervezas)
   quantity_delivered numeric(10,2) not null default 0, -- cantidad entregada (para entregas parciales)
   unit_price numeric(12,2) not null, -- precio unitario aplicado
   discount_amount numeric(12,2) not null default 0,

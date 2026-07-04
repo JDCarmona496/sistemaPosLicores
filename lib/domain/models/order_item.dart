@@ -5,7 +5,7 @@ import 'json_helpers.dart';
 part 'order_item.freezed.dart';
 part 'order_item.g.dart';
 
-enum OrderItemPriceType { retail, wholesale, fractional }
+enum OrderItemPriceType { retail, wholesale, cold }
 
 extension OrderItemPriceTypeX on OrderItemPriceType {
   String get label {
@@ -14,8 +14,8 @@ extension OrderItemPriceTypeX on OrderItemPriceType {
         return 'Detal';
       case OrderItemPriceType.wholesale:
         return 'Mayorista';
-      case OrderItemPriceType.fractional:
-        return 'Fraccionado';
+      case OrderItemPriceType.cold:
+        return 'Frio';
     }
   }
 
@@ -83,5 +83,5 @@ extension OrderItemExtension on OrderItem {
   int get pendingQuantity => quantity - quantityDelivered;
   bool get isFullyDelivered => quantityDelivered >= quantity;
   bool get isWholesalePrice => priceType == OrderItemPriceType.wholesale;
-  bool get isFractionalPrice => priceType == OrderItemPriceType.fractional;
+  bool get isColdPrice => priceType == OrderItemPriceType.cold;
 }

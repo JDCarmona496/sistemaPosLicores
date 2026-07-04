@@ -88,7 +88,7 @@ Sistema multiplataforma (iOS, Android, Web, Windows) para la gestión integral d
 
 #### 2.1 Catálogo de Productos
 - **Datos:** nombre, código de barras, categoría, unidad de medida, imagen
-- **Precios:** precio al detal, precio al por mayor, precio mayorista fraccionado
+- **Precios:** precio al detal, precio al por mayor, precio frio (venta suelta de paquete)
 - **Inventario:** stock actual, stock mínimo, stock máximo, ubicación en bodega
 - **Control de vencimientos:** fecha de vencimiento por lote, alertas
 - **Gestión de lotes:** número de lote, fecha de ingreso, proveedor, cantidad

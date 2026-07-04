@@ -169,8 +169,8 @@ class ProductDetailView extends ConsumerWidget {
                   const SizedBox(height: 12),
                   _buildPriceRow('Detal', product.priceRetail),
                   _buildPriceRow('Mayorista', product.priceWholesale),
-                  if (product.priceWholesaleFractional != null)
-                    _buildPriceRow('Mayorista Fraccionado', product.priceWholesaleFractional!),
+                  if (product.priceCold != null)
+                    _buildPriceRow('Frio', product.priceCold!),
                   const Divider(height: 24),
                   _buildPriceRow('Costo', product.cost),
                   const SizedBox(height: 8),

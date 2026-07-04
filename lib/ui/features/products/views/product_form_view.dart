@@ -23,7 +23,7 @@ class _ProductFormViewState extends ConsumerState<ProductFormView> {
   final _unitsPerPackageController = TextEditingController(text: '1');
   final _priceRetailController = TextEditingController();
   final _priceWholesaleController = TextEditingController();
-  final _priceWholesaleFractionalController = TextEditingController();
+  final _priceColdController = TextEditingController();
   final _costController = TextEditingController();
   final _stockCurrentController = TextEditingController(text: '0');
   final _stockMinController = TextEditingController(text: '5');
@@ -91,7 +91,7 @@ class _ProductFormViewState extends ConsumerState<ProductFormView> {
           _unitsPerPackageController.text = product.unitsPerPackage.toString();
           _priceRetailController.text = product.priceRetail.toString();
           _priceWholesaleController.text = product.priceWholesale.toString();
-          _priceWholesaleFractionalController.text = product.priceWholesaleFractional?.toString() ?? '';
+          _priceColdController.text = product.priceCold?.toString() ?? '';
           _costController.text = product.cost.toString();
           _stockCurrentController.text = product.stockCurrent.toString();
           _stockMinController.text = product.stockMin.toString();
@@ -130,7 +130,7 @@ class _ProductFormViewState extends ConsumerState<ProductFormView> {
     _unitsPerPackageController.dispose();
     _priceRetailController.dispose();
     _priceWholesaleController.dispose();
-    _priceWholesaleFractionalController.dispose();
+    _priceColdController.dispose();
     _costController.dispose();
     _stockCurrentController.dispose();
     _stockMinController.dispose();
@@ -167,8 +167,8 @@ class _ProductFormViewState extends ConsumerState<ProductFormView> {
         unitsPerPackage: int.parse(_unitsPerPackageController.text),
         priceRetail: double.parse(_priceRetailController.text),
         priceWholesale: double.parse(_priceWholesaleController.text),
-        priceWholesaleFractional: _priceWholesaleFractionalController.text.isNotEmpty
-            ? double.parse(_priceWholesaleFractionalController.text)
+        priceCold: _priceColdController.text.isNotEmpty
+            ? double.parse(_priceColdController.text)
             : null,
         cost: double.parse(_costController.text),
         stockCurrent: int.parse(_stockCurrentController.text),
@@ -452,9 +452,9 @@ class _ProductFormViewState extends ConsumerState<ProductFormView> {
                     children: [
                       Expanded(
                         child: TextFormField(
-                          controller: _priceWholesaleFractionalController,
+                          controller: _priceColdController,
                           decoration: const InputDecoration(
-                            labelText: 'Mayorista Fraccionado',
+                            labelText: 'Precio Frio',
                             prefixIcon: Icon(Icons.attach_money),
                           ),
                           keyboardType: const TextInputType.numberWithOptions(decimal: true),

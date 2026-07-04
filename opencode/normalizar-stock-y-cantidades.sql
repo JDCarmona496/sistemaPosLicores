@@ -25,7 +25,7 @@ ALTER TABLE public.order_items
 -- Migrar tipos de precio desde las banderas anteriores
 UPDATE public.order_items
 SET price_type = CASE
-  WHEN is_fractional_price THEN 'fractional'
+  WHEN is_fractional_price THEN 'cold'
   WHEN is_wholesale_price THEN 'wholesale'
   ELSE 'retail'
 END

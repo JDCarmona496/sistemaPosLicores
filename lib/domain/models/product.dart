@@ -73,7 +73,7 @@ class Product with _$Product {
     @Default(false) bool isCold,
     @Default(false) bool isReturnable,
     @Default(0) double returnableDeposit,
-    double? priceWholesaleFractional,
+    double? priceCold,
     String? imageUrl,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -91,8 +91,7 @@ class Product with _$Product {
       ).name,
       'priceRetail': jsonDouble(json['price_retail']),
       'priceWholesale': jsonDouble(json['price_wholesale']),
-      'priceWholesaleFractional':
-          jsonDouble(json['price_wholesale_fractional']),
+      'priceCold': jsonDouble(json['price_cold']),
       'returnableDeposit': jsonDouble(json['returnable_deposit']),
       'cost': jsonDouble(json['cost']),
       'unitsPerPackage': jsonInt(json['units_per_package'], defaultValue: 1),
@@ -150,8 +149,8 @@ extension ProductSupabaseExtension on Product {
       json['volume_ml'] = volumeMl;
     }
 
-    if (priceWholesaleFractional != null) {
-      json['price_wholesale_fractional'] = priceWholesaleFractional;
+    if (priceCold != null) {
+      json['price_cold'] = priceCold;
     }
 
     if (imageUrl != null && imageUrl!.isNotEmpty) {

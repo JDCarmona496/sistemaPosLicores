@@ -798,7 +798,7 @@ class _ProductSelectorDialog extends ConsumerStatefulWidget {
       _ProductSelectorDialogState();
 }
 
-enum _PriceType { retail, wholesale, fractional }
+enum _PriceType { retail, wholesale, cold }
 
 class _ProductSelectorDialogState
     extends ConsumerState<_ProductSelectorDialog> {
@@ -830,10 +830,10 @@ class _ProductSelectorDialogState
   void _onProductSelected(Product product) {
     setState(() {
       _selectedProduct = product;
-      // Si el producto no tiene precio fraccionado, forzamos retail/wholesale.
-      if (_priceType == _PriceType.fractional &&
-          (product.priceWholesaleFractional == null ||
-              product.priceWholesaleFractional! <= 0)) {
+      // Si el producto no tiene precio frio, forzamos retail/wholesale.
+      if (_priceType == _PriceType.cold &&
+          (product.priceCold == null ||
+              product.priceCold! <= 0)) {
         _priceType = _PriceType.retail;
       }
     });
@@ -962,11 +962,11 @@ class _ProductSelectorDialogState
                           value: _PriceType.wholesale,
                           label: Text('Mayorista \$${_selectedProduct!.priceWholesale.toStringAsFixed(0)}'),
                         ),
-                        if (_selectedProduct!.priceWholesaleFractional != null &&
-                            _selectedProduct!.priceWholesaleFractional! > 0)
+                        if (_selectedProduct!.priceCold != null &&
+                            _selectedProduct!.priceCold! > 0)
                           ButtonSegment(
-                            value: _PriceType.fractional,
-                            label: Text('Fracc \$${_selectedProduct!.priceWholesaleFractional!.toStringAsFixed(0)}'),
+                            value: _PriceType.cold,
+                            label: Text('Frio \$${_selectedProduct!.priceCold!.toStringAsFixed(0)}'),
                           ),
                       ],
                       selected: {_priceType},
@@ -1037,8 +1037,8 @@ class _ProductSelectorDialogState
     switch (_priceType) {
       case _PriceType.wholesale:
         return product.priceWholesale;
-      case _PriceType.fractional:
-        return product.priceWholesaleFractional ?? product.priceRetail;
+      case _PriceType.cold:
+        return product.priceCold ?? product.priceRetail;
       case _PriceType.retail:
         return product.priceRetail;
     }
@@ -1053,8 +1053,8 @@ class _ProductSelectorDialogState
     switch (type) {
       case _PriceType.wholesale:
         return OrderItemPriceType.wholesale;
-      case _PriceType.fractional:
-        return OrderItemPriceType.fractional;
+      case _PriceType.cold:
+        return OrderItemPriceType.cold;
       case _PriceType.retail:
         return OrderItemPriceType.retail;
     }
