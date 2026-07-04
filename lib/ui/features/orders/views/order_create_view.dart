@@ -227,142 +227,154 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
       margin: const EdgeInsets.all(16),
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Catálogo',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  '${productsState.products.length} productos',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _productSearchController,
-              decoration: InputDecoration(
-                hintText: 'Buscar producto...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: () {
-                    _productSearchController.clear();
-                    ref.read(productsProvider.notifier).setSearch(null);
-                  },
-                ),
-                border: const OutlineInputBorder(),
-              ),
-              onChanged: _onSearchChanged,
-            ),
-            const SizedBox(height: 12),
-            categoriesAsync.when(
-              data: (categories) => SizedBox(
-                height: 40,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  children: [
-                    FilterChip(
-                      label: const Text('Todas'),
-                      selected: _selectedCategoryId == null,
-                      onSelected: (_) => _onCategorySelected(null),
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Catálogo',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
                     ),
-                    const SizedBox(width: 8),
-                    ...categories.map((category) {
-                      final selected = _selectedCategoryId == category.id;
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: FilterChip(
-                          label: Text(category.name),
-                          selected: selected,
-                          onSelected: (_) => _onCategorySelected(category.id),
-                        ),
-                      );
-                    }),
-                  ],
-                ),
+                  ),
+                  Text(
+                    '${productsState.products.length} productos',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
               ),
-              loading: () => const SizedBox(
-                height: 40,
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 12)),
+            SliverToBoxAdapter(
+              child: TextField(
+                controller: _productSearchController,
+                decoration: InputDecoration(
+                  hintText: 'Buscar producto...',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.clear),
+                    onPressed: () {
+                      _productSearchController.clear();
+                      ref.read(productsProvider.notifier).setSearch(null);
+                    },
+                  ),
+                  border: const OutlineInputBorder(),
+                ),
+                onChanged: _onSearchChanged,
+              ),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 12)),
+            SliverToBoxAdapter(
+              child: categoriesAsync.when(
+                data: (categories) => SizedBox(
+                  height: 40,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    children: [
+                      FilterChip(
+                        label: const Text('Todas'),
+                        selected: _selectedCategoryId == null,
+                        onSelected: (_) => _onCategorySelected(null),
+                      ),
+                      const SizedBox(width: 8),
+                      ...categories.map((category) {
+                        final selected = _selectedCategoryId == category.id;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: FilterChip(
+                            label: Text(category.name),
+                            selected: selected,
+                            onSelected: (_) => _onCategorySelected(category.id),
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+                loading: () => const SizedBox(
+                  height: 40,
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+                error: (error, stackTrace) => const SizedBox.shrink(),
+              ),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 12)),
+            SliverToBoxAdapter(
+              child: Wrap(
+                spacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  const Text('Precio por defecto:'),
+                  SegmentedButton<OrderItemPriceType>(
+                    segments: [
+                      ButtonSegment(
+                        value: OrderItemPriceType.retail,
+                        label: Text(OrderItemPriceType.retail.label),
+                      ),
+                      ButtonSegment(
+                        value: OrderItemPriceType.wholesale,
+                        label: Text(OrderItemPriceType.wholesale.label),
+                      ),
+                      ButtonSegment(
+                        value: OrderItemPriceType.cold,
+                        label: Text(OrderItemPriceType.cold.label),
+                      ),
+                    ],
+                    selected: {_defaultPriceType},
+                    onSelectionChanged: (selected) {
+                      if (selected.isNotEmpty) {
+                        setState(() => _defaultPriceType = selected.first);
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 12)),
+            if (productsState.isLoading && productsState.products.isEmpty)
+              const SliverFillRemaining(
                 child: Center(child: CircularProgressIndicator()),
-              ),
-              error: (error, stackTrace) => const SizedBox.shrink(),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                const Text('Precio por defecto:'),
-                const SizedBox(width: 8),
-                SegmentedButton<OrderItemPriceType>(
-                  segments: [
-                    ButtonSegment(
-                      value: OrderItemPriceType.retail,
-                      label: Text(OrderItemPriceType.retail.label),
-                    ),
-                    ButtonSegment(
-                      value: OrderItemPriceType.wholesale,
-                      label: Text(OrderItemPriceType.wholesale.label),
-                    ),
-                    ButtonSegment(
-                      value: OrderItemPriceType.cold,
-                      label: Text(OrderItemPriceType.cold.label),
-                    ),
-                  ],
-                  selected: {_defaultPriceType},
-                  onSelectionChanged: (selected) {
-                    if (selected.isNotEmpty) {
-                      setState(() => _defaultPriceType = selected.first);
-                    }
-                  },
+              )
+            else if (productsState.products.isEmpty)
+              SliverFillRemaining(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.search_off,
+                          size: 48,
+                          color: Colors.grey.shade700),
+                      const SizedBox(height: 8),
+                      Text(
+                        'No se encontraron productos',
+                        style: TextStyle(
+                            color: Colors.grey.shade700),
+                      ),
+                    ],
+                  ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Expanded(
-              child: productsState.isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : productsState.products.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.search_off,
-                                  size: 48,
-                                  color: Colors.grey.shade700),
-                              const SizedBox(height: 8),
-                              Text(
-                                'No se encontraron productos',
-                                style: TextStyle(
-                                    color: Colors.grey.shade700),
-                              ),
-                            ],
-                          ),
-                        )
-                      : GridView.builder(
-                          gridDelegate:
-                              const SliverGridDelegateWithMaxCrossAxisExtent(
-                            maxCrossAxisExtent: 220,
-                            childAspectRatio: 0.85,
-                            crossAxisSpacing: 12,
-                            mainAxisSpacing: 12,
-                          ),
-                          itemCount: productsState.products.length,
-                          itemBuilder: (context, index) => _buildProductCard(
-                            productsState.products[index],
-                          ),
-                        ),
-            ),
+              )
+            else
+              SliverGrid(
+                gridDelegate:
+                    const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 220,
+                  childAspectRatio: 0.85,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                ),
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) =>
+                      _buildProductCard(productsState.products[index]),
+                  childCount: productsState.products.length,
+                ),
+              ),
           ],
         ),
       ),
@@ -487,64 +499,68 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
       margin: const EdgeInsets.all(16),
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Carrito',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                if (cartState.items.isNotEmpty)
-                  TextButton.icon(
-                    onPressed: () =>
-                        ref.read(currentOrderCartProvider.notifier).clearCart(),
-                    icon: const Icon(Icons.delete_outline),
-                    label: const Text('Vaciar'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: Theme.of(context).colorScheme.error,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Carrito',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            if (cartState.items.isEmpty)
-              Expanded(
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.shopping_cart_outlined,
-                          size: 48,
-                          color: Colors.grey.shade700),
-                      const SizedBox(height: 8),
-                      Text(
-                        'El carrito está vacío',
-                        style: TextStyle(
-                            color: Colors.grey.shade700),
+                  if (cartState.items.isNotEmpty)
+                    TextButton.icon(
+                      onPressed: () => ref
+                          .read(currentOrderCartProvider.notifier)
+                          .clearCart(),
+                      icon: const Icon(Icons.delete_outline),
+                      label: const Text('Vaciar'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Theme.of(context).colorScheme.error,
                       ),
-                    ],
+                    ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              if (cartState.items.isEmpty)
+                SizedBox(
+                  height: 120,
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.shopping_cart_outlined,
+                            size: 48,
+                            color: Colors.grey.shade700),
+                        const SizedBox(height: 8),
+                        Text(
+                          'El carrito está vacío',
+                          style: TextStyle(
+                              color: Colors.grey.shade700),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              )
-            else
-              Expanded(
-                child: ListView.builder(
+                )
+              else
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
                   itemCount: cartState.items.length,
                   itemBuilder: (context, index) =>
                       _buildCartItem(cartState.items[index]),
                 ),
-              ),
-            const Divider(),
-            _buildDeliverySection(cartState),
-            const SizedBox(height: 12),
-            _buildNotesSection(),
-          ],
+              const Divider(),
+              _buildDeliverySection(cartState),
+              const SizedBox(height: 12),
+              _buildNotesSection(),
+            ],
+          ),
         ),
       ),
     );
