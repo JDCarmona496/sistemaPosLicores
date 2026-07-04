@@ -153,12 +153,24 @@ class _OrderDetailViewState extends ConsumerState<OrderDetailView> {
     if (_canMarkDelivery(order)) {
       items.add(
         const PopupMenuItem(
-          value: 'mark_delivery',
+          value: 'mark_delivery_complete',
           child: Row(
             children: [
               Icon(Icons.check_circle, color: Colors.green),
               SizedBox(width: 8),
-              Text('Marcar entrega'),
+              Text('Entrega completa'),
+            ],
+          ),
+        ),
+      );
+      items.add(
+        const PopupMenuItem(
+          value: 'mark_delivery_partial',
+          child: Row(
+            children: [
+              Icon(Icons.incomplete_circle, color: Colors.orange),
+              SizedBox(width: 8),
+              Text('Entrega parcial'),
             ],
           ),
         ),
@@ -231,8 +243,11 @@ class _OrderDetailViewState extends ConsumerState<OrderDetailView> {
       case 'assign_delivery':
         await _assignDeliveryPerson(order);
         break;
-      case 'mark_delivery':
-        await _markDelivery(order);
+      case 'mark_delivery_complete':
+        await _markDelivery(order, complete: true);
+        break;
+      case 'mark_delivery_partial':
+        await _markDelivery(order, complete: false);
         break;
       case 'register_payment':
         await _registerPayment(order);
@@ -261,14 +276,27 @@ class _OrderDetailViewState extends ConsumerState<OrderDetailView> {
     }
   }
 
-  Future<void> _markDelivery(Order order) async {
+  Future<void> _markDelivery(Order order, {bool complete = false}) async {
     final itemsAsync = ref.read(orderItemsProvider(order.id));
     final items = itemsAsync.valueOrNull ?? [];
 
-    final result = await showDialog<List<({String orderItemId, int quantityDelivered})>?>(
-      context: context,
-      builder: (context) => _DeliveryItemsDialog(items: items),
-    );
+    List<({String orderItemId, int quantityDelivered})>? result;
+
+    if (complete) {
+      result = items
+          .where((item) => item.pendingQuantity > 0)
+          .map((item) => (
+                orderItemId: item.id,
+                quantityDelivered: item.quantity,
+              ))
+          .toList();
+    } else {
+      result = await showDialog<
+          List<({String orderItemId, int quantityDelivered})>?>(
+        context: context,
+        builder: (context) => _DeliveryItemsDialog(items: items),
+      );
+    }
 
     if (result == null || result.isEmpty || !mounted) return;
 
@@ -880,6 +908,21 @@ class _DeliveryItemsDialogState extends State<_DeliveryItemsDialog> {
           onPressed: () => Navigator.pop(context),
           child: const Text('Cancelar'),
         ),
+        TextButton(
+          onPressed: () {
+            final result = <({String orderItemId, int quantityDelivered})>[];
+            for (final item in widget.items) {
+              if (item.pendingQuantity > 0) {
+                result.add((
+                  orderItemId: item.id,
+                  quantityDelivered: item.quantity,
+                ));
+              }
+            }
+            Navigator.pop(context, result);
+          },
+          child: const Text('Entregar todo'),
+        ),
         ElevatedButton(
           onPressed: () {
             final result = <({String orderItemId, int quantityDelivered})>[];
@@ -894,7 +937,7 @@ class _DeliveryItemsDialogState extends State<_DeliveryItemsDialog> {
             }
             Navigator.pop(context, result);
           },
-          child: const Text('Guardar'),
+          child: const Text('Guardar parcial'),
         ),
       ],
     );
