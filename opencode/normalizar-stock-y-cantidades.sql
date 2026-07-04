@@ -434,9 +434,9 @@ BEGIN
   UPDATE public.orders
   SET
     status = CASE
-      WHEN v_delivered_items = 0 THEN 'in_transit'
-      WHEN v_delivered_items < v_total_items THEN 'partially_delivered'
-      ELSE 'delivered'
+      WHEN v_delivered_items = 0 THEN 'in_transit'::public.order_status
+      WHEN v_delivered_items < v_total_items THEN 'partially_delivered'::public.order_status
+      ELSE 'delivered'::public.order_status
     END,
     delivered_at = CASE
       WHEN v_delivered_items = v_total_items THEN now()
