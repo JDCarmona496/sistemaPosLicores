@@ -24,12 +24,17 @@ dependencies:
   # Navigation
   go_router: ^14.8.1
 
-  # Impresión térmica ESC/POS
+  # Impresión térmica ESC/POS (móvil / USB nativo / Bluetooth)
   flutter_thermal_printer: ^0.0.9
+  flutter_blue_plus: ^1.34.5
   esc_pos_utils_plus: ^2.0.4
 
   # Puerto serial Windows (COM) para impresoras térmicas
   serial_port_win32: ^2.3.0
+
+  # Impresión nativa de Windows / PDF
+  printing: ^5.13.0
+  pdf: ^3.10.0
 
   # Escaneo de códigos de barras
   mobile_scanner: ^6.0.2

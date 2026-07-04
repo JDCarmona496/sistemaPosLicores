@@ -50,7 +50,8 @@ class LicoreriaApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
+      // Forzamos tema claro porque la UI aun no esta adaptada al modo oscuro.
+      themeMode: ThemeMode.light,
       routerConfig: router,
     );
   }

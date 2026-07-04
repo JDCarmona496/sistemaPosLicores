@@ -1,5 +1,7 @@
 import 'dart:typed_data';
 
+import 'package:pdf/widgets.dart' as pw;
+
 import '../../../domain/models/printer_config.dart';
 
 /// Resultado de una operación de impresión.
@@ -39,6 +41,14 @@ abstract class PrinterService {
 
   /// Envía bytes ESC/POS a la impresora.
   Future<PrinterResult> printBytes(Uint8List bytes);
+
+  /// Envía un documento PDF a la impresora (solo servicios nativos Windows).
+  Future<PrinterResult> printPdf(pw.Document document) async {
+    return const PrinterResult.error('PDF no soportado por este servicio');
+  }
+
+  /// Indica si el servicio puede imprimir documentos PDF.
+  bool get supportsPdf => false;
 
   /// Indica si está conectado.
   bool get isConnected;

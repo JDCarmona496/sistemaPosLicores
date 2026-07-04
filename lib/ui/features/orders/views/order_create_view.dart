@@ -29,6 +29,13 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
   void initState() {
     super.initState();
     _loadCurrentUser();
+    // Limpiar el carrito cada vez que se entra a crear un pedido nuevo.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(currentOrderCartProvider.notifier).clearCart();
+      _notesController.clear();
+      _addressController.clear();
+      _deliveryFeeController.text = '0';
+    });
   }
 
   @override
@@ -127,17 +134,18 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
+                  color: Colors.grey.shade200,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
                     Icon(Icons.person_outline,
-                        color: Colors.grey.shade600),
+                        color: Colors.grey.shade700),
                     const SizedBox(width: 8),
                     Text(
                       'Cliente ocasional',
-                      style: TextStyle(color: Colors.grey.shade700),
+                      style: TextStyle(
+                          color: Colors.grey.shade700),
                     ),
                   ],
                 ),
@@ -298,18 +306,20 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
+                  color: Colors.grey.shade200,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Center(
                   child: Column(
                     children: [
                       Icon(Icons.shopping_cart_outlined,
-                          size: 48, color: Colors.grey.shade400),
+                          size: 48,
+                          color: Colors.grey.shade700),
                       const SizedBox(height: 8),
                       Text(
                         'El carrito está vacío',
-                        style: TextStyle(color: Colors.grey.shade600),
+                        style: TextStyle(
+                            color: Colors.grey.shade700),
                       ),
                     ],
                   ),
@@ -324,31 +334,39 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
   }
 
   Widget _buildCartItem(OrderItem item) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final priceLabel = item.priceType.label;
     return ListTile(
       leading: CircleAvatar(
-        backgroundColor: Colors.green.shade100,
+        backgroundColor: colorScheme.primaryContainer,
         child: Text(
-          item.quantity.toStringAsFixed(item.quantity % 1 == 0 ? 0 : 1),
+          '${item.quantity}',
           style: TextStyle(
-            color: Colors.green.shade700,
+            color: colorScheme.onPrimaryContainer,
             fontWeight: FontWeight.bold,
           ),
         ),
       ),
-      title: Text(item.productName ?? 'Producto'),
+      title: Text(
+        item.productName ?? 'Producto',
+        style: TextStyle(color: colorScheme.onSurface),
+      ),
       subtitle: Text(
-        '\$${item.unitPrice.toStringAsFixed(0)} c/u',
-        style: TextStyle(color: Colors.grey.shade600),
+        '\$${item.unitPrice.toStringAsFixed(0)} c/u • $priceLabel',
+        style: TextStyle(color: Colors.grey.shade700),
       ),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             '\$${item.subtotal.toStringAsFixed(0)}',
-            style: const TextStyle(fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: colorScheme.onSurface,
+            ),
           ),
           IconButton(
-            icon: const Icon(Icons.delete_outline, color: Colors.red),
+            icon: Icon(Icons.delete_outline, color: colorScheme.error),
             onPressed: () => ref
                 .read(currentOrderCartProvider.notifier)
                 .removeItem(item.id),
@@ -428,13 +446,14 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
   }
 
   Widget _buildBottomBar(CurrentOrderCartState cartState) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: colorScheme.shadow.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),
@@ -449,10 +468,11 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
               children: [
                 Text(
                   '${cartState.items.length} productos',
-                  style: TextStyle(color: Colors.grey.shade600),
+                  style: TextStyle(color: colorScheme.onSurfaceVariant),
                 ),
                 Text(
                   'Subtotal: \$${cartState.subtotal.toStringAsFixed(0)}',
+                  style: TextStyle(color: colorScheme.onSurface),
                 ),
               ],
             ),
@@ -462,7 +482,7 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
                 children: [
                   Text(
                     'Descuento: -\$${cartState.discountAmount.toStringAsFixed(0)}',
-                    style: TextStyle(color: Colors.green.shade700),
+                    style: TextStyle(color: colorScheme.tertiary),
                   ),
                 ],
               ),
@@ -471,18 +491,21 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   Text(
-                      'Domicilio: \$${cartState.deliveryFee.toStringAsFixed(0)}'),
+                    'Domicilio: \$${cartState.deliveryFee.toStringAsFixed(0)}',
+                    style: TextStyle(color: colorScheme.onSurface),
+                  ),
                 ],
               ),
-            const Divider(),
+            Divider(color: colorScheme.outlineVariant),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Total:',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 Text(
@@ -490,7 +513,7 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary,
+                    color: colorScheme.primary,
                   ),
                 ),
               ],
@@ -586,7 +609,7 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
             productName: selected.product.name,
             price: selected.price,
             quantity: selected.quantity,
-            isWholesalePrice: selected.isWholesale,
+            priceType: selected.priceType,
           );
     }
   }
@@ -654,14 +677,14 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
 class _SelectedProduct {
   final Product product;
   final double price;
-  final double quantity;
-  final bool isWholesale;
+  final int quantity;
+  final OrderItemPriceType priceType;
 
   _SelectedProduct({
     required this.product,
     required this.price,
     required this.quantity,
-    required this.isWholesale,
+    required this.priceType,
   });
 }
 
@@ -676,6 +699,15 @@ class _CustomerSelectorDialog extends ConsumerStatefulWidget {
 class _CustomerSelectorDialogState
     extends ConsumerState<_CustomerSelectorDialog> {
   final _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _searchController.clear();
+      ref.read(customersProvider.notifier).setSearch(null);
+    });
+  }
 
   @override
   void dispose() {
@@ -766,18 +798,45 @@ class _ProductSelectorDialog extends ConsumerStatefulWidget {
       _ProductSelectorDialogState();
 }
 
+enum _PriceType { retail, wholesale, fractional }
+
 class _ProductSelectorDialogState
     extends ConsumerState<_ProductSelectorDialog> {
   final _searchController = TextEditingController();
   Product? _selectedProduct;
   final _quantityController = TextEditingController(text: '1');
-  bool _isWholesale = false;
+  _PriceType _priceType = _PriceType.retail;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _searchController.clear();
+      _selectedProduct = null;
+      _quantityController.text = '1';
+      _priceType = _PriceType.retail;
+      ref.read(productsProvider.notifier).setSearch(null);
+      setState(() {});
+    });
+  }
 
   @override
   void dispose() {
     _searchController.dispose();
     _quantityController.dispose();
     super.dispose();
+  }
+
+  void _onProductSelected(Product product) {
+    setState(() {
+      _selectedProduct = product;
+      // Si el producto no tiene precio fraccionado, forzamos retail/wholesale.
+      if (_priceType == _PriceType.fractional &&
+          (product.priceWholesaleFractional == null ||
+              product.priceWholesaleFractional! <= 0)) {
+        _priceType = _PriceType.retail;
+      }
+    });
   }
 
   @override
@@ -840,9 +899,7 @@ class _ProductSelectorDialogState
                                       : Colors.green,
                             ),
                           ),
-                          onTap: () {
-                            setState(() => _selectedProduct = product);
-                          },
+                          onTap: () => _onProductSelected(product),
                         );
                       },
                     ),
@@ -851,42 +908,93 @@ class _ProductSelectorDialogState
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
+                  color: Colors.grey.shade200,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Text(
+                      _selectedProduct!.name,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${_selectedProduct!.presentation} | '
+                      '${_selectedProduct!.unitsPerPackage} und/paquete',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade700,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _quantityController,
+                      decoration: const InputDecoration(
+                        labelText: 'Cantidad',
+                        border: OutlineInputBorder(),
+                        helperText:
+                            'Unidades enteras (ej: 15 unidades de una canasta de 30)',
+                      ),
+                      keyboardType: TextInputType.number,
+                      onChanged: (_) => setState(() {}),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Tipo de precio',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    SegmentedButton<_PriceType>(
+                      segments: [
+                        ButtonSegment(
+                          value: _PriceType.retail,
+                          label: Text('Detal \$${_selectedProduct!.priceRetail.toStringAsFixed(0)}'),
+                        ),
+                        ButtonSegment(
+                          value: _PriceType.wholesale,
+                          label: Text('Mayorista \$${_selectedProduct!.priceWholesale.toStringAsFixed(0)}'),
+                        ),
+                        if (_selectedProduct!.priceWholesaleFractional != null &&
+                            _selectedProduct!.priceWholesaleFractional! > 0)
+                          ButtonSegment(
+                            value: _PriceType.fractional,
+                            label: Text('Fracc \$${_selectedProduct!.priceWholesaleFractional!.toStringAsFixed(0)}'),
+                          ),
+                      ],
+                      selected: {_priceType},
+                      onSelectionChanged: (selected) {
+                        if (selected.isNotEmpty) {
+                          setState(() => _priceType = selected.first);
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 12),
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _quantityController,
-                            decoration: const InputDecoration(
-                              labelText: 'Cantidad',
-                              border: OutlineInputBorder(),
-                            ),
-                            keyboardType: const TextInputType.numberWithOptions(
-                                decimal: true),
+                        Text(
+                          'Unitario: \$${_getUnitPrice().toStringAsFixed(0)}',
+                          style: TextStyle(
+                            color: Colors.grey.shade700,
                           ),
                         ),
-                        const SizedBox(width: 16),
-                        Row(
-                          children: [
-                            const Text('Mayorista'),
-                            Switch(
-                              value: _isWholesale,
-                              onChanged: (value) {
-                                setState(() => _isWholesale = value);
-                              },
-                            ),
-                          ],
+                        Text(
+                          'Subtotal: \$${_getSubtotal().toStringAsFixed(0)}',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
                         ),
                       ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Precio: \$${_getPrice().toStringAsFixed(0)}',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
@@ -903,15 +1011,16 @@ class _ProductSelectorDialogState
           onPressed: _selectedProduct == null
               ? null
               : () {
-                  final quantity = double.tryParse(_quantityController.text) ?? 1;
+                  final quantity =
+                      int.tryParse(_quantityController.text.trim()) ?? 1;
                   if (quantity <= 0) return;
                   Navigator.pop(
                     context,
                     _SelectedProduct(
                       product: _selectedProduct!,
-                      price: _getPrice(),
+                      price: _getUnitPrice(),
                       quantity: quantity,
-                      isWholesale: _isWholesale,
+                      priceType: _mapPriceType(_priceType),
                     ),
                   );
                 },
@@ -921,10 +1030,33 @@ class _ProductSelectorDialogState
     );
   }
 
-  double _getPrice() {
-    if (_selectedProduct == null) return 0;
-    return _isWholesale
-        ? _selectedProduct!.priceWholesale
-        : _selectedProduct!.priceRetail;
+  double _getUnitPrice() {
+    final product = _selectedProduct;
+    if (product == null) return 0;
+
+    switch (_priceType) {
+      case _PriceType.wholesale:
+        return product.priceWholesale;
+      case _PriceType.fractional:
+        return product.priceWholesaleFractional ?? product.priceRetail;
+      case _PriceType.retail:
+        return product.priceRetail;
+    }
+  }
+
+  double _getSubtotal() {
+    final quantity = int.tryParse(_quantityController.text.trim()) ?? 1;
+    return quantity * _getUnitPrice();
+  }
+
+  OrderItemPriceType _mapPriceType(_PriceType type) {
+    switch (type) {
+      case _PriceType.wholesale:
+        return OrderItemPriceType.wholesale;
+      case _PriceType.fractional:
+        return OrderItemPriceType.fractional;
+      case _PriceType.retail:
+        return OrderItemPriceType.retail;
+    }
   }
 }

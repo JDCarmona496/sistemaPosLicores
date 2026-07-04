@@ -107,7 +107,7 @@ class _ProductsViewState extends ConsumerState<ProductsView> {
               Expanded(
                 child: categoriesAsync.when(
                   data: (categories) => DropdownButtonFormField<String?>(
-                    value: state.selectedCategoryId,
+                    initialValue: state.selectedCategoryId,
                     decoration: const InputDecoration(
                       labelText: 'Categoría',
                       border: OutlineInputBorder(),
@@ -132,7 +132,7 @@ class _ProductsViewState extends ConsumerState<ProductsView> {
               Expanded(
                 child: brandsAsync.when(
                   data: (brands) => DropdownButtonFormField<String?>(
-                    value: state.selectedBrandId,
+                    initialValue: state.selectedBrandId,
                     decoration: const InputDecoration(
                       labelText: 'Marca',
                       border: OutlineInputBorder(),
@@ -271,7 +271,7 @@ class _ProductsViewState extends ConsumerState<ProductsView> {
                         child: Image.network(
                           product.imageUrl!,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => const Icon(Icons.inventory),
+                          errorBuilder: (_, _, _) => const Icon(Icons.inventory),
                         ),
                       )
                     : const Icon(Icons.inventory, size: 32, color: Colors.grey),

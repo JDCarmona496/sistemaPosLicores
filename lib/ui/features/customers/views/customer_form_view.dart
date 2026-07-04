@@ -48,7 +48,7 @@ class _CustomerFormViewState extends ConsumerState<CustomerFormView> {
   Future<void> _loadCurrentUser() async {
     final user = await AuthService().getCurrentUser();
     if (mounted) {
-      setState(() => _currentUserId = user?.id);
+      setState(() => _currentUserId = user.id);
     }
   }
 

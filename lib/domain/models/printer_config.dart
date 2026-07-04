@@ -8,6 +8,7 @@ enum PrinterConnectionType {
   usb,
   serial,
   wifi,
+  windows,
 }
 
 extension PrinterConnectionTypeX on PrinterConnectionType {
@@ -21,6 +22,8 @@ extension PrinterConnectionTypeX on PrinterConnectionType {
         return 'Puerto COM';
       case PrinterConnectionType.wifi:
         return 'WiFi / Red';
+      case PrinterConnectionType.windows:
+        return 'Impresora Windows';
     }
   }
 }

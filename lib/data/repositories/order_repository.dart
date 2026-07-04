@@ -143,7 +143,7 @@ class OrderRepository {
           unit_price,
           discount_amount,
           subtotal,
-          is_wholesale_price,
+          price_type,
           notes,
           delivered_at,
           created_at,
@@ -237,7 +237,7 @@ class OrderRepository {
 
   Future<void> markItemsDelivered({
     required String orderId,
-    required List<({String orderItemId, double quantityDelivered})> items,
+    required List<({String orderItemId, int quantityDelivered})> items,
   }) async {
     try {
       await _client.rpc(
@@ -299,7 +299,7 @@ class OrderRepository {
   Future<void> editItem({
     required String orderId,
     required String orderItemId,
-    required double newQuantity,
+    required int newQuantity,
     required String editedBy,
     String? reason,
   }) async {

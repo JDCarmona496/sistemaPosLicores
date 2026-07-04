@@ -287,7 +287,7 @@ class _ProductFormViewState extends ConsumerState<ProductFormView> {
                       Expanded(
                         child: brandsAsync.when(
                           data: (brands) => DropdownButtonFormField<String>(
-                            value: _selectedBrandId,
+                            initialValue: _selectedBrandId,
                             decoration: const InputDecoration(
                               labelText: 'Marca *',
                               prefixIcon: Icon(Icons.branding_watermark),
@@ -306,7 +306,7 @@ class _ProductFormViewState extends ConsumerState<ProductFormView> {
                       Expanded(
                         child: categoriesAsync.when(
                           data: (categories) => DropdownButtonFormField<String>(
-                            value: _selectedCategoryId,
+                            initialValue: _selectedCategoryId,
                             decoration: const InputDecoration(
                               labelText: 'Categoría *',
                               prefixIcon: Icon(Icons.category),
@@ -357,7 +357,7 @@ class _ProductFormViewState extends ConsumerState<ProductFormView> {
                     children: [
                       Expanded(
                         child: DropdownButtonFormField<PackagingType>(
-                          value: _packagingType,
+                          initialValue: _packagingType,
                           decoration: const InputDecoration(
                             labelText: 'Tipo de Empaque *',
                             prefixIcon: Icon(Icons.inventory_2),
@@ -520,7 +520,7 @@ class _ProductFormViewState extends ConsumerState<ProductFormView> {
                   _buildSectionTitle('Estado'),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<ProductStatus>(
-                    value: _status,
+                    initialValue: _status,
                     decoration: const InputDecoration(
                       labelText: 'Estado *',
                       prefixIcon: Icon(Icons.info),

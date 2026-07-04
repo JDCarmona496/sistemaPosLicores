@@ -1,9 +1,11 @@
-import 'dart:typed_data';
 import 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 
 import '../../../domain/models/order.dart';
 import '../../../domain/models/order_item.dart';
+import '../../../domain/models/printer_config.dart';
+import '../../providers/printer_provider.dart';
 
 /// Genera comandos ESC/POS para tickets de 58mm.
 ///
@@ -13,10 +15,8 @@ import '../../../domain/models/order_item.dart';
 /// - Espesor de papel: 0.06-0.08mm
 /// - Ancho útil de impresión: ~48mm (384 puntos)
 /// - Caracteres por línea (fuente A 12x24): 32
-class EscPosReceiptGenerator {
-  final int paperWidthMm;
-
-  const EscPosReceiptGenerator({this.paperWidthMm = 58});
+class EscPosReceiptGenerator extends ReceiptGenerator {
+  const EscPosReceiptGenerator({super.paperWidthMm = 58});
 
   Future<Uint8List> generateOrderReceipt({
     required Order order,
@@ -218,8 +218,13 @@ class EscPosReceiptGenerator {
     return Uint8List.fromList(bytes);
   }
 
-  /// Genera una página de prueba simple.
-  Future<Uint8List> generateTestPage() async {
+  /// Genera una página de prueba compacta con información básica de la
+  /// impresora y del dispositivo. Se mantiene corta para evitar problemas
+  /// con impresoras BLE que no aceptan trabajos largos.
+  Future<Uint8List> generateTestPage({
+    PrinterConfig? config,
+    String? debugInfo,
+  }) async {
     final profile = await CapabilityProfile.load();
     final generator = Generator(
       paperWidthMm == 58 ? PaperSize.mm58 : PaperSize.mm80,
@@ -227,21 +232,58 @@ class EscPosReceiptGenerator {
     );
 
     var bytes = <int>[];
+
+    // Título
     bytes += generator.setStyles(
       const PosStyles(align: PosAlign.center, bold: true),
     );
-    bytes += generator.text('PRUEBA DE IMPRESORA');
+    bytes += generator.text('PAGINA DE PRUEBA');
     bytes += generator.feed(1);
+
+    // Información compacta en una sola sección
     bytes += generator.setStyles(const PosStyles());
-    bytes += generator.text('58mm - 203dpi');
-    bytes += generator.text('Papel: 0.06-0.08mm');
-    bytes += generator.feed(1);
-    bytes += generator.text('12345678901234567890123456789012');
-    bytes += generator.feed(2);
-    bytes += generator.setStyles(
-      const PosStyles(align: PosAlign.center),
+    if (config != null) {
+      bytes += generator.text(config.connectionType.label);
+      if (config.name?.isNotEmpty == true) {
+        bytes += generator.text(config.name!);
+      }
+      if (config.address?.isNotEmpty == true) {
+        bytes += generator.text(config.address!);
+      }
+      if (config.connectionType == PrinterConnectionType.serial) {
+        bytes += generator.text('${config.baudRate} baud');
+      }
+    } else {
+      bytes += generator.text('Sin configurar');
+    }
+    bytes += generator.text('${paperWidthMm}mm | ${defaultTargetPlatform.name}');
+    bytes += generator.text(
+      DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now()),
     );
-    bytes += generator.text('Impresión OK');
+    bytes += generator.feed(1);
+
+    // Estado
+    bytes += generator.setStyles(
+      const PosStyles(align: PosAlign.center, bold: true),
+    );
+    bytes += generator.text('IMPRESION OK');
+    bytes += generator.setStyles(const PosStyles());
+    bytes += generator.feed(1);
+
+    // Información de debug
+    if (debugInfo != null && debugInfo.isNotEmpty) {
+      bytes += generator.hr();
+      bytes += generator.text('DEBUG:', styles: const PosStyles(bold: true));
+      for (final line in debugInfo.split('\n')) {
+        if (line.isNotEmpty) {
+          bytes += generator.text(line);
+        }
+      }
+      bytes += generator.feed(1);
+    }
+
+    // Línea de prueba
+    bytes += generator.text('12345678901234567890123456789012');
     bytes += generator.feed(2);
     bytes += generator.cut();
 

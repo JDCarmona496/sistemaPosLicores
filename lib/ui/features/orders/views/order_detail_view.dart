@@ -7,7 +7,6 @@ import '../../../../data/providers/payment_providers.dart';
 import '../../../../data/providers/printer_provider.dart';
 import '../../../../data/providers/user_providers.dart';
 import '../../../../data/services/auth_service.dart';
-import '../../../../data/services/printer/esc_pos_receipt_generator.dart';
 import '../../../../domain/models/order.dart';
 import '../../../../domain/models/order_item.dart';
 import '../../../../domain/models/payment.dart';
@@ -266,7 +265,7 @@ class _OrderDetailViewState extends ConsumerState<OrderDetailView> {
     final itemsAsync = ref.read(orderItemsProvider(order.id));
     final items = itemsAsync.valueOrNull ?? [];
 
-    final result = await showDialog<List<({String orderItemId, double quantityDelivered})>?>(
+    final result = await showDialog<List<({String orderItemId, int quantityDelivered})>?>(
       context: context,
       builder: (context) => _DeliveryItemsDialog(items: items),
     );
@@ -671,14 +670,7 @@ class _OrderDetailViewState extends ConsumerState<OrderDetailView> {
     final itemsAsync = ref.read(orderItemsProvider(order.id));
     final items = itemsAsync.valueOrNull ?? [];
 
-    final bytes = await const EscPosReceiptGenerator(paperWidthMm: 58)
-        .generateOrderReceipt(
-      order: order,
-      items: items,
-      businessName: 'Licorería',
-    );
-
-    final result = await ref.read(printTicketProvider)(bytes);
+    final result = await ref.read(printOrderReceiptProvider)(order, items);
 
     if (!mounted) return;
     _showSnack(
@@ -839,7 +831,7 @@ class _DeliveryItemsDialog extends StatefulWidget {
 }
 
 class _DeliveryItemsDialogState extends State<_DeliveryItemsDialog> {
-  late final Map<String, double> _deliveredQuantities;
+  late final Map<String, int> _deliveredQuantities;
 
   @override
   void initState() {
@@ -864,20 +856,18 @@ class _DeliveryItemsDialogState extends State<_DeliveryItemsDialog> {
             final pending = item.quantity - item.quantityDelivered;
             return ListTile(
               title: Text(item.productName ?? 'Producto'),
-              subtitle: Text('Pendiente: ${pending.toStringAsFixed(pending % 1 == 0 ? 0 : 1)}'),
+              subtitle: Text('Pendiente: $pending'),
               trailing: SizedBox(
                 width: 80,
                 child: TextField(
                   controller: TextEditingController(
-                    text: _deliveredQuantities[item.id]!.toStringAsFixed(
-                      _deliveredQuantities[item.id]! % 1 == 0 ? 0 : 1,
-                    ),
+                    text: '${_deliveredQuantities[item.id]}',
                   ),
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: TextInputType.number,
                   textAlign: TextAlign.center,
                   onChanged: (value) {
                     _deliveredQuantities[item.id] =
-                        double.tryParse(value) ?? 0;
+                        int.tryParse(value) ?? 0;
                   },
                 ),
               ),
@@ -892,7 +882,7 @@ class _DeliveryItemsDialogState extends State<_DeliveryItemsDialog> {
         ),
         ElevatedButton(
           onPressed: () {
-            final result = <({String orderItemId, double quantityDelivered})>[];
+            final result = <({String orderItemId, int quantityDelivered})>[];
             for (final item in widget.items) {
               final delivered = _deliveredQuantities[item.id] ?? 0;
               if (delivered > item.quantityDelivered) {

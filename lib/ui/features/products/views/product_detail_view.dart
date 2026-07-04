@@ -100,7 +100,7 @@ class ProductDetailView extends ConsumerWidget {
                             child: Image.network(
                               product.imageUrl!,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => const Icon(Icons.inventory, size: 48),
+                              errorBuilder: (_, _, _) => const Icon(Icons.inventory, size: 48),
                             ),
                           )
                         : const Icon(Icons.inventory, size: 48, color: Colors.grey),

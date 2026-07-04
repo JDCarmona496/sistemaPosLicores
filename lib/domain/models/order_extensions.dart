@@ -61,7 +61,7 @@ extension OrderItemSupabaseExtension on OrderItem {
       'unit_price': unitPrice,
       'discount_amount': discountAmount,
       'subtotal': subtotal,
-      'is_wholesale_price': isWholesalePrice,
+      'price_type': priceType.dbValue,
     };
 
     if (includeId) json['id'] = id;
@@ -79,6 +79,7 @@ extension OrderItemSupabaseExtension on OrderItem {
       'quantity': quantity,
       'unit_price': unitPrice,
       'discount_amount': discountAmount,
+      'price_type': priceType.dbValue,
     };
   }
 }

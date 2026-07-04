@@ -203,7 +203,7 @@ class OrdersNotifier extends StateNotifier<OrdersState> {
 
   Future<void> markItemsDelivered({
     required String orderId,
-    required List<({String orderItemId, double quantityDelivered})> items,
+    required List<({String orderItemId, int quantityDelivered})> items,
   }) async {
     try {
       await _repository.markItemsDelivered(orderId: orderId, items: items);
@@ -342,7 +342,10 @@ class CurrentOrderCartNotifier
     CustomerType? type,
     String? address,
   }) {
+    // Si no hay id, forzamos limpieza total del cliente.
+    final clear = id == null;
     state = state.copyWith(
+      clearCustomer: clear,
       customerId: id,
       customerName: name,
       customerType: type,
@@ -374,12 +377,12 @@ class CurrentOrderCartNotifier
     required String productId,
     required String productName,
     required double price,
-    required double quantity,
-    bool isWholesalePrice = false,
+    required int quantity,
+    required OrderItemPriceType priceType,
     double discountAmount = 0,
   }) {
     final existingIndex = state.items.indexWhere(
-      (item) => item.productId == productId && item.isWholesalePrice == isWholesalePrice,
+      (item) => item.productId == productId && item.priceType == priceType,
     );
 
     if (existingIndex >= 0) {
@@ -397,13 +400,13 @@ class CurrentOrderCartNotifier
       unitPrice: price,
       discountAmount: discountAmount,
       subtotal: (price * quantity) - discountAmount,
-      isWholesalePrice: isWholesalePrice,
+      priceType: priceType,
     );
 
     state = state.copyWith(items: [...state.items, newItem]);
   }
 
-  void updateItemQuantity(String itemId, double quantity) {
+  void updateItemQuantity(String itemId, int quantity) {
     if (quantity <= 0) {
       removeItem(itemId);
       return;
