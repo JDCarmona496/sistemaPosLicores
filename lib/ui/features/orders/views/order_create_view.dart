@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../data/providers/customer_providers.dart';
 import '../../../../data/providers/order_providers.dart';
 import '../../../../data/providers/product_providers.dart';
+
 import '../../../../data/services/auth_service.dart';
 import '../../../../domain/models/customer.dart';
 import '../../../../domain/models/order.dart';
@@ -22,19 +25,26 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
   final _notesController = TextEditingController();
   final _addressController = TextEditingController();
   final _deliveryFeeController = TextEditingController(text: '0');
+  final _productSearchController = TextEditingController();
   bool _isLoading = false;
   String? _currentUserId;
+  OrderItemPriceType _defaultPriceType = OrderItemPriceType.retail;
+  String? _selectedCategoryId;
+  Timer? _searchDebounce;
 
   @override
   void initState() {
     super.initState();
     _loadCurrentUser();
-    // Limpiar el carrito cada vez que se entra a crear un pedido nuevo.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(currentOrderCartProvider.notifier).clearCart();
       _notesController.clear();
       _addressController.clear();
       _deliveryFeeController.text = '0';
+      _productSearchController.clear();
+      _selectedCategoryId = null;
+      _defaultPriceType = OrderItemPriceType.retail;
+      ref.read(productsProvider.notifier).clearFilters();
     });
   }
 
@@ -43,6 +53,8 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
     _notesController.dispose();
     _addressController.dispose();
     _deliveryFeeController.dispose();
+    _productSearchController.dispose();
+    _searchDebounce?.cancel();
     super.dispose();
   }
 
@@ -59,6 +71,72 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
     }
   }
 
+  void _onSearchChanged(String value) {
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 300), () {
+      ref
+          .read(productsProvider.notifier)
+          .setSearch(value.isEmpty ? null : value);
+    });
+  }
+
+  void _onCategorySelected(String? categoryId) {
+    setState(() => _selectedCategoryId = categoryId);
+    ref.read(productsProvider.notifier).setCategory(categoryId);
+  }
+
+  void _onProductIncrement(Product product) {
+    final price = _resolvePrice(product, _defaultPriceType);
+    if (price <= 0) {
+      _showSnack('Este producto no tiene precio para ${orderItemPriceTypeLabel(_defaultPriceType).toLowerCase()}', isError: true);
+      return;
+    }
+    ref.read(currentOrderCartProvider.notifier).incrementItem(
+          productId: product.id,
+          productName: product.name,
+          price: price,
+          priceType: _defaultPriceType,
+        );
+  }
+
+  void _onProductDecrement(Product product) {
+    ref.read(currentOrderCartProvider.notifier).decrementItem(
+          productId: product.id,
+          priceType: _defaultPriceType,
+        );
+  }
+
+  double _resolvePrice(Product product, OrderItemPriceType priceType) {
+    switch (priceType) {
+      case OrderItemPriceType.wholesale:
+        return product.priceWholesale;
+      case OrderItemPriceType.cold:
+        return product.priceCold ?? product.priceRetail;
+      case OrderItemPriceType.retail:
+        return product.priceRetail;
+    }
+  }
+
+  int _quantityInCart(Product product, OrderItemPriceType priceType) {
+    final cart = ref.read(currentOrderCartProvider);
+    final item = cart.items.firstWhere(
+      (i) => i.productId == product.id && i.priceType == priceType,
+      orElse: () => const OrderItem(
+        id: '',
+        orderId: '',
+        productId: '',
+      ),
+    );
+    return item.id.isEmpty ? 0 : item.quantity;
+  }
+
+  int _totalQuantityInCart(Product product) {
+    final cart = ref.read(currentOrderCartProvider);
+    return cart.items
+        .where((i) => i.productId == product.id)
+        .fold(0, (sum, i) => sum + i.quantity);
+  }
+
   @override
   Widget build(BuildContext context) {
     final cartState = ref.watch(currentOrderCartProvider);
@@ -66,43 +144,518 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Nuevo Pedido'),
-        actions: [
-          TextButton.icon(
-            onPressed: _isLoading || _currentUserId == null ? null : _saveOrder,
-            icon: _isLoading
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.save),
-            label: const Text('Guardar'),
-            style: TextButton.styleFrom(foregroundColor: Colors.white),
-          ),
-        ],
       ),
-      body: Column(
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isWide = constraints.maxWidth >= 900;
+          return Column(
+            children: [
+              Expanded(
+                child: isWide
+                    ? Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            flex: 3,
+                            child: _buildCatalogPanel(cartState),
+                          ),
+                          Expanded(
+                            flex: 2,
+                            child: _buildCartPanel(cartState),
+                          ),
+                        ],
+                      )
+                    : _buildMobileBody(cartState),
+              ),
+              _buildBottomBar(cartState),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildMobileBody(CurrentOrderCartState cartState) {
+    return DefaultTabController(
+      length: 2,
+      child: Column(
         children: [
+          _buildHeader(cartState),
+          const TabBar(
+            tabs: [
+              Tab(icon: Icon(Icons.search), text: 'Catálogo'),
+              Tab(icon: Icon(Icons.shopping_cart), text: 'Carrito'),
+            ],
+          ),
           Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(16),
+            child: TabBarView(
               children: [
-                _buildCustomerSection(cartState),
-                const SizedBox(height: 16),
-                _buildTypeSection(cartState),
-                const SizedBox(height: 16),
-                _buildProductsSection(cartState),
-                const SizedBox(height: 16),
-                _buildDeliverySection(cartState),
-                const SizedBox(height: 16),
-                _buildNotesSection(),
+                _buildCatalogPanel(cartState),
+                _buildCartPanel(cartState),
               ],
             ),
           ),
-          _buildBottomBar(cartState),
         ],
       ),
     );
+  }
+
+  Widget _buildHeader(CurrentOrderCartState cartState) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      child: Column(
+        children: [
+          _buildCustomerSection(cartState),
+          const SizedBox(height: 12),
+          _buildTypeSection(cartState),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCatalogPanel(CurrentOrderCartState cartState) {
+    final productsState = ref.watch(productsProvider);
+    final categoriesAsync = ref.watch(categoriesProvider);
+
+    return Card(
+      margin: const EdgeInsets.all(16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Catálogo',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  '${productsState.products.length} productos',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _productSearchController,
+              decoration: InputDecoration(
+                hintText: 'Buscar producto...',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () {
+                    _productSearchController.clear();
+                    ref.read(productsProvider.notifier).setSearch(null);
+                  },
+                ),
+                border: const OutlineInputBorder(),
+              ),
+              onChanged: _onSearchChanged,
+            ),
+            const SizedBox(height: 12),
+            categoriesAsync.when(
+              data: (categories) => SizedBox(
+                height: 40,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: [
+                    FilterChip(
+                      label: const Text('Todas'),
+                      selected: _selectedCategoryId == null,
+                      onSelected: (_) => _onCategorySelected(null),
+                    ),
+                    const SizedBox(width: 8),
+                    ...categories.map((category) {
+                      final selected = _selectedCategoryId == category.id;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: FilterChip(
+                          label: Text(category.name),
+                          selected: selected,
+                          onSelected: (_) => _onCategorySelected(category.id),
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              ),
+              loading: () => const SizedBox(
+                height: 40,
+                child: Center(child: CircularProgressIndicator()),
+              ),
+              error: (error, stackTrace) => const SizedBox.shrink(),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                const Text('Precio por defecto:'),
+                const SizedBox(width: 8),
+                SegmentedButton<OrderItemPriceType>(
+                  segments: [
+                    ButtonSegment(
+                      value: OrderItemPriceType.retail,
+                      label: Text(OrderItemPriceType.retail.label),
+                    ),
+                    ButtonSegment(
+                      value: OrderItemPriceType.wholesale,
+                      label: Text(OrderItemPriceType.wholesale.label),
+                    ),
+                    ButtonSegment(
+                      value: OrderItemPriceType.cold,
+                      label: Text(OrderItemPriceType.cold.label),
+                    ),
+                  ],
+                  selected: {_defaultPriceType},
+                  onSelectionChanged: (selected) {
+                    if (selected.isNotEmpty) {
+                      setState(() => _defaultPriceType = selected.first);
+                    }
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Expanded(
+              child: productsState.isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : productsState.products.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.search_off,
+                                  size: 48,
+                                  color: Colors.grey.shade700),
+                              const SizedBox(height: 8),
+                              Text(
+                                'No se encontraron productos',
+                                style: TextStyle(
+                                    color: Colors.grey.shade700),
+                              ),
+                            ],
+                          ),
+                        )
+                      : GridView.builder(
+                          gridDelegate:
+                              const SliverGridDelegateWithMaxCrossAxisExtent(
+                            maxCrossAxisExtent: 220,
+                            childAspectRatio: 0.85,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                          ),
+                          itemCount: productsState.products.length,
+                          itemBuilder: (context, index) => _buildProductCard(
+                            productsState.products[index],
+                          ),
+                        ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProductCard(Product product) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final defaultPrice = _resolvePrice(product, _defaultPriceType);
+    final quantityForDefault = _quantityInCart(product, _defaultPriceType);
+    final totalQuantity = _totalQuantityInCart(product);
+    final hasPrice = defaultPrice > 0;
+    final stockColor = product.stockCurrent == 0
+        ? Colors.red
+        : product.stockCurrent <= product.stockMin
+            ? Colors.orange
+            : Colors.green;
+
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  product.name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  product.presentation,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const Spacer(),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '\$${defaultPrice.toStringAsFixed(0)}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                    Text(
+                      'Stock: ${product.stockCurrent}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: stockColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    _IconButton(
+                      icon: Icons.remove,
+                      onPressed: quantityForDefault > 0
+                          ? () => _onProductDecrement(product)
+                          : null,
+                    ),
+                    Expanded(
+                      child: Text(
+                        '$quantityForDefault',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                    _IconButton(
+                      icon: Icons.add,
+                      onPressed: hasPrice
+                          ? () => _onProductIncrement(product)
+                          : null,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          if (totalQuantity > 0)
+            Positioned(
+              top: 8,
+              right: 8,
+              child: CircleAvatar(
+                radius: 14,
+                backgroundColor: Theme.of(context).colorScheme.error,
+                child: Text(
+                  '$totalQuantity',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onError,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCartPanel(CurrentOrderCartState cartState) {
+    return Card(
+      margin: const EdgeInsets.all(16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Carrito',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (cartState.items.isNotEmpty)
+                  TextButton.icon(
+                    onPressed: () =>
+                        ref.read(currentOrderCartProvider.notifier).clearCart(),
+                    icon: const Icon(Icons.delete_outline),
+                    label: const Text('Vaciar'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (cartState.items.isEmpty)
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.shopping_cart_outlined,
+                          size: 48,
+                          color: Colors.grey.shade700),
+                      const SizedBox(height: 8),
+                      Text(
+                        'El carrito está vacío',
+                        style: TextStyle(
+                            color: Colors.grey.shade700),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              Expanded(
+                child: ListView.builder(
+                  itemCount: cartState.items.length,
+                  itemBuilder: (context, index) =>
+                      _buildCartItem(cartState.items[index]),
+                ),
+              ),
+            const Divider(),
+            _buildDeliverySection(cartState),
+            const SizedBox(height: 12),
+            _buildNotesSection(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCartItem(OrderItem item) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: CircleAvatar(
+        backgroundColor: colorScheme.primaryContainer,
+        child: Text(
+          '${item.quantity}',
+          style: TextStyle(
+            color: colorScheme.onPrimaryContainer,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+      title: Text(
+        item.productName ?? 'Producto',
+        style: TextStyle(color: colorScheme.onSurface),
+      ),
+      subtitle: Wrap(
+        spacing: 8,
+        children: [
+          Text(
+            '\$${item.unitPrice.toStringAsFixed(0)} c/u',
+            style: TextStyle(color: Colors.grey.shade700),
+          ),
+          _buildItemPriceTypeChip(item),
+        ],
+      ),
+      trailing: SizedBox(
+        width: 120,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Text(
+              '\$${item.subtotal.toStringAsFixed(0)}',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                InkWell(
+                  onTap: () => ref
+                      .read(currentOrderCartProvider.notifier)
+                      .updateItemQuantity(item.id, item.quantity + 1),
+                  child: const Icon(Icons.add, size: 18),
+                ),
+                InkWell(
+                  onTap: () => ref
+                      .read(currentOrderCartProvider.notifier)
+                      .updateItemQuantity(item.id, item.quantity - 1),
+                  child: const Icon(Icons.remove, size: 18),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildItemPriceTypeChip(OrderItem item) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return InkWell(
+      onTap: () => _showItemPriceTypeSelector(item),
+      child: Chip(
+        label: Text(
+          item.priceType.label,
+          style: TextStyle(
+            fontSize: 10,
+            color: colorScheme.onPrimaryContainer,
+          ),
+        ),
+        backgroundColor: colorScheme.primaryContainer,
+        padding: EdgeInsets.zero,
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
+    );
+  }
+
+  Future<void> _showItemPriceTypeSelector(OrderItem item) async {
+    final selected = await showDialog<OrderItemPriceType>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cambiar tipo de precio'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: OrderItemPriceType.values.map((type) {
+            final selected = type == item.priceType;
+            return ListTile(
+              title: Text(type.label),
+              leading: Icon(
+                selected ? Icons.check_circle : Icons.radio_button_unchecked,
+                color: selected
+                    ? Theme.of(context).colorScheme.primary
+                    : Colors.grey,
+              ),
+              onTap: () => Navigator.pop(context, type),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+
+    if (selected != null && selected != item.priceType) {
+      ref
+          .read(currentOrderCartProvider.notifier)
+          .updateItemPriceType(item.id, selected);
+    }
   }
 
   Widget _buildCustomerSection(CurrentOrderCartState cartState) {
@@ -261,10 +814,6 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
                         ref
                             .read(currentOrderCartProvider.notifier)
                             .setDeliveryType(value);
-                        if (value == DeliveryType.delivery &&
-                            _addressController.text.isEmpty) {
-                          // Focus on address field
-                        }
                       }
                     },
                   ),
@@ -277,171 +826,62 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
     );
   }
 
-  Widget _buildProductsSection(CurrentOrderCartState cartState) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Productos',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                TextButton.icon(
-                  onPressed: () => _addProduct(),
-                  icon: const Icon(Icons.add),
-                  label: const Text('Agregar'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            if (cartState.items.isEmpty)
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade200,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Center(
-                  child: Column(
-                    children: [
-                      Icon(Icons.shopping_cart_outlined,
-                          size: 48,
-                          color: Colors.grey.shade700),
-                      const SizedBox(height: 8),
-                      Text(
-                        'El carrito está vacío',
-                        style: TextStyle(
-                            color: Colors.grey.shade700),
-                      ),
-                    ],
-                  ),
-                ),
-              )
-            else
-              ...cartState.items.map((item) => _buildCartItem(item)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCartItem(OrderItem item) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final priceLabel = item.priceType.label;
-    return ListTile(
-      leading: CircleAvatar(
-        backgroundColor: colorScheme.primaryContainer,
-        child: Text(
-          '${item.quantity}',
+  Widget _buildDeliverySection(CurrentOrderCartState cartState) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Entrega',
           style: TextStyle(
-            color: colorScheme.onPrimaryContainer,
+            fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
         ),
-      ),
-      title: Text(
-        item.productName ?? 'Producto',
-        style: TextStyle(color: colorScheme.onSurface),
-      ),
-      subtitle: Text(
-        '\$${item.unitPrice.toStringAsFixed(0)} c/u • $priceLabel',
-        style: TextStyle(color: Colors.grey.shade700),
-      ),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            '\$${item.subtotal.toStringAsFixed(0)}',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: colorScheme.onSurface,
-            ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _addressController,
+          decoration: const InputDecoration(
+            labelText: 'Dirección de entrega',
+            prefixIcon: Icon(Icons.location_on),
+            border: OutlineInputBorder(),
           ),
-          IconButton(
-            icon: Icon(Icons.delete_outline, color: colorScheme.error),
-            onPressed: () => ref
-                .read(currentOrderCartProvider.notifier)
-                .removeItem(item.id),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDeliverySection(CurrentOrderCartState cartState) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Entrega',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _addressController,
-              decoration: const InputDecoration(
-                labelText: 'Dirección de entrega',
-                prefixIcon: Icon(Icons.location_on),
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 2,
-              onChanged: (value) => ref
-                  .read(currentOrderCartProvider.notifier)
-                  .setDeliveryAddress(value),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _deliveryFeeController,
-              decoration: const InputDecoration(
-                labelText: 'Costo de domicilio',
-                prefixIcon: Icon(Icons.delivery_dining),
-                border: OutlineInputBorder(),
-              ),
-              keyboardType: TextInputType.number,
-              onChanged: (value) {
-                final fee = double.tryParse(value) ?? 0;
-                ref
-                    .read(currentOrderCartProvider.notifier)
-                    .setDeliveryFee(fee);
-              },
-            ),
-          ],
+          maxLines: 2,
+          onChanged: (value) => ref
+              .read(currentOrderCartProvider.notifier)
+              .setDeliveryAddress(value),
         ),
-      ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _deliveryFeeController,
+          decoration: const InputDecoration(
+            labelText: 'Costo de domicilio',
+            prefixIcon: Icon(Icons.delivery_dining),
+            border: OutlineInputBorder(),
+          ),
+          keyboardType: TextInputType.number,
+          onChanged: (value) {
+            final fee = double.tryParse(value) ?? 0;
+            ref
+                .read(currentOrderCartProvider.notifier)
+                .setDeliveryFee(fee);
+          },
+        ),
+      ],
     );
   }
 
   Widget _buildNotesSection() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: TextField(
-          controller: _notesController,
-          decoration: const InputDecoration(
-            labelText: 'Notas / Observaciones',
-            prefixIcon: Icon(Icons.note),
-            border: OutlineInputBorder(),
-            alignLabelWithHint: true,
-          ),
-          maxLines: 3,
-          onChanged: (value) =>
-              ref.read(currentOrderCartProvider.notifier).setNotes(value),
-        ),
+    return TextField(
+      controller: _notesController,
+      decoration: const InputDecoration(
+        labelText: 'Notas / Observaciones',
+        prefixIcon: Icon(Icons.note),
+        border: OutlineInputBorder(),
+        alignLabelWithHint: true,
       ),
+      maxLines: 2,
+      onChanged: (value) =>
+          ref.read(currentOrderCartProvider.notifier).setNotes(value),
     );
   }
 
@@ -519,27 +959,27 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
               ],
             ),
             const SizedBox(height: 8),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _isLoading || _currentUserId == null
-                      ? null
-                      : _saveOrder,
-                  icon: _isLoading
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.check),
-                  label: _currentUserId == null
-                      ? const Text('CARGANDO USUARIO...')
-                      : const Text('CREAR PEDIDO'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _isLoading || _currentUserId == null
+                    ? null
+                    : _saveOrder,
+                icon: _isLoading
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.check),
+                label: _currentUserId == null
+                    ? const Text('CARGANDO USUARIO...')
+                    : const Text('CREAR PEDIDO'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
               ),
+            ),
           ],
         ),
       ),
@@ -553,7 +993,6 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
     );
 
     if (selected == null) {
-      // Cliente ocasional
       ref.read(currentOrderCartProvider.notifier).setCustomer(
             id: null,
             name: null,
@@ -594,23 +1033,6 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
         'Cliente ocasional: se cambió la venta a contado',
         isError: true,
       );
-    }
-  }
-
-  Future<void> _addProduct() async {
-    final selected = await showDialog<_SelectedProduct>(
-      context: context,
-      builder: (context) => const _ProductSelectorDialog(),
-    );
-
-    if (selected != null) {
-      ref.read(currentOrderCartProvider.notifier).addItem(
-            productId: selected.product.id,
-            productName: selected.product.name,
-            price: selected.price,
-            quantity: selected.quantity,
-            priceType: selected.priceType,
-          );
     }
   }
 
@@ -674,18 +1096,35 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
   }
 }
 
-class _SelectedProduct {
-  final Product product;
-  final double price;
-  final int quantity;
-  final OrderItemPriceType priceType;
+class _IconButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback? onPressed;
 
-  _SelectedProduct({
-    required this.product,
-    required this.price,
-    required this.quantity,
-    required this.priceType,
-  });
+  const _IconButton({required this.icon, this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: onPressed == null
+              ? Colors.grey.shade200
+              : Theme.of(context).colorScheme.primaryContainer,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(
+          icon,
+          size: 20,
+          color: onPressed == null
+              ? Colors.grey
+              : Theme.of(context).colorScheme.onPrimaryContainer,
+        ),
+      ),
+    );
+  }
 }
 
 class _CustomerSelectorDialog extends ConsumerStatefulWidget {
@@ -790,273 +1229,6 @@ class _CustomerSelectorDialogState
   }
 }
 
-class _ProductSelectorDialog extends ConsumerStatefulWidget {
-  const _ProductSelectorDialog();
-
-  @override
-  ConsumerState<_ProductSelectorDialog> createState() =>
-      _ProductSelectorDialogState();
-}
-
-enum _PriceType { retail, wholesale, cold }
-
-class _ProductSelectorDialogState
-    extends ConsumerState<_ProductSelectorDialog> {
-  final _searchController = TextEditingController();
-  Product? _selectedProduct;
-  final _quantityController = TextEditingController(text: '1');
-  _PriceType _priceType = _PriceType.retail;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _searchController.clear();
-      _selectedProduct = null;
-      _quantityController.text = '1';
-      _priceType = _PriceType.retail;
-      ref.read(productsProvider.notifier).setSearch(null);
-      setState(() {});
-    });
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    _quantityController.dispose();
-    super.dispose();
-  }
-
-  void _onProductSelected(Product product) {
-    setState(() {
-      _selectedProduct = product;
-      // Si el producto no tiene precio frio, forzamos retail/wholesale.
-      if (_priceType == _PriceType.cold &&
-          (product.priceCold == null ||
-              product.priceCold! <= 0)) {
-        _priceType = _PriceType.retail;
-      }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final productsState = ref.watch(productsProvider);
-
-    return AlertDialog(
-      title: const Text('Agregar Producto'),
-      content: SizedBox(
-        width: double.maxFinite,
-        height: 400,
-        child: Column(
-          children: [
-            TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Buscar producto...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: () {
-                    _searchController.clear();
-                    ref.read(productsProvider.notifier).setSearch(null);
-                  },
-                ),
-                border: const OutlineInputBorder(),
-              ),
-              onChanged: (value) {
-                ref
-                    .read(productsProvider.notifier)
-                    .setSearch(value.isEmpty ? null : value);
-              },
-            ),
-            const SizedBox(height: 8),
-            Expanded(
-              child: productsState.isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : ListView.builder(
-                      itemCount: productsState.products.length,
-                      itemBuilder: (context, index) {
-                        final product = productsState.products[index];
-                        final isSelected = _selectedProduct?.id == product.id;
-                        return ListTile(
-                          selected: isSelected,
-                          selectedTileColor: Colors.blue.shade50,
-                          leading: CircleAvatar(
-                            child: Text(product.name[0].toUpperCase()),
-                          ),
-                          title: Text(product.name),
-                          subtitle: Text(
-                            'Detal: \$${product.priceRetail.toStringAsFixed(0)} | Mayorista: \$${product.priceWholesale.toStringAsFixed(0)}',
-                          ),
-                          trailing: Text(
-                            'Stock: ${product.stockCurrent}',
-                            style: TextStyle(
-                              color: product.stockCurrent == 0
-                                  ? Colors.red
-                                  : product.stockCurrent <= product.stockMin
-                                      ? Colors.orange
-                                      : Colors.green,
-                            ),
-                          ),
-                          onTap: () => _onProductSelected(product),
-                        );
-                      },
-                    ),
-            ),
-            if (_selectedProduct != null)
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade200,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _selectedProduct!.name,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${_selectedProduct!.presentation} | '
-                      '${_selectedProduct!.unitsPerPackage} und/paquete',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade700,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: _quantityController,
-                      decoration: const InputDecoration(
-                        labelText: 'Cantidad',
-                        border: OutlineInputBorder(),
-                        helperText:
-                            'Unidades enteras (ej: 15 unidades de una canasta de 30)',
-                      ),
-                      keyboardType: TextInputType.number,
-                      onChanged: (_) => setState(() {}),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Tipo de precio',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    SegmentedButton<_PriceType>(
-                      segments: [
-                        ButtonSegment(
-                          value: _PriceType.retail,
-                          label: Text('Detal \$${_selectedProduct!.priceRetail.toStringAsFixed(0)}'),
-                        ),
-                        ButtonSegment(
-                          value: _PriceType.wholesale,
-                          label: Text('Mayorista \$${_selectedProduct!.priceWholesale.toStringAsFixed(0)}'),
-                        ),
-                        if (_selectedProduct!.priceCold != null &&
-                            _selectedProduct!.priceCold! > 0)
-                          ButtonSegment(
-                            value: _PriceType.cold,
-                            label: Text('Frio \$${_selectedProduct!.priceCold!.toStringAsFixed(0)}'),
-                          ),
-                      ],
-                      selected: {_priceType},
-                      onSelectionChanged: (selected) {
-                        if (selected.isNotEmpty) {
-                          setState(() => _priceType = selected.first);
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Unitario: \$${_getUnitPrice().toStringAsFixed(0)}',
-                          style: TextStyle(
-                            color: Colors.grey.shade700,
-                          ),
-                        ),
-                        Text(
-                          'Subtotal: \$${_getSubtotal().toStringAsFixed(0)}',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancelar'),
-        ),
-        ElevatedButton(
-          onPressed: _selectedProduct == null
-              ? null
-              : () {
-                  final quantity =
-                      int.tryParse(_quantityController.text.trim()) ?? 1;
-                  if (quantity <= 0) return;
-                  Navigator.pop(
-                    context,
-                    _SelectedProduct(
-                      product: _selectedProduct!,
-                      price: _getUnitPrice(),
-                      quantity: quantity,
-                      priceType: _mapPriceType(_priceType),
-                    ),
-                  );
-                },
-          child: const Text('Agregar'),
-        ),
-      ],
-    );
-  }
-
-  double _getUnitPrice() {
-    final product = _selectedProduct;
-    if (product == null) return 0;
-
-    switch (_priceType) {
-      case _PriceType.wholesale:
-        return product.priceWholesale;
-      case _PriceType.cold:
-        return product.priceCold ?? product.priceRetail;
-      case _PriceType.retail:
-        return product.priceRetail;
-    }
-  }
-
-  double _getSubtotal() {
-    final quantity = int.tryParse(_quantityController.text.trim()) ?? 1;
-    return quantity * _getUnitPrice();
-  }
-
-  OrderItemPriceType _mapPriceType(_PriceType type) {
-    switch (type) {
-      case _PriceType.wholesale:
-        return OrderItemPriceType.wholesale;
-      case _PriceType.cold:
-        return OrderItemPriceType.cold;
-      case _PriceType.retail:
-        return OrderItemPriceType.retail;
-    }
-  }
+String orderItemPriceTypeLabel(OrderItemPriceType type) {
+  return type.label;
 }

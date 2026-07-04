@@ -425,6 +425,93 @@ class CurrentOrderCartNotifier
     );
   }
 
+  /// Incrementa la cantidad de un producto con un tipo de precio específico.
+  /// Si no existe, lo crea con quantity 1.
+  void incrementItem({
+    required String productId,
+    String? productName,
+    required double price,
+    required OrderItemPriceType priceType,
+  }) {
+    final existingIndex = state.items.indexWhere(
+      (item) => item.productId == productId && item.priceType == priceType,
+    );
+
+    if (existingIndex >= 0) {
+      final existing = state.items[existingIndex];
+      updateItemQuantity(existing.id, existing.quantity + 1);
+      return;
+    }
+
+    if (productName == null) return;
+
+    addItem(
+      productId: productId,
+      productName: productName,
+      price: price,
+      quantity: 1,
+      priceType: priceType,
+    );
+  }
+
+  /// Decrementa la cantidad de un producto con un tipo de precio específico.
+  /// Si llega a 0, lo elimina.
+  void decrementItem({
+    required String productId,
+    required OrderItemPriceType priceType,
+  }) {
+    final existingIndex = state.items.indexWhere(
+      (item) => item.productId == productId && item.priceType == priceType,
+    );
+
+    if (existingIndex >= 0) {
+      final existing = state.items[existingIndex];
+      updateItemQuantity(existing.id, existing.quantity - 1);
+    }
+  }
+
+  /// Cambia el tipo de precio de un item existente.
+  /// Si ya existe otro item con el nuevo tipo de precio, se fusiona.
+  void updateItemPriceType(String itemId, OrderItemPriceType newPriceType) {
+    final index = state.items.indexWhere((item) => item.id == itemId);
+    if (index < 0) return;
+
+    final item = state.items[index];
+    if (item.priceType == newPriceType) return;
+
+    final mergeIndex = state.items.indexWhere(
+      (i) => i.productId == item.productId && i.priceType == newPriceType,
+    );
+
+    if (mergeIndex >= 0) {
+      final mergeItem = state.items[mergeIndex];
+      final merged = mergeItem.copyWith(
+        quantity: mergeItem.quantity + item.quantity,
+        subtotal: (mergeItem.unitPrice * (mergeItem.quantity + item.quantity)) -
+            mergeItem.discountAmount,
+      );
+      state = state.copyWith(
+        items: state.items
+            .where((i) => i.id != itemId && i.id != mergeItem.id)
+            .toList()
+          ..add(merged),
+      );
+      return;
+    }
+
+    // Recalcular unitPrice según el nuevo tipo de precio no es posible
+    // sin conocer el producto. Mantenemos el unitPrice actual y solo
+    // cambiamos el priceType; el usuario puede ajustar cantidad si es necesario.
+    state = state.copyWith(
+      items: state.items.map((i) {
+        if (i.id == itemId) {
+          return i.copyWith(priceType: newPriceType);
+        }
+        return i;
+      }).toList(),
+    );
+  }
+
   void updateItemDiscount(String itemId, double discountAmount) {
     state = state.copyWith(
       items: state.items.map((item) {
