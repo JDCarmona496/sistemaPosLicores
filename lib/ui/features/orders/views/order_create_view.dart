@@ -148,11 +148,12 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
       body: LayoutBuilder(
         builder: (context, constraints) {
           final isWide = constraints.maxWidth >= 900;
-          return Column(
-            children: [
-              Expanded(
-                child: isWide
-                    ? Row(
+          return isWide
+              ? Column(
+                  children: [
+                    _buildHeader(cartState),
+                    Expanded(
+                      child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
@@ -164,12 +165,17 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
                             child: _buildCartPanel(cartState),
                           ),
                         ],
-                      )
-                    : _buildMobileBody(cartState),
-              ),
-              _buildBottomBar(cartState),
-            ],
-          );
+                      ),
+                    ),
+                    _buildBottomBar(cartState),
+                  ],
+                )
+              : Column(
+                  children: [
+                    Expanded(child: _buildMobileBody(cartState)),
+                    _buildBottomBar(cartState),
+                  ],
+                );
         },
       ),
     );
