@@ -22,19 +22,28 @@ ALTER TABLE public.order_items
 ALTER TABLE public.order_items
   ADD COLUMN IF NOT EXISTS price_type text NOT NULL DEFAULT 'retail';
 
--- Migrar tipos de precio desde las banderas anteriores
-UPDATE public.order_items
-SET price_type = CASE
-  WHEN is_fractional_price THEN 'cold'
-  WHEN is_wholesale_price THEN 'wholesale'
-  ELSE 'retail'
-END
-WHERE price_type = 'retail'
-  AND (is_wholesale_price IS TRUE OR is_fractional_price IS TRUE);
+-- Migrar tipos de precio desde las banderas anteriores (solo si aun existen)
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'order_items' AND column_name = 'is_wholesale_price'
+  ) THEN
+    UPDATE public.order_items
+    SET price_type = CASE
+      WHEN is_fractional_price THEN 'cold'
+      WHEN is_wholesale_price THEN 'wholesale'
+      ELSE 'retail'
+    END
+    WHERE price_type = 'retail'
+      AND (is_wholesale_price IS TRUE OR is_fractional_price IS TRUE);
 
-ALTER TABLE public.order_items
-  DROP COLUMN IF EXISTS is_wholesale_price,
-  DROP COLUMN IF EXISTS is_fractional_price;
+    ALTER TABLE public.order_items
+      DROP COLUMN IF EXISTS is_wholesale_price,
+      DROP COLUMN IF EXISTS is_fractional_price;
+  END IF;
+END
+$$;
 
 -- 3. Movimientos de inventario a integer
 ALTER TABLE public.inventory_movements
