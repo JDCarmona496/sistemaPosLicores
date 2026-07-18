@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../data/providers/order_providers.dart';
 import '../../../../../data/providers/product_providers.dart';
 import '../../../../../domain/models/order_item.dart';
+import 'geocode_address_button.dart';
 import 'price_type_style.dart';
 import 'quantity_selector.dart';
 
@@ -332,6 +333,11 @@ class OrderCartPanel extends ConsumerWidget {
           onChanged: (value) => ref
               .read(currentOrderCartProvider.notifier)
               .setDeliveryAddress(value),
+        ),
+        const SizedBox(height: 8),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: GeocodeAddressButton(addressController: addressController),
         ),
         const SizedBox(height: 12),
         TextField(

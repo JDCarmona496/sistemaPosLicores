@@ -421,6 +421,8 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
             items: cartState.items,
             notes: cartState.notes,
             deliveryAddress: cartState.deliveryAddress,
+            deliveryLatitude: cartState.deliveryLatitude,
+            deliveryLongitude: cartState.deliveryLongitude,
             deliveryFee: cartState.deliveryFee,
           );
 

@@ -20,6 +20,8 @@ class CurrentOrderCartState {
   final double deliveryFee;
   final String? notes;
   final String? deliveryAddress;
+  final double? deliveryLatitude;
+  final double? deliveryLongitude;
 
   const CurrentOrderCartState({
     this.customerId,
@@ -32,6 +34,8 @@ class CurrentOrderCartState {
     this.deliveryFee = 0,
     this.notes,
     this.deliveryAddress,
+    this.deliveryLatitude,
+    this.deliveryLongitude,
   });
 
   double get subtotal =>
@@ -42,6 +46,8 @@ class CurrentOrderCartState {
   int get itemCount => items.length;
   bool get isOccasionalCustomer =>
       customerId == null || customerType == CustomerType.occasional;
+  bool get hasDeliveryCoordinates =>
+      deliveryLatitude != null && deliveryLongitude != null;
 
   CurrentOrderCartState copyWith({
     String? customerId,
@@ -54,9 +60,12 @@ class CurrentOrderCartState {
     double? deliveryFee,
     String? notes,
     String? deliveryAddress,
+    double? deliveryLatitude,
+    double? deliveryLongitude,
     bool clearCustomer = false,
     bool clearNotes = false,
     bool clearDeliveryAddress = false,
+    bool clearDeliveryCoordinates = false,
   }) {
     return CurrentOrderCartState(
       customerId: clearCustomer ? null : (customerId ?? this.customerId),
@@ -72,6 +81,12 @@ class CurrentOrderCartState {
       deliveryAddress: clearDeliveryAddress
           ? null
           : (deliveryAddress ?? this.deliveryAddress),
+      deliveryLatitude: clearDeliveryCoordinates
+          ? null
+          : (deliveryLatitude ?? this.deliveryLatitude),
+      deliveryLongitude: clearDeliveryCoordinates
+          ? null
+          : (deliveryLongitude ?? this.deliveryLongitude),
     );
   }
 }
@@ -118,7 +133,19 @@ class CurrentOrderCartNotifier
   }
 
   void setDeliveryAddress(String? address) {
-    state = state.copyWith(deliveryAddress: address);
+    // Editar la direccion invalida las coordenadas capturadas antes:
+    // ya no corresponden al texto nuevo.
+    state = state.copyWith(
+      deliveryAddress: address,
+      clearDeliveryCoordinates: true,
+    );
+  }
+
+  void setDeliveryCoordinates(double latitude, double longitude) {
+    state = state.copyWith(
+      deliveryLatitude: latitude,
+      deliveryLongitude: longitude,
+    );
   }
 
   void addItem({

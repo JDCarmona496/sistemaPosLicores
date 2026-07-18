@@ -368,4 +368,33 @@ void main() {
       expect(cart.state.isOccasionalCustomer, isFalse);
     });
   });
+
+  group('AC-15: coordenadas de entrega', () {
+    test('setDeliveryCoordinates guarda latitud y longitud', () {
+      cart.setDeliveryCoordinates(3.5373, -76.3036);
+
+      expect(cart.state.deliveryLatitude, closeTo(3.5373, 0.0001));
+      expect(cart.state.deliveryLongitude, closeTo(-76.3036, 0.0001));
+      expect(cart.state.hasDeliveryCoordinates, isTrue);
+    });
+
+    test('hasDeliveryCoordinates es false sin coordenadas', () {
+      expect(cart.state.hasDeliveryCoordinates, isFalse);
+    });
+
+    test('editar la direccion manualmente invalida las coordenadas', () {
+      cart.setDeliveryCoordinates(3.5373, -76.3036);
+      cart.setDeliveryAddress('Direccion corregida');
+
+      expect(cart.state.deliveryAddress, 'Direccion corregida');
+      expect(cart.state.hasDeliveryCoordinates, isFalse);
+    });
+
+    test('clearCart limpia las coordenadas', () {
+      cart.setDeliveryCoordinates(3.5373, -76.3036);
+      cart.clearCart();
+
+      expect(cart.state.hasDeliveryCoordinates, isFalse);
+    });
+  });
 }
