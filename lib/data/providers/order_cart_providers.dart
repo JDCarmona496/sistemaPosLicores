@@ -80,6 +80,11 @@ class CurrentOrderCartNotifier
     extends StateNotifier<CurrentOrderCartState> {
   CurrentOrderCartNotifier() : super(const CurrentOrderCartState());
 
+  // IDs unicos por sesion: el timestamp por milisegundo puede colisionar
+  // cuando se agregan dos items casi simultaneos (bug detectado en tests).
+  int _idSeq = 0;
+  String _nextItemId() => 'cart-item-${_idSeq++}';
+
   void setCustomer({
     String? id,
     String? name,
@@ -136,7 +141,7 @@ class CurrentOrderCartNotifier
     }
 
     final newItem = OrderItem(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: _nextItemId(),
       orderId: '',
       productId: productId,
       quantity: quantity,
