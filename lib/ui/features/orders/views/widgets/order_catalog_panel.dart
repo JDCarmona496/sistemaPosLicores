@@ -64,7 +64,8 @@ class _OrderCatalogPanelState extends ConsumerState<OrderCatalogPanel> {
       return;
     }
 
-    final totalInCart = _totalQuantityInCart(product);
+    final totalInCart =
+        _totalQuantityInCart(ref.read(currentOrderCartProvider), product);
     if (totalInCart >= product.stockCurrent) {
       _showSnack(
         'Stock máximo alcanzado (${product.stockCurrent} unidades)',
@@ -99,8 +100,8 @@ class _OrderCatalogPanelState extends ConsumerState<OrderCatalogPanel> {
     }
   }
 
-  int _quantityInCart(Product product, OrderItemPriceType priceType) {
-    final cart = ref.read(currentOrderCartProvider);
+  int _quantityInCart(
+    CurrentOrderCartState cart, Product product, OrderItemPriceType priceType) {
     final item = cart.items.firstWhere(
       (i) => i.productId == product.id && i.priceType == priceType,
       orElse: () => const OrderItem(
@@ -112,8 +113,7 @@ class _OrderCatalogPanelState extends ConsumerState<OrderCatalogPanel> {
     return item.id.isEmpty ? 0 : item.quantity;
   }
 
-  int _totalQuantityInCart(Product product) {
-    final cart = ref.read(currentOrderCartProvider);
+  int _totalQuantityInCart(CurrentOrderCartState cart, Product product) {
     return cart.items
         .where((i) => i.productId == product.id)
         .fold(0, (sum, i) => sum + i.quantity);
@@ -123,6 +123,9 @@ class _OrderCatalogPanelState extends ConsumerState<OrderCatalogPanel> {
   Widget build(BuildContext context) {
     final productsState = ref.watch(productsProvider);
     final categoriesAsync = ref.watch(categoriesProvider);
+    // Suscribirse al carrito: sin esto las cantidades de las tarjetas
+    // no se actualizan (el padre usa const OrderCatalogPanel()).
+    final cart = ref.watch(currentOrderCartProvider);
 
     return Card(
       margin: const EdgeInsets.all(16),
@@ -273,7 +276,7 @@ class _OrderCatalogPanelState extends ConsumerState<OrderCatalogPanel> {
                 ),
                 delegate: SliverChildBuilderDelegate(
                   (context, index) =>
-                      _buildProductCard(productsState.products[index]),
+                      _buildProductCard(cart, productsState.products[index]),
                   childCount: productsState.products.length,
                 ),
               ),
@@ -283,11 +286,11 @@ class _OrderCatalogPanelState extends ConsumerState<OrderCatalogPanel> {
     );
   }
 
-  Widget _buildProductCard(Product product) {
+  Widget _buildProductCard(CurrentOrderCartState cart, Product product) {
     final colorScheme = Theme.of(context).colorScheme;
     final defaultPrice = _resolvePrice(product, _defaultPriceType);
-    final quantityForDefault = _quantityInCart(product, _defaultPriceType);
-    final totalQuantity = _totalQuantityInCart(product);
+    final quantityForDefault = _quantityInCart(cart, product, _defaultPriceType);
+    final totalQuantity = _totalQuantityInCart(cart, product);
     final hasPrice = defaultPrice > 0;
     final atStockLimit = totalQuantity >= product.stockCurrent;
     final stockColor = product.stockCurrent == 0
@@ -298,6 +301,7 @@ class _OrderCatalogPanelState extends ConsumerState<OrderCatalogPanel> {
 
     return Card(
       clipBehavior: Clip.antiAlias,
+      elevation: 1,
       child: Stack(
         children: [
           Padding(
@@ -305,6 +309,22 @@ class _OrderCatalogPanelState extends ConsumerState<OrderCatalogPanel> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Icono del producto (el lado derecho queda libre para
+                // la cinta de cantidad en carrito).
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.liquor,
+                    size: 20,
+                    color: colorScheme.onPrimaryContainer,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                // Nombre y presentación.
                 Text(
                   product.name,
                   style: const TextStyle(
@@ -314,7 +334,7 @@ class _OrderCatalogPanelState extends ConsumerState<OrderCatalogPanel> {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
                   product.presentation,
                   style: TextStyle(
@@ -325,6 +345,7 @@ class _OrderCatalogPanelState extends ConsumerState<OrderCatalogPanel> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const Spacer(),
+                // Precio + stock.
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -332,30 +353,45 @@ class _OrderCatalogPanelState extends ConsumerState<OrderCatalogPanel> {
                       '\$${defaultPrice.toStringAsFixed(0)}',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: colorScheme.primary,
+                        fontSize: 17,
+                        color: hasPrice
+                            ? colorScheme.primary
+                            : colorScheme.onSurfaceVariant,
                       ),
                     ),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.inventory_2_outlined,
-                            size: 12, color: stockColor),
-                        const SizedBox(width: 2),
-                        Text(
-                          atStockLimit && product.stockCurrent > 0
-                              ? 'Máx: ${product.stockCurrent}'
-                              : 'Stock: ${product.stockCurrent}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: atStockLimit ? Colors.red : stockColor,
-                            fontWeight: FontWeight.bold,
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: stockColor.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: stockColor.shade200),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.inventory_2_outlined,
+                              size: 11, color: stockColor.shade700),
+                          const SizedBox(width: 3),
+                          Text(
+                            atStockLimit && product.stockCurrent > 0
+                                ? 'Máx ${product.stockCurrent}'
+                                : '${product.stockCurrent}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: atStockLimit
+                                  ? Colors.red.shade700
+                                  : stockColor.shade700,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 8),
+                // Controles de cantidad.
                 Row(
                   children: [
                     AddRemoveButton(
@@ -368,9 +404,12 @@ class _OrderCatalogPanelState extends ConsumerState<OrderCatalogPanel> {
                       child: Text(
                         '$quantityForDefault',
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
+                          color: quantityForDefault > 0
+                              ? colorScheme.primary
+                              : null,
                         ),
                       ),
                     ),
@@ -385,17 +424,25 @@ class _OrderCatalogPanelState extends ConsumerState<OrderCatalogPanel> {
               ],
             ),
           ),
+          // Cinta con el total en carrito (todos los tipos de precio).
           if (totalQuantity > 0)
             Positioned(
-              top: 8,
-              right: 8,
-              child: CircleAvatar(
-                radius: 14,
-                backgroundColor: Theme.of(context).colorScheme.error,
+              top: 0,
+              right: 0,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: colorScheme.error,
+                  borderRadius: const BorderRadius.only(
+                    topRight: Radius.circular(12),
+                    bottomLeft: Radius.circular(12),
+                  ),
+                ),
                 child: Text(
                   '$totalQuantity',
                   style: TextStyle(
-                    color: Theme.of(context).colorScheme.onError,
+                    color: colorScheme.onError,
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
                   ),
