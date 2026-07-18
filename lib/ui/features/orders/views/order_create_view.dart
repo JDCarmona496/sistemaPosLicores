@@ -1,20 +1,16 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../data/providers/order_providers.dart';
-import '../../../../data/providers/product_providers.dart';
-
 import '../../../../core/responsive.dart';
+import '../../../../data/providers/order_providers.dart';
 import '../../../../data/services/auth_service.dart';
 import '../../../../domain/models/customer.dart';
 import '../../../../domain/models/order.dart';
-import '../../../../domain/models/order_item.dart';
-import '../../../../domain/models/product.dart';
-import 'widgets/add_remove_button.dart';
 import 'widgets/customer_selector_dialog.dart';
+import 'widgets/order_cart_panel.dart';
+import 'widgets/order_catalog_panel.dart';
+import 'widgets/order_create_bottom_bar.dart';
 
 class OrderCreateView extends ConsumerStatefulWidget {
   const OrderCreateView({super.key});
@@ -27,12 +23,8 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
   final _notesController = TextEditingController();
   final _addressController = TextEditingController();
   final _deliveryFeeController = TextEditingController(text: '0');
-  final _productSearchController = TextEditingController();
   bool _isLoading = false;
   String? _currentUserId;
-  OrderItemPriceType _defaultPriceType = OrderItemPriceType.retail;
-  String? _selectedCategoryId;
-  Timer? _searchDebounce;
 
   @override
   void initState() {
@@ -43,10 +35,6 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
       _notesController.clear();
       _addressController.clear();
       _deliveryFeeController.text = '0';
-      _productSearchController.clear();
-      _selectedCategoryId = null;
-      _defaultPriceType = OrderItemPriceType.retail;
-      ref.read(productsProvider.notifier).clearFilters();
     });
   }
 
@@ -55,8 +43,6 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
     _notesController.dispose();
     _addressController.dispose();
     _deliveryFeeController.dispose();
-    _productSearchController.dispose();
-    _searchDebounce?.cancel();
     super.dispose();
   }
 
@@ -71,72 +57,6 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
         setState(() => _currentUserId = null);
       }
     }
-  }
-
-  void _onSearchChanged(String value) {
-    _searchDebounce?.cancel();
-    _searchDebounce = Timer(const Duration(milliseconds: 300), () {
-      ref
-          .read(productsProvider.notifier)
-          .setSearch(value.isEmpty ? null : value);
-    });
-  }
-
-  void _onCategorySelected(String? categoryId) {
-    setState(() => _selectedCategoryId = categoryId);
-    ref.read(productsProvider.notifier).setCategory(categoryId);
-  }
-
-  void _onProductIncrement(Product product) {
-    final price = _resolvePrice(product, _defaultPriceType);
-    if (price <= 0) {
-      _showSnack('Este producto no tiene precio para ${_defaultPriceType.label.toLowerCase()}', isError: true);
-      return;
-    }
-    ref.read(currentOrderCartProvider.notifier).incrementItem(
-          productId: product.id,
-          productName: product.name,
-          price: price,
-          priceType: _defaultPriceType,
-        );
-  }
-
-  void _onProductDecrement(Product product) {
-    ref.read(currentOrderCartProvider.notifier).decrementItem(
-          productId: product.id,
-          priceType: _defaultPriceType,
-        );
-  }
-
-  double _resolvePrice(Product product, OrderItemPriceType priceType) {
-    switch (priceType) {
-      case OrderItemPriceType.wholesale:
-        return product.priceWholesale;
-      case OrderItemPriceType.cold:
-        return product.priceCold ?? product.priceRetail;
-      case OrderItemPriceType.retail:
-        return product.priceRetail;
-    }
-  }
-
-  int _quantityInCart(Product product, OrderItemPriceType priceType) {
-    final cart = ref.read(currentOrderCartProvider);
-    final item = cart.items.firstWhere(
-      (i) => i.productId == product.id && i.priceType == priceType,
-      orElse: () => const OrderItem(
-        id: '',
-        orderId: '',
-        productId: '',
-      ),
-    );
-    return item.id.isEmpty ? 0 : item.quantity;
-  }
-
-  int _totalQuantityInCart(Product product) {
-    final cart = ref.read(currentOrderCartProvider);
-    return cart.items
-        .where((i) => i.productId == product.id)
-        .fold(0, (sum, i) => sum + i.quantity);
   }
 
   @override
@@ -158,24 +78,36 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
+                          const Expanded(
                             flex: 3,
-                            child: _buildCatalogPanel(cartState),
+                            child: OrderCatalogPanel(),
                           ),
                           Expanded(
                             flex: 2,
-                            child: _buildCartPanel(cartState),
+                            child: OrderCartPanel(
+                              addressController: _addressController,
+                              deliveryFeeController: _deliveryFeeController,
+                              notesController: _notesController,
+                            ),
                           ),
                         ],
                       ),
                     ),
-                    _buildBottomBar(cartState),
+                    OrderCreateBottomBar(
+                      isLoading: _isLoading,
+                      canSave: _currentUserId != null,
+                      onSave: _saveOrder,
+                    ),
                   ],
                 )
               : Column(
                   children: [
                     Expanded(child: _buildMobileBody(cartState)),
-                    _buildBottomBar(cartState),
+                    OrderCreateBottomBar(
+                      isLoading: _isLoading,
+                      canSave: _currentUserId != null,
+                      onSave: _saveOrder,
+                    ),
                   ],
                 );
         },
@@ -198,8 +130,12 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
           Expanded(
             child: TabBarView(
               children: [
-                _buildCatalogPanel(cartState),
-                _buildCartPanel(cartState),
+                const OrderCatalogPanel(),
+                OrderCartPanel(
+                  addressController: _addressController,
+                  deliveryFeeController: _deliveryFeeController,
+                  notesController: _notesController,
+                ),
               ],
             ),
           ),
@@ -229,467 +165,6 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
         ),
       ),
     );
-  }
-
-  Widget _buildCatalogPanel(CurrentOrderCartState cartState) {
-    final productsState = ref.watch(productsProvider);
-    final categoriesAsync = ref.watch(categoriesProvider);
-
-    return Card(
-      margin: const EdgeInsets.all(16),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Catálogo',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    '${productsState.products.length} productos',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 12)),
-            SliverToBoxAdapter(
-              child: TextField(
-                controller: _productSearchController,
-                decoration: InputDecoration(
-                  hintText: 'Buscar producto...',
-                  prefixIcon: const Icon(Icons.search),
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.clear),
-                    onPressed: () {
-                      _productSearchController.clear();
-                      ref.read(productsProvider.notifier).setSearch(null);
-                    },
-                  ),
-                  border: const OutlineInputBorder(),
-                ),
-                onChanged: _onSearchChanged,
-              ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 12)),
-            SliverToBoxAdapter(
-              child: categoriesAsync.when(
-                data: (categories) => SizedBox(
-                  height: 40,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    children: [
-                      FilterChip(
-                        label: const Text('Todas'),
-                        selected: _selectedCategoryId == null,
-                        onSelected: (_) => _onCategorySelected(null),
-                      ),
-                      const SizedBox(width: 8),
-                      ...categories.map((category) {
-                        final selected = _selectedCategoryId == category.id;
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: FilterChip(
-                            label: Text(category.name),
-                            selected: selected,
-                            onSelected: (_) => _onCategorySelected(category.id),
-                          ),
-                        );
-                      }),
-                    ],
-                  ),
-                ),
-                loading: () => const SizedBox(
-                  height: 40,
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-                error: (error, stackTrace) => const SizedBox.shrink(),
-              ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 12)),
-            SliverToBoxAdapter(
-              child: Wrap(
-                spacing: 8,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  const Text('Precio por defecto:'),
-                  SegmentedButton<OrderItemPriceType>(
-                    segments: [
-                      ButtonSegment(
-                        value: OrderItemPriceType.retail,
-                        label: Text(OrderItemPriceType.retail.label),
-                      ),
-                      ButtonSegment(
-                        value: OrderItemPriceType.wholesale,
-                        label: Text(OrderItemPriceType.wholesale.label),
-                      ),
-                      ButtonSegment(
-                        value: OrderItemPriceType.cold,
-                        label: Text(OrderItemPriceType.cold.label),
-                      ),
-                    ],
-                    selected: {_defaultPriceType},
-                    onSelectionChanged: (selected) {
-                      if (selected.isNotEmpty) {
-                        setState(() => _defaultPriceType = selected.first);
-                      }
-                    },
-                  ),
-                ],
-              ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 12)),
-            if (productsState.isLoading && productsState.products.isEmpty)
-              const SliverFillRemaining(
-                child: Center(child: CircularProgressIndicator()),
-              )
-            else if (productsState.products.isEmpty)
-              SliverFillRemaining(
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.search_off,
-                          size: 48,
-                          color: Colors.grey.shade700),
-                      const SizedBox(height: 8),
-                      Text(
-                        'No se encontraron productos',
-                        style: TextStyle(
-                            color: Colors.grey.shade700),
-                      ),
-                    ],
-                  ),
-                ),
-              )
-            else
-              SliverGrid(
-                gridDelegate:
-                    const SliverGridDelegateWithMaxCrossAxisExtent(
-                  maxCrossAxisExtent: 220,
-                  childAspectRatio: 0.85,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                ),
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) =>
-                      _buildProductCard(productsState.products[index]),
-                  childCount: productsState.products.length,
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildProductCard(Product product) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final defaultPrice = _resolvePrice(product, _defaultPriceType);
-    final quantityForDefault = _quantityInCart(product, _defaultPriceType);
-    final totalQuantity = _totalQuantityInCart(product);
-    final hasPrice = defaultPrice > 0;
-    final stockColor = product.stockCurrent == 0
-        ? Colors.red
-        : product.stockCurrent <= product.stockMin
-            ? Colors.orange
-            : Colors.green;
-
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: Stack(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  product.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  product.presentation,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const Spacer(),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '\$${defaultPrice.toStringAsFixed(0)}',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.primary,
-                      ),
-                    ),
-                    Text(
-                      'Stock: ${product.stockCurrent}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: stockColor,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    AddRemoveButton(
-                      icon: Icons.remove,
-                      onPressed: quantityForDefault > 0
-                          ? () => _onProductDecrement(product)
-                          : null,
-                    ),
-                    Expanded(
-                      child: Text(
-                        '$quantityForDefault',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                    AddRemoveButton(
-                      icon: Icons.add,
-                      onPressed: hasPrice
-                          ? () => _onProductIncrement(product)
-                          : null,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          if (totalQuantity > 0)
-            Positioned(
-              top: 8,
-              right: 8,
-              child: CircleAvatar(
-                radius: 14,
-                backgroundColor: Theme.of(context).colorScheme.error,
-                child: Text(
-                  '$totalQuantity',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onError,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCartPanel(CurrentOrderCartState cartState) {
-    return Card(
-      margin: const EdgeInsets.all(16),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Carrito',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  if (cartState.items.isNotEmpty)
-                    TextButton.icon(
-                      onPressed: () => ref
-                          .read(currentOrderCartProvider.notifier)
-                          .clearCart(),
-                      icon: const Icon(Icons.delete_outline),
-                      label: const Text('Vaciar'),
-                      style: TextButton.styleFrom(
-                        foregroundColor: Theme.of(context).colorScheme.error,
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              if (cartState.items.isEmpty)
-                SizedBox(
-                  height: 120,
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.shopping_cart_outlined,
-                            size: 48,
-                            color: Colors.grey.shade700),
-                        const SizedBox(height: 8),
-                        Text(
-                          'El carrito está vacío',
-                          style: TextStyle(
-                              color: Colors.grey.shade700),
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-              else
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: cartState.items.length,
-                  itemBuilder: (context, index) =>
-                      _buildCartItem(cartState.items[index]),
-                ),
-              const Divider(),
-              _buildDeliverySection(cartState),
-              const SizedBox(height: 12),
-              _buildNotesSection(),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCartItem(OrderItem item) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: CircleAvatar(
-        backgroundColor: colorScheme.primaryContainer,
-        child: Text(
-          '${item.quantity}',
-          style: TextStyle(
-            color: colorScheme.onPrimaryContainer,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-      title: Text(
-        item.productName ?? 'Producto',
-        style: TextStyle(color: colorScheme.onSurface),
-      ),
-      subtitle: Wrap(
-        spacing: 8,
-        children: [
-          Text(
-            '\$${item.unitPrice.toStringAsFixed(0)} c/u',
-            style: TextStyle(color: Colors.grey.shade700),
-          ),
-          _buildItemPriceTypeChip(item),
-        ],
-      ),
-      trailing: SizedBox(
-        width: 120,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Text(
-              '\$${item.subtotal.toStringAsFixed(0)}',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                InkWell(
-                  onTap: () => ref
-                      .read(currentOrderCartProvider.notifier)
-                      .updateItemQuantity(item.id, item.quantity + 1),
-                  child: const Icon(Icons.add, size: 18),
-                ),
-                InkWell(
-                  onTap: () => ref
-                      .read(currentOrderCartProvider.notifier)
-                      .updateItemQuantity(item.id, item.quantity - 1),
-                  child: const Icon(Icons.remove, size: 18),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildItemPriceTypeChip(OrderItem item) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return InkWell(
-      onTap: () => _showItemPriceTypeSelector(item),
-      child: Chip(
-        label: Text(
-          item.priceType.label,
-          style: TextStyle(
-            fontSize: 10,
-            color: colorScheme.onPrimaryContainer,
-          ),
-        ),
-        backgroundColor: colorScheme.primaryContainer,
-        padding: EdgeInsets.zero,
-        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      ),
-    );
-  }
-
-  Future<void> _showItemPriceTypeSelector(OrderItem item) async {
-    final selected = await showDialog<OrderItemPriceType>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Cambiar tipo de precio'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: OrderItemPriceType.values.map((type) {
-            final selected = type == item.priceType;
-            return ListTile(
-              title: Text(type.label),
-              leading: Icon(
-                selected ? Icons.check_circle : Icons.radio_button_unchecked,
-                color: selected
-                    ? Theme.of(context).colorScheme.primary
-                    : Colors.grey,
-              ),
-              onTap: () => Navigator.pop(context, type),
-            );
-          }).toList(),
-        ),
-      ),
-    );
-
-    if (selected != null && selected != item.priceType) {
-      ref
-          .read(currentOrderCartProvider.notifier)
-          .updateItemPriceType(item.id, selected);
-    }
   }
 
   Widget _buildCustomerSection(CurrentOrderCartState cartState) {
@@ -726,13 +201,11 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.person_outline,
-                        color: Colors.grey.shade700),
+                    Icon(Icons.person_outline, color: Colors.grey.shade700),
                     const SizedBox(width: 8),
                     Text(
                       'Cliente ocasional',
-                      style: TextStyle(
-                          color: Colors.grey.shade700),
+                      style: TextStyle(color: Colors.grey.shade700),
                     ),
                   ],
                 ),
@@ -853,166 +326,6 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
                   ),
                 ),
               ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDeliverySection(CurrentOrderCartState cartState) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Entrega',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 12),
-        TextField(
-          controller: _addressController,
-          decoration: const InputDecoration(
-            labelText: 'Dirección de entrega',
-            prefixIcon: Icon(Icons.location_on),
-            border: OutlineInputBorder(),
-          ),
-          maxLines: 2,
-          onChanged: (value) => ref
-              .read(currentOrderCartProvider.notifier)
-              .setDeliveryAddress(value),
-        ),
-        const SizedBox(height: 12),
-        TextField(
-          controller: _deliveryFeeController,
-          decoration: const InputDecoration(
-            labelText: 'Costo de domicilio',
-            prefixIcon: Icon(Icons.delivery_dining),
-            border: OutlineInputBorder(),
-          ),
-          keyboardType: TextInputType.number,
-          onChanged: (value) {
-            final fee = double.tryParse(value) ?? 0;
-            ref
-                .read(currentOrderCartProvider.notifier)
-                .setDeliveryFee(fee);
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildNotesSection() {
-    return TextField(
-      controller: _notesController,
-      decoration: const InputDecoration(
-        labelText: 'Notas / Observaciones',
-        prefixIcon: Icon(Icons.note),
-        border: OutlineInputBorder(),
-        alignLabelWithHint: true,
-      ),
-      maxLines: 2,
-      onChanged: (value) =>
-          ref.read(currentOrderCartProvider.notifier).setNotes(value),
-    );
-  }
-
-  Widget _buildBottomBar(CurrentOrderCartState cartState) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: colorScheme.shadow.withValues(alpha: 0.1),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '${cartState.items.length} productos',
-                  style: TextStyle(color: colorScheme.onSurfaceVariant),
-                ),
-                Text(
-                  'Subtotal: \$${cartState.subtotal.toStringAsFixed(0)}',
-                  style: TextStyle(color: colorScheme.onSurface),
-                ),
-              ],
-            ),
-            if (cartState.discountAmount > 0)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Text(
-                    'Descuento: -\$${cartState.discountAmount.toStringAsFixed(0)}',
-                    style: TextStyle(color: colorScheme.tertiary),
-                  ),
-                ],
-              ),
-            if (cartState.deliveryFee > 0)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Text(
-                    'Domicilio: \$${cartState.deliveryFee.toStringAsFixed(0)}',
-                    style: TextStyle(color: colorScheme.onSurface),
-                  ),
-                ],
-              ),
-            Divider(color: colorScheme.outlineVariant),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Total:',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.onSurface,
-                  ),
-                ),
-                Text(
-                  '\$${cartState.total.toStringAsFixed(0)}',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.primary,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _isLoading || _currentUserId == null
-                    ? null
-                    : _saveOrder,
-                icon: _isLoading
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.check),
-                label: _currentUserId == null
-                    ? const Text('CARGANDO USUARIO...')
-                    : const Text('CREAR PEDIDO'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-              ),
             ),
           ],
         ),
