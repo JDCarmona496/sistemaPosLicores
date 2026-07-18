@@ -155,6 +155,26 @@ class CustomerRepository {
     }
   }
 
+  /// Actualiza únicamente las coordenadas GPS del cliente.
+  /// Usado por el módulo de domicilios cuando el domiciliario captura
+  /// la ubicación por primera vez y el cliente aún no tiene coordenadas.
+  Future<void> updateCoordinates(
+    String customerId, {
+    required double latitude,
+    required double longitude,
+  }) async {
+    try {
+      await _client.from('customers').update({
+        'latitude': latitude,
+        'longitude': longitude,
+      }).eq('id', customerId);
+    } on PostgrestException catch (e) {
+      throw _handlePostgrestError(e, 'actualizar las coordenadas');
+    } catch (e) {
+      throw Exception('Error inesperado al actualizar las coordenadas: $e');
+    }
+  }
+
   Future<List<Map<String, dynamic>>> getOrdersHistory(
     String customerId, {
     int limit = 50,

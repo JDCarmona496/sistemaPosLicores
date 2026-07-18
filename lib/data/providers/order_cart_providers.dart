@@ -105,14 +105,19 @@ class CurrentOrderCartNotifier
     String? name,
     CustomerType? type,
     String? address,
+    double? latitude,
+    double? longitude,
   }) {
     final clear = id == null;
     state = state.copyWith(
       clearCustomer: clear,
+      clearDeliveryCoordinates: clear,
       customerId: id,
       customerName: name,
       customerType: type,
       customerAddress: address,
+      deliveryLatitude: latitude,
+      deliveryLongitude: longitude,
     );
   }
 

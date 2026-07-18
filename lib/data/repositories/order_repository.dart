@@ -224,6 +224,89 @@ class OrderRepository {
     }
   }
 
+  Future<List<Order>> getAssignedOrders({
+    required String deliveryPersonId,
+    List<OrderStatus>? statuses,
+    int limit = 100,
+    int offset = 0,
+  }) async {
+    var query = _client.from('orders').select('''
+        id,
+        order_number,
+        customer_id,
+        seller_id,
+        delivery_person_id,
+        status,
+        sale_type,
+        delivery_type,
+        subtotal,
+        discount_amount,
+        tax_amount,
+        delivery_fee,
+        total,
+        notes,
+        delivery_address,
+        delivery_latitude,
+        delivery_longitude,
+        delivery_photo_url,
+        delivery_signature,
+        created_at,
+        updated_at,
+        customer:customers(full_name, phone, address)
+      ''');
+
+    query = query.eq('delivery_person_id', deliveryPersonId);
+
+    if (statuses != null && statuses.isNotEmpty) {
+      final values = statuses.map((s) => s.dbValue).toList();
+      query = query.inFilter('status', values);
+    }
+
+    final data = await query
+        .order('created_at', ascending: false)
+        .range(offset, offset + limit - 1);
+
+    return data.map((json) {
+      final customer = json['customer'] as Map<String, dynamic>?;
+      json['customer_name'] = customer?['full_name'];
+      json['customer_phone'] = customer?['phone'];
+      json['customer_address'] = customer?['address'];
+      return Order.fromJson(json);
+    }).toList();
+  }
+
+  Future<Order> recordDeliveryEvidence({
+    required String orderId,
+    String? photoUrl,
+    String? signatureBase64,
+    DateTime? deliveredAt,
+  }) async {
+    try {
+      final updates = <String, dynamic>{};
+      if (photoUrl != null) updates['delivery_photo_url'] = photoUrl;
+      if (signatureBase64 != null) updates['delivery_signature'] = signatureBase64;
+      if (deliveredAt != null) {
+        updates['delivered_at'] = deliveredAt.toIso8601String();
+      }
+      if (updates.isEmpty) {
+        throw Exception('No hay evidencia para registrar');
+      }
+
+      final result = await _client
+          .from('orders')
+          .update(updates)
+          .eq('id', orderId)
+          .select()
+          .single();
+
+      return Order.fromJson(result);
+    } on PostgrestException catch (e) {
+      throw _handlePostgrestError(e, 'registrar evidencia de entrega');
+    } catch (e) {
+      throw Exception('Error inesperado al registrar evidencia: $e');
+    }
+  }
+
   Future<void> updateStatus(String orderId, OrderStatus status) async {
     try {
       await _client

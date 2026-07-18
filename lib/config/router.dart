@@ -13,6 +13,7 @@ import '../ui/features/customers/views/customers_view.dart';
 import '../ui/features/customers/views/customer_detail_view.dart';
 import '../ui/features/customers/views/customer_form_view.dart';
 import '../ui/features/delivery/views/delivery_view.dart';
+import '../ui/features/delivery/views/delivery_order_detail_view.dart';
 import '../ui/features/reports/views/reports_view.dart';
 import '../ui/features/settings/views/settings_view.dart';
 import '../ui/features/settings/views/printer_settings_view.dart';
@@ -138,6 +139,16 @@ final GoRouter router = GoRouter(
       path: '/delivery',
       name: 'delivery',
       builder: (context, state) => const DeliveryView(),
+      routes: [
+        GoRoute(
+          path: 'order/:id',
+          name: 'delivery-order-detail',
+          builder: (context, state) {
+            final id = state.pathParameters['id']!;
+            return DeliveryOrderDetailView(orderId: id);
+          },
+        ),
+      ],
     ),
     GoRoute(
       path: '/reports',

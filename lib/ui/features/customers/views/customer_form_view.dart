@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../data/providers/customer_providers.dart';
 import '../../../../data/services/auth_service.dart';
 import '../../../../domain/models/customer.dart';
+import 'widgets/geocode_customer_address_button.dart';
 
 class CustomerFormView extends ConsumerStatefulWidget {
   final String? customerId;
@@ -382,6 +383,12 @@ class _CustomerFormViewState extends ConsumerState<CustomerFormView> {
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 12),
+                GeocodeCustomerAddressButton(
+                  addressController: _addressController,
+                  latitudeController: _latitudeController,
+                  longitudeController: _longitudeController,
                 ),
               ],
             ),

@@ -168,6 +168,36 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
     }
   }
 
+  /// Actualiza las coordenadas GPS de un cliente y refresca el estado local.
+  /// El módulo de domicilios lo llamará cuando el domiciliario capture
+  /// la ubicación por primera vez.
+  Future<void> updateCoordinates(
+    String id, {
+    required double latitude,
+    required double longitude,
+  }) async {
+    try {
+      await _repository.updateCoordinates(
+        id,
+        latitude: latitude,
+        longitude: longitude,
+      );
+      state = state.copyWith(
+        customers: state.customers
+            .map((c) => c.id == id
+                ? c.copyWith(
+                    latitude: latitude,
+                    longitude: longitude,
+                    updatedAt: DateTime.now(),
+                  )
+                : c)
+            .toList(),
+      );
+    } catch (e) {
+      throw Exception('Error al actualizar coordenadas: ${e.toString()}');
+    }
+  }
+
   Future<Customer?> getByIdentification(String identification) async {
     return await _repository.getByIdentification(identification);
   }

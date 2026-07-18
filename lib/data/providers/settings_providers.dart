@@ -2,9 +2,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/geocoding_service.dart';
+import '../services/location_service.dart';
 
 final geocodingServiceProvider = Provider<GeocodingService>((ref) {
   return GeocodingService();
+});
+
+/// Servicio de captura GPS (geolocator) para el módulo de domicilios.
+final locationServiceProvider = Provider<LocationService>((ref) {
+  return LocationService(dataSource: GeolocatorDataSource());
 });
 
 /// Zona de operacion del negocio (ciudad, departamento, pais).

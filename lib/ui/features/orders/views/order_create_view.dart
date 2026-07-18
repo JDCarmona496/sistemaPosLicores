@@ -369,6 +369,8 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
           name: selected.fullName,
           type: selected.type,
           address: selected.address,
+          latitude: selected.latitude,
+          longitude: selected.longitude,
         );
 
     if (selected.address != null && selected.address!.isNotEmpty) {
