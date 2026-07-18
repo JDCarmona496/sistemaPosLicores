@@ -4,6 +4,12 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../data/providers/order_providers.dart';
 import '../../../../domain/models/order.dart';
+import '../../../../domain/services/order_zone_grouper.dart';
+import 'widgets/order_card.dart';
+import 'widgets/order_filter_bar.dart';
+import 'widgets/order_zone_group_card.dart';
+
+enum OrdersViewMode { list, zones }
 
 class OrdersView extends ConsumerStatefulWidget {
   const OrdersView({super.key});
@@ -14,7 +20,17 @@ class OrdersView extends ConsumerStatefulWidget {
 
 class _OrdersViewState extends ConsumerState<OrdersView> {
   final _searchController = TextEditingController();
-  bool _showFilters = false;
+  OrdersViewMode _viewMode = OrdersViewMode.list;
+
+  /// Colores de acento rotativos para distinguir zonas visualmente.
+  static const _zoneAccents = <MaterialColor>[
+    Colors.indigo,
+    Colors.teal,
+    Colors.deepOrange,
+    Colors.purple,
+    Colors.cyan,
+    Colors.brown,
+  ];
 
   @override
   void dispose() {
@@ -29,51 +45,13 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Pedidos'),
-        actions: [
-          IconButton(
-            icon: Icon(_showFilters
-                ? Icons.filter_alt
-                : Icons.filter_alt_outlined),
-            onPressed: () {
-              setState(() => _showFilters = !_showFilters);
-            },
-            tooltip: 'Filtros',
-          ),
-        ],
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Buscar por número, cliente o teléfono...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          ref.read(ordersProvider.notifier).setSearch(null);
-                        },
-                      )
-                    : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              keyboardType: TextInputType.text,
-              onChanged: (value) {
-                ref
-                    .read(ordersProvider.notifier)
-                    .setSearch(value.isEmpty ? null : value);
-              },
-            ),
-          ),
-          if (_showFilters) _buildFilters(ordersState),
+          OrderFilterBar(searchController: _searchController),
+          _buildViewModeSelector(),
           Expanded(
-            child: _buildOrdersList(ordersState),
+            child: _buildBody(ordersState),
           ),
         ],
       ),
@@ -85,107 +63,43 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
     );
   }
 
-  Widget _buildFilters(OrdersState state) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        border: Border(
-          bottom: BorderSide(color: Colors.grey.shade300),
-        ),
-      ),
-      child: Column(
+  Widget _buildViewModeSelector() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      child: Row(
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: DropdownButtonFormField<OrderStatus?>(
-                  initialValue: state.selectedStatus,
-                  decoration: const InputDecoration(
-                    labelText: 'Estado',
-                    border: OutlineInputBorder(),
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  ),
-                  items: [
-                    const DropdownMenuItem<OrderStatus?>(
-                        value: null, child: Text('Todos')),
-                    ...OrderStatus.values.map((status) => DropdownMenuItem(
-                          value: status,
-                          child: Text(status.label),
-                        )),
-                  ],
-                  onChanged: (value) {
-                    ref.read(ordersProvider.notifier).setStatus(value);
-                  },
-                ),
+          SegmentedButton<OrdersViewMode>(
+            segments: const [
+              ButtonSegment(
+                value: OrdersViewMode.list,
+                icon: Icon(Icons.view_list, size: 18),
+                label: Text('Lista'),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: DropdownButtonFormField<SaleType?>(
-                  initialValue: state.selectedSaleType,
-                  decoration: const InputDecoration(
-                    labelText: 'Venta',
-                    border: OutlineInputBorder(),
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  ),
-                  items: [
-                    const DropdownMenuItem<SaleType?>(
-                        value: null, child: Text('Todas')),
-                    ...SaleType.values.map((type) => DropdownMenuItem(
-                          value: type,
-                          child: Text(type.label),
-                        )),
-                  ],
-                  onChanged: (value) {
-                    ref.read(ordersProvider.notifier).setSaleType(value);
-                  },
-                ),
+              ButtonSegment(
+                value: OrdersViewMode.zones,
+                icon: Icon(Icons.route, size: 18),
+                label: Text('Por zona'),
               ),
             ],
-          ),
-          const SizedBox(height: 8),
-          DropdownButtonFormField<DeliveryType?>(
-            initialValue: state.selectedDeliveryType,
-            decoration: const InputDecoration(
-              labelText: 'Entrega',
-              border: OutlineInputBorder(),
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            ),
-            items: [
-              const DropdownMenuItem<DeliveryType?>(
-                  value: null, child: Text('Todas')),
-              ...DeliveryType.values.map((type) => DropdownMenuItem(
-                    value: type,
-                    child: Text(type.label),
-                  )),
-            ],
-            onChanged: (value) {
-              ref.read(ordersProvider.notifier).setDeliveryType(value);
+            selected: {_viewMode},
+            onSelectionChanged: (selected) {
+              setState(() => _viewMode = selected.first);
             },
           ),
-          if (state.selectedStatus != null ||
-              state.selectedSaleType != null ||
-              state.selectedDeliveryType != null)
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton.icon(
-                onPressed: () {
-                  ref.read(ordersProvider.notifier).clearFilters();
-                  _searchController.clear();
-                },
-                icon: const Icon(Icons.clear_all),
-                label: const Text('Limpiar filtros'),
-              ),
+          const Spacer(),
+          if (_viewMode == OrdersViewMode.zones)
+            Tooltip(
+              message:
+                  'Agrupa domicilios a menos de 500m para combinar viajes',
+              child: Icon(Icons.info_outline,
+                  size: 18, color: Colors.grey.shade600),
             ),
         ],
       ),
     );
   }
 
-  Widget _buildOrdersList(OrdersState state) {
+  Widget _buildBody(OrdersState state) {
     if (state.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -214,198 +128,73 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
     }
 
     if (state.orders.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.receipt_long_outlined,
-                size: 64, color: Colors.grey.shade400),
-            const SizedBox(height: 16),
-            Text(
-              'No hay pedidos',
-              style: TextStyle(fontSize: 18, color: Colors.grey.shade600),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              state.searchQuery != null ||
-                      state.selectedStatus != null ||
-                      state.selectedSaleType != null ||
-                      state.selectedDeliveryType != null
-                  ? 'No se encontraron pedidos con los filtros aplicados'
-                  : 'Crea tu primer pedido',
-              style: TextStyle(color: Colors.grey.shade500),
-              textAlign: TextAlign.center,
-            ),
-            if (state.searchQuery != null ||
-                state.selectedStatus != null ||
-                state.selectedSaleType != null ||
-                state.selectedDeliveryType != null) ...[
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: () {
-                  ref.read(ordersProvider.notifier).clearFilters();
-                  _searchController.clear();
-                },
-                icon: const Icon(Icons.clear_all),
-                label: const Text('Limpiar filtros'),
-              ),
-            ] else ...[
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: () => context.push('/orders/create'),
-                icon: const Icon(Icons.add_shopping_cart),
-                label: const Text('Crear primer pedido'),
-              ),
-            ],
-          ],
-        ),
-      );
+      return _buildEmptyState(state);
     }
 
     return RefreshIndicator(
       onRefresh: () => ref.read(ordersProvider.notifier).loadOrders(),
-      child: ListView.builder(
-        itemCount: state.orders.length,
+      child: _viewMode == OrdersViewMode.list
+          ? _buildFlatList(state.orders)
+          : _buildZoneList(state.orders),
+    );
+  }
+
+  Widget _buildFlatList(List<Order> orders) {
+    return ListView.builder(
+      itemCount: orders.length,
+      padding: const EdgeInsets.all(16),
+      itemBuilder: (context, index) => OrderCard(order: orders[index]),
+    );
+  }
+
+  Widget _buildZoneList(List<Order> orders) {
+    final result = const OrderZoneGrouper().group(orders);
+
+    if (result.zones.isEmpty) {
+      return ListView(
         padding: const EdgeInsets.all(16),
-        itemBuilder: (context, index) {
-          final order = state.orders[index];
-          return _buildOrderCard(order);
-        },
-      ),
+        children: [
+          _buildNoZonesNotice(result.withoutLocation.length),
+          const SizedBox(height: 16),
+          ...result.withoutLocation.map((order) => OrderCard(order: order)),
+        ],
+      );
+    }
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        ...result.zones.map((zone) => OrderZoneGroupCard(
+              zone: zone,
+              accentColor:
+                  _zoneAccents[(zone.zoneNumber - 1) % _zoneAccents.length],
+            )),
+        if (result.withoutLocation.isNotEmpty) ...[
+          _buildWithoutLocationHeader(result.withoutLocation.length),
+          const SizedBox(height: 8),
+          ...result.withoutLocation.map((order) => OrderCard(order: order)),
+        ],
+      ],
     );
   }
 
-  Widget _buildOrderCard(Order order) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: InkWell(
-        onTap: () => context.push('/orders/${order.id}'),
+  Widget _buildNoZonesNotice(int count) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.blueGrey.shade50,
         borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Pedido #${order.orderNumber}',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  _buildStatusChip(order.status),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Icon(Icons.person_outline,
-                      size: 16, color: Colors.grey.shade600),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      order.customerName ?? 'Cliente ocasional',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey.shade700,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  Icon(Icons.phone, size: 16, color: Colors.grey.shade600),
-                  const SizedBox(width: 4),
-                  Text(
-                    order.customerPhone ?? 'Sin teléfono',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _buildInfoChip(
-                    icon: _getSaleTypeIcon(order.saleType),
-                    label: order.saleType.label,
-                    color: order.saleType == SaleType.credit
-                        ? Colors.orange
-                        : Colors.green,
-                  ),
-                  _buildInfoChip(
-                    icon: _getDeliveryTypeIcon(order.deliveryType),
-                    label: order.deliveryType.label,
-                    color: Colors.blue,
-                  ),
-                  Text(
-                    '\$${order.total.toStringAsFixed(0)}',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatusChip(OrderStatus status) {
-    final color = _getStatusColor(status);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.shade100,
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        status.label,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.bold,
-          color: color.shade700,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoChip({
-    required IconData icon,
-    required String label,
-    required MaterialColor color,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.shade50,
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: color.shade200),
+        border: Border.all(color: Colors.blueGrey.shade200),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: color.shade700),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: color.shade700,
-              fontWeight: FontWeight.w500,
+          Icon(Icons.info_outline, color: Colors.blueGrey.shade600),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'Ningún pedido tiene coordenadas de entrega registradas. '
+              'Los pedidos con GPS se agruparán por zona automáticamente.',
+              style: TextStyle(color: Colors.blueGrey.shade700, fontSize: 13),
             ),
           ),
         ],
@@ -413,42 +202,74 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
     );
   }
 
-  MaterialColor _getStatusColor(OrderStatus status) {
-    switch (status) {
-      case OrderStatus.pending:
-        return Colors.orange;
-      case OrderStatus.preparing:
-        return Colors.blue;
-      case OrderStatus.ready:
-        return Colors.purple;
-      case OrderStatus.inTransit:
-        return Colors.indigo;
-      case OrderStatus.delivered:
-        return Colors.green;
-      case OrderStatus.partiallyDelivered:
-        return Colors.teal;
-      case OrderStatus.cancelled:
-        return Colors.red;
-      case OrderStatus.returned:
-        return Colors.brown;
-    }
+  Widget _buildWithoutLocationHeader(int count) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade200,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.location_off, size: 18, color: Colors.grey.shade700),
+          const SizedBox(width: 8),
+          Text(
+            'Sin ubicación ($count)',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.grey.shade700,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
-  IconData _getSaleTypeIcon(SaleType type) {
-    switch (type) {
-      case SaleType.cash:
-        return Icons.payments;
-      case SaleType.credit:
-        return Icons.account_balance_wallet;
-    }
-  }
+  Widget _buildEmptyState(OrdersState state) {
+    final hasFilters = state.searchQuery != null ||
+        state.selectedStatus != null ||
+        state.selectedSaleType != null ||
+        state.selectedDeliveryType != null;
 
-  IconData _getDeliveryTypeIcon(DeliveryType type) {
-    switch (type) {
-      case DeliveryType.inStore:
-        return Icons.storefront;
-      case DeliveryType.delivery:
-        return Icons.delivery_dining;
-    }
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.receipt_long_outlined,
+              size: 64, color: Colors.grey.shade400),
+          const SizedBox(height: 16),
+          Text(
+            'No hay pedidos',
+            style: TextStyle(fontSize: 18, color: Colors.grey.shade600),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            hasFilters
+                ? 'No se encontraron pedidos con los filtros aplicados'
+                : 'Crea tu primer pedido',
+            style: TextStyle(color: Colors.grey.shade500),
+            textAlign: TextAlign.center,
+          ),
+          if (hasFilters) ...[
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: () {
+                ref.read(ordersProvider.notifier).clearFilters();
+                _searchController.clear();
+              },
+              icon: const Icon(Icons.clear_all),
+              label: const Text('Limpiar filtros'),
+            ),
+          ] else ...[
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () => context.push('/orders/create'),
+              icon: const Icon(Icons.add_shopping_cart),
+              label: const Text('Crear primer pedido'),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 }

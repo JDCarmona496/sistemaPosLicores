@@ -34,6 +34,8 @@ class OrderRepository {
         total,
         notes,
         delivery_address,
+        delivery_latitude,
+        delivery_longitude,
         created_at,
         updated_at,
         customer:customers(full_name, phone)
