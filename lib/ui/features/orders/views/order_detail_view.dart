@@ -5,12 +5,15 @@ import 'package:go_router/go_router.dart';
 import '../../../../data/providers/order_providers.dart';
 import '../../../../data/providers/payment_providers.dart';
 import '../../../../data/providers/printer_provider.dart';
-import '../../../../data/providers/user_providers.dart';
 import '../../../../data/services/auth_service.dart';
 import '../../../../domain/models/order.dart';
 import '../../../../domain/models/order_item.dart';
 import '../../../../domain/models/payment.dart';
 import '../../../../domain/models/user.dart';
+import 'widgets/delivery_person_selector_dialog.dart';
+import 'widgets/delivery_items_dialog.dart';
+import 'widgets/payment_form_dialog.dart';
+import 'widgets/payments_dialog.dart';
 
 class OrderDetailView extends ConsumerStatefulWidget {
   final String orderId;
@@ -258,7 +261,7 @@ class _OrderDetailViewState extends ConsumerState<OrderDetailView> {
   Future<void> _assignDeliveryPerson(Order order) async {
     final selected = await showDialog<User?>(
       context: context,
-      builder: (context) => const _DeliveryPersonSelectorDialog(),
+      builder: (context) => const DeliveryPersonSelectorDialog(),
     );
 
     if (selected == null || !mounted) return;
@@ -294,7 +297,7 @@ class _OrderDetailViewState extends ConsumerState<OrderDetailView> {
       result = await showDialog<
           List<({String orderItemId, int quantityDelivered})>?>(
         context: context,
-        builder: (context) => _DeliveryItemsDialog(items: items),
+        builder: (context) => DeliveryItemsDialog(items: items),
       );
     }
 
@@ -317,7 +320,7 @@ class _OrderDetailViewState extends ConsumerState<OrderDetailView> {
   Future<void> _registerPayment(Order order) async {
     final result = await showDialog<Payment?>(
       context: context,
-      builder: (context) => _PaymentDialog(
+      builder: (context) => PaymentFormDialog(
         order: order,
         receivedBy: _currentUserId,
       ),
@@ -690,7 +693,7 @@ class _OrderDetailViewState extends ConsumerState<OrderDetailView> {
   Future<void> _showPayments(Order order) async {
     await showDialog(
       context: context,
-      builder: (context) => _PaymentsDialog(orderId: order.id),
+      builder: (context) => PaymentsDialog(orderId: order.id),
     );
   }
 
@@ -806,308 +809,3 @@ class _OrderDetailViewState extends ConsumerState<OrderDetailView> {
   }
 }
 
-class _DeliveryPersonSelectorDialog extends ConsumerWidget {
-  const _DeliveryPersonSelectorDialog();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final usersAsync = ref.watch(deliveryUsersProvider);
-
-    return AlertDialog(
-      title: const Text('Asignar domiciliario'),
-      content: SizedBox(
-        width: double.maxFinite,
-        height: 300,
-        child: usersAsync.when(
-          data: (users) => users.isEmpty
-              ? const Center(child: Text('No hay domiciliarios activos'))
-              : ListView.builder(
-                  itemCount: users.length,
-                  itemBuilder: (context, index) {
-                    final user = users[index];
-                    return ListTile(
-                      leading: CircleAvatar(
-                        child: Text(user.fullName[0].toUpperCase()),
-                      ),
-                      title: Text(user.fullName),
-                      subtitle: Text(user.email),
-                      onTap: () => Navigator.pop(context, user),
-                    );
-                  },
-                ),
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, _) => Center(child: Text('Error: $error')),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancelar'),
-        ),
-      ],
-    );
-  }
-}
-
-class _DeliveryItemsDialog extends StatefulWidget {
-  final List<OrderItem> items;
-
-  const _DeliveryItemsDialog({required this.items});
-
-  @override
-  State<_DeliveryItemsDialog> createState() => _DeliveryItemsDialogState();
-}
-
-class _DeliveryItemsDialogState extends State<_DeliveryItemsDialog> {
-  late final Map<String, int> _deliveredQuantities;
-
-  @override
-  void initState() {
-    super.initState();
-    _deliveredQuantities = {
-      for (final item in widget.items)
-        item.id: item.quantityDelivered,
-    };
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Marcar entrega'),
-      content: SizedBox(
-        width: double.maxFinite,
-        height: 400,
-        child: ListView.builder(
-          itemCount: widget.items.length,
-          itemBuilder: (context, index) {
-            final item = widget.items[index];
-            final pending = item.quantity - item.quantityDelivered;
-            return ListTile(
-              title: Text(item.productName ?? 'Producto'),
-              subtitle: Text('Pendiente: $pending'),
-              trailing: SizedBox(
-                width: 80,
-                child: TextField(
-                  controller: TextEditingController(
-                    text: '${_deliveredQuantities[item.id]}',
-                  ),
-                  keyboardType: TextInputType.number,
-                  textAlign: TextAlign.center,
-                  onChanged: (value) {
-                    _deliveredQuantities[item.id] =
-                        int.tryParse(value) ?? 0;
-                  },
-                ),
-              ),
-            );
-          },
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancelar'),
-        ),
-        TextButton(
-          onPressed: () {
-            final result = <({String orderItemId, int quantityDelivered})>[];
-            for (final item in widget.items) {
-              if (item.pendingQuantity > 0) {
-                result.add((
-                  orderItemId: item.id,
-                  quantityDelivered: item.quantity,
-                ));
-              }
-            }
-            Navigator.pop(context, result);
-          },
-          child: const Text('Entregar todo'),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            final result = <({String orderItemId, int quantityDelivered})>[];
-            for (final item in widget.items) {
-              final delivered = _deliveredQuantities[item.id] ?? 0;
-              if (delivered > item.quantityDelivered) {
-                result.add((
-                  orderItemId: item.id,
-                  quantityDelivered: delivered,
-                ));
-              }
-            }
-            Navigator.pop(context, result);
-          },
-          child: const Text('Guardar parcial'),
-        ),
-      ],
-    );
-  }
-}
-
-class _PaymentsDialog extends ConsumerWidget {
-  final String orderId;
-
-  const _PaymentsDialog({required this.orderId});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final paymentsAsync = ref.watch(paymentsByOrderProvider(orderId));
-
-    return AlertDialog(
-      title: const Text('Pagos / Abonos'),
-      content: SizedBox(
-        width: double.maxFinite,
-        height: 300,
-        child: paymentsAsync.when(
-          data: (payments) {
-            if (payments.isEmpty) {
-              return const Center(child: Text('No hay pagos registrados'));
-            }
-            return ListView.builder(
-              itemCount: payments.length,
-              itemBuilder: (context, index) {
-                final payment = payments[index];
-                return ListTile(
-                  leading: const Icon(Icons.payments),
-                  title: Text('${payment.paymentMethod.label} - \$${payment.amount.toStringAsFixed(0)}'),
-                  subtitle: Text(payment.createdAt != null
-                      ? payment.createdAt!.toLocal().toString().substring(0, 16)
-                      : ''),
-                  trailing: payment.reference != null
-                      ? Text(payment.reference!, style: const TextStyle(fontSize: 12))
-                      : null,
-                );
-              },
-            );
-          },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, _) => Center(child: Text('Error: $error')),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cerrar'),
-        ),
-      ],
-    );
-  }
-}
-
-class _PaymentDialog extends StatefulWidget {
-  final Order order;
-  final String? receivedBy;
-
-  const _PaymentDialog({required this.order, this.receivedBy});
-
-  @override
-  State<_PaymentDialog> createState() => _PaymentDialogState();
-}
-
-class _PaymentDialogState extends State<_PaymentDialog> {
-  PaymentMethod _method = PaymentMethod.cash;
-  final _amountController = TextEditingController();
-  final _referenceController = TextEditingController();
-  final _notesController = TextEditingController();
-
-  @override
-  void dispose() {
-    _amountController.dispose();
-    _referenceController.dispose();
-    _notesController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Registrar pago'),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Total pedido: \$${widget.order.total.toStringAsFixed(0)}',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<PaymentMethod>(
-              initialValue: _method,
-              decoration: const InputDecoration(
-                labelText: 'Método de pago',
-                border: OutlineInputBorder(),
-              ),
-              items: PaymentMethod.values
-                  .map((m) => DropdownMenuItem(
-                        value: m,
-                        child: Text(m.label),
-                      ))
-                  .toList(),
-              onChanged: (value) {
-                if (value != null) setState(() => _method = value);
-              },
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _amountController,
-              decoration: const InputDecoration(
-                labelText: 'Monto',
-                prefixIcon: Icon(Icons.attach_money),
-                border: OutlineInputBorder(),
-              ),
-              keyboardType: TextInputType.number,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _referenceController,
-              decoration: const InputDecoration(
-                labelText: 'Referencia (opcional)',
-                prefixIcon: Icon(Icons.confirmation_number),
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _notesController,
-              decoration: const InputDecoration(
-                labelText: 'Notas (opcional)',
-                prefixIcon: Icon(Icons.note),
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancelar'),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            final amount = double.tryParse(_amountController.text) ?? 0;
-            if (amount <= 0) return;
-            Navigator.pop(
-              context,
-              Payment(
-                id: DateTime.now().millisecondsSinceEpoch.toString(),
-                orderId: widget.order.id,
-                customerId: widget.order.customerId,
-                paymentMethod: _method,
-                amount: amount,
-                reference: _referenceController.text.isEmpty
-                    ? null
-                    : _referenceController.text,
-                receivedBy: widget.receivedBy ?? '',
-                notes: _notesController.text.isEmpty
-                    ? null
-                    : _notesController.text,
-              ),
-            );
-          },
-          child: const Text('Registrar'),
-        ),
-      ],
-    );
-  }
-}
