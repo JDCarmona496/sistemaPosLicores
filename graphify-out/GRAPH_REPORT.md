@@ -1,16 +1,16 @@
 # Graph Report - applicoresestacion  (2026-07-17)
 
 ## Corpus Check
-- 123 files · ~62,070 words
+- 126 files · ~62,309 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1336 nodes · 1772 edges · 105 communities (95 shown, 10 thin omitted)
+- 1357 nodes · 1813 edges · 102 communities (92 shown, 10 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 13 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `c79a37df`
+- Built from commit: `8374ac95`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -79,14 +79,11 @@
 - customersProvider
 - currentOrderCartProvider
 - config/supabase_config.dart
-- window_size_service.dart
-- window_size_service_stub.dart
 - package:supabase_flutter/supabase_flutter.dart
 - StateNotifier
 - PrinterService
 - package:flutter_riverpod/flutter_riverpod.dart
 - json_helpers.dart
-- user.dart
 - package:freezed_annotation/freezed_annotation.dart
 - MainActivity
 - graphify.js
@@ -118,9 +115,9 @@
 
 ## God Nodes (most connected - your core abstractions)
 1. `Win32Window` - 22 edges
-2. `Requerimientos Funcionales` - 16 edges
-3. `productsProvider` - 14 edges
-4. `currentOrderCartProvider` - 12 edges
+2. `currentOrderCartProvider` - 18 edges
+3. `Requerimientos Funcionales` - 16 edges
+4. `productsProvider` - 14 edges
 5. `MessageHandler` - 12 edges
 6. `Sistema de Gestión para Licorería` - 11 edges
 7. `Sistema de Gestión para Licorería - Documentación Completa` - 11 edges
@@ -129,29 +126,29 @@
 10. `ordersProvider` - 10 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `wWinMain()` --calls--> `CreateAndAttachConsole()`  [INFERRED]
-  windows/runner/main.cpp → windows/runner/utils.cpp
-- `Win32Window::Win32Window()` --calls--> `Destroy`  [INFERRED]
-  windows/runner/win32_window.cpp → windows/runner/win32_window.h
-- `_CustomerFormViewState` --references--> `customersProvider`  [EXTRACTED]
-  lib/ui/features/customers/views/customer_form_view.dart → lib/data/providers/customer_providers.dart
-- `_save` --references--> `customersProvider`  [EXTRACTED]
-  lib/ui/features/customers/views/customer_form_view.dart → lib/data/providers/customer_providers.dart
-- `_buildCustomersList` --references--> `customersProvider`  [EXTRACTED]
-  lib/ui/features/customers/views/customers_view.dart → lib/data/providers/customer_providers.dart
+- `build` --references--> `currentOrderCartProvider`  [EXTRACTED]
+  lib/ui/features/orders/views/widgets/order_cart_panel.dart → lib/data/providers/order_cart_providers.dart
+- `_buildDeliverySection` --references--> `currentOrderCartProvider`  [EXTRACTED]
+  lib/ui/features/orders/views/widgets/order_cart_panel.dart → lib/data/providers/order_cart_providers.dart
+- `_buildNotesSection` --references--> `currentOrderCartProvider`  [EXTRACTED]
+  lib/ui/features/orders/views/widgets/order_cart_panel.dart → lib/data/providers/order_cart_providers.dart
+- `_onProductIncrement` --references--> `currentOrderCartProvider`  [EXTRACTED]
+  lib/ui/features/orders/views/widgets/order_catalog_panel.dart → lib/data/providers/order_cart_providers.dart
+- `build` --references--> `currentOrderCartProvider`  [EXTRACTED]
+  lib/ui/features/orders/views/widgets/order_create_bottom_bar.dart → lib/data/providers/order_cart_providers.dart
 
 ## Import Cycles
 - None detected.
 
-## Communities (105 total, 10 thin omitted)
+## Communities (102 total, 10 thin omitted)
 
 ### Community 0 - "Win32Window"
 Cohesion: 0.06
 Nodes (52): FlutterViewController, Point, RECT, Size, unique_ptr, DartProject, HWND, LPARAM (+44 more)
 
 ### Community 2 - "order_create_view.dart"
-Cohesion: 0.06
-Nodes (40): ../../../../core/responsive.dart, currentOrderCartProvider, _addressController, build, _buildBottomBar, _buildCartItem, _buildCartPanel, _buildCustomerSection (+32 more)
+Cohesion: 0.11
+Nodes (19): ../../../../core/responsive.dart, _addressController, _buildHeader, _buildMobileBody, _buildTypeSection, createState, _currentUserId, _deliveryFeeController (+11 more)
 
 ### Community 3 - "order_repository.dart"
 Cohesion: 0.05
@@ -167,7 +164,7 @@ Nodes (27): FormState, _addressController, build, _buildSection, createState, _c
 
 ### Community 6 - "product_form_view.dart"
 Cohesion: 0.06
-Nodes (35): productRepositoryProvider, _barcodeController, _buildSectionTitle, _codeController, _costController, createState, _descriptionController, dispose (+27 more)
+Nodes (31): _barcodeController, _buildSectionTitle, _codeController, _costController, createState, _descriptionController, dispose, _formKey (+23 more)
 
 ### Community 7 - "product_providers.dart"
 Cohesion: 0.08
@@ -190,8 +187,8 @@ Cohesion: 0.09
 Nodes (22): BluetoothDevice?, FlutterThermalPrinter, connect, _connectedBtDevice, _connectedPrinter, disconnect, discoverDevices, _ignoredCharacteristicUuids (+14 more)
 
 ### Community 12 - "orders_view.dart"
-Cohesion: 0.11
-Nodes (21): ../../../../data/providers/order_providers.dart, ordersProvider, _saveOrder, _assignDeliveryPerson, _cancelOrder, build, _buildFilters, _buildInfoChip (+13 more)
+Cohesion: 0.12
+Nodes (20): ordersProvider, _saveOrder, _assignDeliveryPerson, _cancelOrder, build, _buildFilters, _buildInfoChip, _buildOrderCard (+12 more)
 
 ### Community 13 - "AppDelegate"
 Cohesion: 0.11
@@ -210,8 +207,8 @@ Cohesion: 0.10
 Nodes (19): GoRouter, router, ../ui/features/auth/views/login_view.dart, ../ui/features/customers/views/customer_detail_view.dart, ../ui/features/customers/views/customer_form_view.dart, ../ui/features/customers/views/customers_view.dart, ../ui/features/dashboard/views/dashboard_view.dart, ../ui/features/delivery/views/delivery_view.dart (+11 more)
 
 ### Community 17 - "productsProvider"
-Cohesion: 0.11
-Nodes (24): ../../../../data/repositories/brand_repository.dart, ../../../../data/repositories/category_repository.dart, brandsProvider, categoriesProvider, productsProvider, _buildCatalogPanel, _onCategorySelected, _showDeleteDialog (+16 more)
+Cohesion: 0.12
+Nodes (18): ../../../../data/repositories/brand_repository.dart, ../../../../data/repositories/category_repository.dart, productsProvider, initState, _onCategorySelected, _showDeleteDialog, _generateNextCode, _saveProduct (+10 more)
 
 ### Community 18 - "json_helpers.dart"
 Cohesion: 0.12
@@ -230,8 +227,8 @@ Cohesion: 0.12
 Nodes (15): _authService, build, _buildContent, _buildError, _buildModuleCard, createState, _errorMessage, _getRoleColor (+7 more)
 
 ### Community 22 - "supabase_health_check_view.dart"
-Cohesion: 0.04
-Nodes (46): ../../../../data/services/supabase_health_check_service.dart, addItem, clearCart, copyWith, CurrentOrderCartNotifier, CurrentOrderCartState, customerAddress, customerId (+38 more)
+Cohesion: 0.06
+Nodes (32): addItem, clearCart, copyWith, CurrentOrderCartNotifier, CurrentOrderCartState, customerAddress, customerId, customerName (+24 more)
 
 ### Community 23 - "app_config.dart"
 Cohesion: 0.13
@@ -250,16 +247,16 @@ Cohesion: 0.14
 Nodes (13): Category, CategoryRepository, _client, create, description, fromJson, getAll, iconUrl (+5 more)
 
 ### Community 27 - "order_item.dart"
-Cohesion: 0.18
-Nodes (13): OrderItemSupabaseExtension, dbValue, fromJson, isColdPrice, isFullyDelivered, isWholesalePrice, OrderItem, OrderItemExtension (+5 more)
+Cohesion: 0.06
+Nodes (35): ../../../../data/services/supabase_health_check_service.dart, double get, OrderItemListExtension, OrderItemSupabaseExtension, toRpcJson, toSupabaseJson, totalDiscount, totalQuantity (+27 more)
 
 ### Community 28 - "package:go_router/go_router.dart"
 Cohesion: 0.22
 Nodes (9): BarcodeScannerView, _BarcodeScannerViewState, build, _controller, createState, dispose, _hasScanned, MobileScannerController (+1 more)
 
 ### Community 29 - "window_size_service_web.dart"
-Cohesion: 0.15
-Nodes (12): dart:html, dart:math, _debounce, getLastSize, _heightKey, initialize, _onResize, saveSize (+4 more)
+Cohesion: 0.07
+Nodes (26): dart:html, dart:math, getLastSize, initialize, _instance, saveSize, getLastSize, initialize (+18 more)
 
 ### Community 30 - "product_detail_view.dart"
 Cohesion: 0.17
@@ -282,8 +279,8 @@ Cohesion: 0.17
 Nodes (11): dart:typed_data, connect, disconnect, discoverDevices, isConnected, _port, printBytes, printPdf (+3 more)
 
 ### Community 35 - "customers_view.dart"
-Cohesion: 0.15
-Nodes (13): ConsumerState, ../../../../../data/providers/customer_providers.dart, _buildCustomerCard, _buildInfoChip, _buildStatusBadge, createState, CustomersView, _CustomersViewState (+5 more)
+Cohesion: 0.18
+Nodes (10): ../../../../../domain/models/customer.dart, _buildCustomerCard, _buildInfoChip, _buildStatusBadge, createState, dispose, _getTypeColor, _getTypeIcon (+2 more)
 
 ### Community 36 - "customer_basket_repository.dart"
 Cohesion: 0.17
@@ -303,31 +300,31 @@ Nodes (10): connect, disconnect, discoverDevices, isConnected, printBytes, print
 
 ### Community 40 - "order.dart"
 Cohesion: 0.06
-Nodes (37): assignDeliveryPerson, cancelOrder, clearFilters, copyWith, createOrder, error, getById, getItems (+29 more)
+Nodes (38): assignDeliveryPerson, cancelOrder, clearFilters, copyWith, createOrder, error, getById, getItems (+30 more)
 
 ### Community 41 - "_OrderDetailViewState"
-Cohesion: 0.28
-Nodes (9): ConsumerStatefulWidget, orderByIdProvider, orderItemsProvider, printOrderReceiptProvider, CustomerDetailView, build, OrderDetailView, _OrderDetailViewState (+1 more)
+Cohesion: 0.47
+Nodes (6): orderByIdProvider, orderItemsProvider, printOrderReceiptProvider, build, _OrderDetailViewState, _printReceipt
 
 ### Community 42 - "order_extensions.dart"
-Cohesion: 0.22
-Nodes (8): double get, toRpcJson, toSupabaseJson, totalDiscount, totalQuantity, totalSubtotal, order.dart, order_item.dart
+Cohesion: 0.14
+Nodes (14): add_remove_button.dart, _buildProductCard, createState, _defaultPriceType, dispose, _onProductIncrement, _onSearchChanged, OrderCatalogPanel (+6 more)
 
 ### Community 43 - "supabase_service.dart"
 Cohesion: 0.18
 Nodes (10): _client, delete, insert, insertMany, rpc, select, selectOne, subscribe (+2 more)
 
 ### Community 44 - "payment.dart"
-Cohesion: 0.25
-Nodes (10): fromJson, Payment, PaymentMethod, _paymentMethodFromDb, PaymentMethodX, PaymentStatus, _paymentStatusFromDb, PaymentStatusX (+2 more)
+Cohesion: 0.20
+Nodes (11): ConsumerWidget, currentOrderCartProvider, build, _buildCustomerSection, initState, _selectCustomer, OrderCartPanel, _onProductDecrement (+3 more)
 
 ### Community 45 - "manifest.json"
 Cohesion: 0.18
 Nodes (10): background_color, description, display, icons, name, orientation, prefer_related_applications, short_name (+2 more)
 
 ### Community 46 - "@freezed"
-Cohesion: 0.50
-Nodes (4): customer.dart, Customer, CustomerSupabaseExtension, toSupabaseJson
+Cohesion: 0.22
+Nodes (11): brandsProvider, categoriesProvider, productRepositoryProvider, build, build, _loadProduct, ProductFormView, _ProductFormViewState (+3 more)
 
 ### Community 47 - "ConsumerState"
 Cohesion: 0.04
@@ -335,7 +332,7 @@ Nodes (47): 1. Clonar el repositorio, 2. Configurar Supabase, 3. Instalar depend
 
 ### Community 48 - "serial_printer_service_web.dart"
 Cohesion: 0.22
-Nodes (8): connect, disconnect, discoverDevices, isConnected, printBytes, printPdf, supportsPdf, package:pdf/widgets.dart
+Nodes (8): ../../../../domain/models/printer_config.dart, connect, disconnect, discoverDevices, isConnected, printBytes, printPdf, supportsPdf
 
 ### Community 49 - "products_view.dart"
 Cohesion: 0.07
@@ -350,36 +347,36 @@ Cohesion: 0.20
 Nodes (9): AppTheme, backgroundColor, errorColor, primaryColor, secondaryColor, successColor, surfaceColor, warningColor (+1 more)
 
 ### Community 52 - "_CustomerDetailViewState"
-Cohesion: 0.24
-Nodes (10): customerBasketsProvider, customerBasketStatsProvider, customerByIdProvider, customerOrdersHistoryProvider, customerStatsProvider, build, _buildBasketsTab, _buildOrdersTab (+2 more)
+Cohesion: 0.22
+Nodes (11): customerBasketsProvider, customerBasketStatsProvider, customerByIdProvider, customerOrdersHistoryProvider, customerStatsProvider, build, _buildBasketsTab, _buildOrdersTab (+3 more)
 
 ### Community 53 - "customer.dart"
-Cohesion: 0.24
-Nodes (9): CustomerStatus, _customerStatusFromDb, CustomerStatusX, CustomerType, _customerTypeFromDb, CustomerTypeX, dbValue, fromJson (+1 more)
+Cohesion: 0.18
+Nodes (10): addressController, build, _buildCartItem, _buildDeliverySection, _buildItemPriceTypeChip, _buildNotesSection, deliveryFeeController, notesController (+2 more)
 
 ### Community 54 - "product.dart"
-Cohesion: 0.24
-Nodes (9): fromJson, PackagingType, _packagingTypeFromDb, packagingTypeToDb, Product, ProductStatus, _productStatusFromDb, ProductSupabaseExtension (+1 more)
+Cohesion: 0.33
+Nodes (5): ../../../../../data/providers/order_providers.dart, build, canSave, isLoading, onSave
 
 ### Community 55 - "State"
 Cohesion: 0.32
 Nodes (8): LoginView, _LoginViewState, DashboardView, _DashboardViewState, PaymentFormDialog, _PaymentFormDialogState, State, StatefulWidget
 
 ### Community 56 - "main.dart"
-Cohesion: 0.25
-Nodes (7): config/router.dart, config/theme.dart, data/services/window_size/window_size_service.dart, build, initialize, main, _waitForInitialSession
+Cohesion: 0.22
+Nodes (8): config/router.dart, config/theme.dart, data/services/window_size/window_size_service.dart, build, initialize, main, _waitForInitialSession, package:flutter/foundation.dart
 
 ### Community 57 - "auth_service.dart"
-Cohesion: 0.22
-Nodes (8): AuthService, authStateChanges, _client, getCurrentUser, signIn, signOut, package:flutter/foundation.dart, Stream
+Cohesion: 0.20
+Nodes (9): ../../../../domain/models/user.dart, AuthService, authStateChanges, _client, getCurrentUser, signIn, signOut, Stream (+1 more)
 
 ### Community 58 - "windows_printer_service_web.dart"
-Cohesion: 0.22
-Nodes (8): ../../../../domain/models/printer_config.dart, connect, disconnect, discoverDevices, isConnected, printBytes, printPdf, supportsPdf
-
-### Community 59 - "bluetooth_printer_service_web.dart"
 Cohesion: 0.20
 Nodes (9): dart:async, connect, disconnect, discoverDevices, isConnected, printBytes, printPdf, supportsPdf (+1 more)
+
+### Community 59 - "bluetooth_printer_service_web.dart"
+Cohesion: 0.22
+Nodes (8): connect, disconnect, discoverDevices, isConnected, printBytes, printPdf, supportsPdf, package:pdf/widgets.dart
 
 ### Community 60 - "bool get"
 Cohesion: 0.25
@@ -390,20 +387,12 @@ Cohesion: 0.25
 Nodes (8): customersProvider, _save, build, _buildCustomersList, _buildFilters, build, initState, Route /customers/create
 
 ### Community 62 - "currentOrderCartProvider"
-Cohesion: 0.15
-Nodes (13): _, class, ../../../../../domain/models/customer.dart, cancelled, createState, customer, CustomerSelectionResult, CustomerSelectorDialog (+5 more)
+Cohesion: 0.17
+Nodes (11): _, class, ../../../../../data/providers/customer_providers.dart, cancelled, createState, customer, CustomerSelectionResult, dispose (+3 more)
 
 ### Community 63 - "config/supabase_config.dart"
 Cohesion: 0.25
-Nodes (7): _client, create, delete, getByCustomer, getByOrder, _handleError, SupabaseClient get
-
-### Community 64 - "window_size_service.dart"
-Cohesion: 0.25
-Nodes (7): getLastSize, initialize, _instance, saveSize, static final WindowSizeService, static WindowSizeService get, window_size_service_stub.dart
-
-### Community 65 - "window_size_service_stub.dart"
-Cohesion: 0.25
-Nodes (7): getLastSize, initialize, saveSize, WindowSizeServiceImpl, WindowSizeServiceImpl, WindowSizeService, window_size_service.dart
+Nodes (7): config/supabase_config.dart, _client, create, delete, getByCustomer, getByOrder, _handleError
 
 ### Community 66 - "package:supabase_flutter/supabase_flutter.dart"
 Cohesion: 0.29
@@ -418,28 +407,24 @@ Cohesion: 0.29
 Nodes (7): BluetoothPrinterService, BluetoothPrinterService, PrinterService, SerialPrinterService, SerialPrinterService, WindowsPrinterService, WindowsPrinterService
 
 ### Community 69 - "package:flutter_riverpod/flutter_riverpod.dart"
-Cohesion: 0.33
-Nodes (5): config/supabase_config.dart, ../../../../domain/models/user.dart, client, data, map
+Cohesion: 0.24
+Nodes (8): ../../../../../data/providers/user_providers.dart, client, data, deliveryUsersProvider, map, build, DeliveryPersonSelectorDialog, package:flutter_riverpod/flutter_riverpod.dart
 
 ### Community 70 - "json_helpers.dart"
-Cohesion: 0.21
-Nodes (10): json_helpers.dart, BasketStatus, _basketStatusFromDb, BasketStatusX, fromJson, fromJson, UserRole, _userRoleFromDb (+2 more)
-
-### Community 71 - "user.dart"
-Cohesion: 0.53
-Nodes (6): @freezed, CustomerBasket, CustomerBasketSupabaseExtension, OrderSupabaseExtension, Order, User
+Cohesion: 0.06
+Nodes (45): @freezed, customer.dart, json_helpers.dart, BasketStatus, _basketStatusFromDb, BasketStatusX, CustomerBasket, CustomerBasketSupabaseExtension (+37 more)
 
 ### Community 72 - "package:freezed_annotation/freezed_annotation.dart"
 Cohesion: 0.47
 Nodes (5): PrinterConfigNotifier, fromJson, PrinterConfig, PrinterConnectionType, PrinterConnectionTypeX
 
 ### Community 85 - "package:flutter_riverpod/flutter_riverpod.dart"
-Cohesion: 0.18
-Nodes (12): ConsumerWidget, ../../../../../data/providers/payment_providers.dart, ../../../../../data/providers/user_providers.dart, ../../../../../domain/models/payment.dart, paymentsByOrderProvider, deliveryUsersProvider, build, DeliveryPersonSelectorDialog (+4 more)
+Cohesion: 0.33
+Nodes (6): ../../../../../data/providers/payment_providers.dart, ../../../../../domain/models/payment.dart, paymentsByOrderProvider, build, orderId, PaymentsDialog
 
 ### Community 86 - "payment_form_dialog.dart"
-Cohesion: 0.20
-Nodes (9): _amountController, build, createState, dispose, _method, _notesController, order, receivedBy (+1 more)
+Cohesion: 0.18
+Nodes (11): OrderSupabaseExtension, Order, _amountController, build, createState, dispose, _method, _notesController (+3 more)
 
 ### Community 87 - "Requerimientos Funcionales"
 Cohesion: 0.20
@@ -451,7 +436,7 @@ Nodes (9): 3.1 Registro de Pedidos, 3.2 Estados del Pedido, 3.3 Facturación e I
 
 ### Community 89 - "add_remove_button.dart"
 Cohesion: 0.29
-Nodes (6): IconData, AddRemoveButton, build, icon, onPressed, VoidCallback?
+Nodes (6): IconData, AddRemoveButton, build, icon, onPressed, VoidCallback
 
 ### Community 90 - "7. Módulo Financiero y de Caja"
 Cohesion: 0.29
@@ -474,8 +459,8 @@ Cohesion: 0.40
 Nodes (5): 4.1 Registro de Clientes, 4.2 Clientes a Crédito, 4.3 Control de Canastas Retornables, 4.4 Cliente Consignatario (Caso Especial), 4. Módulo de Clientes
 
 ### Community 95 - "_CustomerFormViewState"
-Cohesion: 0.50
-Nodes (4): customerRepositoryProvider, CustomerFormView, _CustomerFormViewState, _loadCustomer
+Cohesion: 0.22
+Nodes (11): ConsumerState, ConsumerStatefulWidget, customerRepositoryProvider, CustomerFormView, _CustomerFormViewState, _loadCustomer, CustomersView, _CustomersViewState (+3 more)
 
 ### Community 96 - "package:go_router/go_router.dart"
 Cohesion: 0.50
@@ -506,24 +491,24 @@ Cohesion: 0.50
 Nodes (3): plugin, $schema, .opencode/plugins/graphify.js
 
 ## Knowledge Gaps
-- **788 isolated node(s):** `$schema`, `.opencode/plugins/graphify.js`, `XCTest`, `AppConfig`, `appName` (+783 more)
+- **794 isolated node(s):** `$schema`, `.opencode/plugins/graphify.js`, `XCTest`, `AppConfig`, `appName` (+789 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **10 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `CustomerType` connect `customer.dart` to `customer_providers.dart`, `customer_form_view.dart`, `supabase_health_check_view.dart`?**
+- **Why does `CustomerType` connect `json_helpers.dart` to `customer_providers.dart`, `customer_form_view.dart`, `supabase_health_check_view.dart`?**
   _High betweenness centrality (0.016) - this node is a cross-community bridge._
+- **Why does `Sistema de Gestión para Licorería - Documentación Completa` connect `ConsumerState` to `products_view.dart`, `Requerimientos Funcionales`?**
+  _High betweenness centrality (0.011) - this node is a cross-community bridge._
 - **Why does `SaleType` connect `order.dart` to `order_create_view.dart`, `supabase_health_check_view.dart`?**
-  _High betweenness centrality (0.011) - this node is a cross-community bridge._
-- **Why does `DeliveryType` connect `order.dart` to `order_create_view.dart`, `supabase_health_check_view.dart`?**
-  _High betweenness centrality (0.011) - this node is a cross-community bridge._
+  _High betweenness centrality (0.010) - this node is a cross-community bridge._
 - **What connects `$schema`, `.opencode/plugins/graphify.js`, `XCTest` to the rest of the system?**
-  _788 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _794 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Win32Window` be split into smaller, more focused modules?**
   _Cohesion score 0.06271186440677966 - nodes in this community are weakly interconnected._
 - **Should `order_create_view.dart` be split into smaller, more focused modules?**
-  _Cohesion score 0.06097560975609756 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.10526315789473684 - nodes in this community are weakly interconnected._
 - **Should `order_repository.dart` be split into smaller, more focused modules?**
   _Cohesion score 0.04698581560283688 - nodes in this community are weakly interconnected._

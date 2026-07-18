@@ -335,8 +335,8 @@
     "semantic_hash": "7ca7344f379c565cbaca8003635bac89"
   },
   "lib/ui/features/orders/views/order_create_view.dart": {
-    "mtime": 1784340409.0159712,
-    "ast_hash": "5121b6c5bde3132258370217852f0114",
+    "mtime": 1784345058.2347672,
+    "ast_hash": "242642c3d5e244005121dc5edb2f20d6",
     "semantic_hash": ""
   },
   "lib/ui/features/orders/views/order_detail_view.dart": {
@@ -787,6 +787,21 @@
   "web/icons/Icon-maskable-512.png": {
     "mtime": 1780446445.8761294,
     "ast_hash": "301a7604d45b3e739efc881eb04896ea",
+    "semantic_hash": ""
+  },
+  "lib/ui/features/orders/views/widgets/order_cart_panel.dart": {
+    "mtime": 1784345094.0343945,
+    "ast_hash": "d4b87cbd2a4ac601590538e70d29e51d",
+    "semantic_hash": ""
+  },
+  "lib/ui/features/orders/views/widgets/order_catalog_panel.dart": {
+    "mtime": 1784345091.7450519,
+    "ast_hash": "5f1e12ee6bae843c127b1009a8e064e1",
+    "semantic_hash": ""
+  },
+  "lib/ui/features/orders/views/widgets/order_create_bottom_bar.dart": {
+    "mtime": 1784345096.1003578,
+    "ast_hash": "e5540aa3ab26b4d94fb93fe0d85b2738",
     "semantic_hash": ""
   }
 }

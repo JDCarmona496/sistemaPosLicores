@@ -8,6 +8,7 @@ import '../../../../../data/providers/product_providers.dart';
 import '../../../../../domain/models/order_item.dart';
 import '../../../../../domain/models/product.dart';
 import 'add_remove_button.dart';
+import 'price_type_style.dart';
 
 /// Panel de catálogo de productos con búsqueda, filtros por categoría,
 /// selector de tipo de precio por defecto y grilla de productos.
@@ -62,6 +63,16 @@ class _OrderCatalogPanelState extends ConsumerState<OrderCatalogPanel> {
       );
       return;
     }
+
+    final totalInCart = _totalQuantityInCart(product);
+    if (totalInCart >= product.stockCurrent) {
+      _showSnack(
+        'Stock máximo alcanzado (${product.stockCurrent} unidades)',
+        isError: true,
+      );
+      return;
+    }
+
     ref.read(currentOrderCartProvider.notifier).incrementItem(
           productId: product.id,
           productName: product.name,
@@ -205,14 +216,17 @@ class _OrderCatalogPanelState extends ConsumerState<OrderCatalogPanel> {
                     segments: [
                       ButtonSegment(
                         value: OrderItemPriceType.retail,
+                        icon: Icon(OrderItemPriceType.retail.icon, size: 16),
                         label: Text(OrderItemPriceType.retail.label),
                       ),
                       ButtonSegment(
                         value: OrderItemPriceType.wholesale,
+                        icon: Icon(OrderItemPriceType.wholesale.icon, size: 16),
                         label: Text(OrderItemPriceType.wholesale.label),
                       ),
                       ButtonSegment(
                         value: OrderItemPriceType.cold,
+                        icon: Icon(OrderItemPriceType.cold.icon, size: 16),
                         label: Text(OrderItemPriceType.cold.label),
                       ),
                     ],
@@ -275,6 +289,7 @@ class _OrderCatalogPanelState extends ConsumerState<OrderCatalogPanel> {
     final quantityForDefault = _quantityInCart(product, _defaultPriceType);
     final totalQuantity = _totalQuantityInCart(product);
     final hasPrice = defaultPrice > 0;
+    final atStockLimit = totalQuantity >= product.stockCurrent;
     final stockColor = product.stockCurrent == 0
         ? Colors.red
         : product.stockCurrent <= product.stockMin
@@ -320,13 +335,23 @@ class _OrderCatalogPanelState extends ConsumerState<OrderCatalogPanel> {
                         color: colorScheme.primary,
                       ),
                     ),
-                    Text(
-                      'Stock: ${product.stockCurrent}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: stockColor,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.inventory_2_outlined,
+                            size: 12, color: stockColor),
+                        const SizedBox(width: 2),
+                        Text(
+                          atStockLimit && product.stockCurrent > 0
+                              ? 'Máx: ${product.stockCurrent}'
+                              : 'Stock: ${product.stockCurrent}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: atStockLimit ? Colors.red : stockColor,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -351,7 +376,7 @@ class _OrderCatalogPanelState extends ConsumerState<OrderCatalogPanel> {
                     ),
                     AddRemoveButton(
                       icon: Icons.add,
-                      onPressed: hasPrice
+                      onPressed: hasPrice && !atStockLimit
                           ? () => _onProductIncrement(product)
                           : null,
                     ),

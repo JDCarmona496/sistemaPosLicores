@@ -1146,8 +1146,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "double_get",
-      "community": 42,
-      "community_name": "order_extensions.dart",
+      "community": 27,
+      "community_name": "order_item.dart",
       "norm_label": "double get"
     },
     {
@@ -1366,8 +1366,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "list",
-      "community": 22,
-      "community_name": "supabase_health_check_view.dart",
+      "community": 27,
+      "community_name": "order_item.dart",
       "norm_label": "list"
     },
     {
@@ -1685,7 +1685,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "package_flutter_riverpod_flutter_riverpod_dart",
-      "community": 85,
+      "community": 69,
       "community_name": "package:flutter_riverpod/flutter_riverpod.dart",
       "norm_label": "package:flutter_riverpod/flutter_riverpod.dart"
     },
@@ -1696,8 +1696,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "domain_models_customer_dart",
-      "community": 62,
-      "community_name": "currentOrderCartProvider",
+      "community": 35,
+      "community_name": "customers_view.dart",
       "norm_label": "../../../../../domain/models/customer.dart"
     },
     {
@@ -1762,8 +1762,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_data_providers_order_cart_providers_currentordercartprovider",
-      "community": 2,
-      "community_name": "order_create_view.dart",
+      "community": 44,
+      "community_name": "payment.dart",
       "norm_label": "currentordercartprovider"
     },
     {
@@ -2895,8 +2895,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "dart_async",
-      "community": 59,
-      "community_name": "bluetooth_printer_service_web.dart",
+      "community": 58,
+      "community_name": "windows_printer_service_web.dart",
       "norm_label": "dart:async"
     },
     {
@@ -2917,8 +2917,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "package_flutter_foundation_dart",
-      "community": 57,
-      "community_name": "auth_service.dart",
+      "community": 56,
+      "community_name": "main.dart",
       "norm_label": "package:flutter/foundation.dart"
     },
     {
@@ -2939,8 +2939,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "domain_models_printer_config_dart",
-      "community": 58,
-      "community_name": "windows_printer_service_web.dart",
+      "community": 48,
+      "community_name": "serial_printer_service_web.dart",
       "norm_label": "../../../../domain/models/printer_config.dart"
     },
     {
@@ -3049,8 +3049,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_data_providers_product_providers_productrepositoryprovider",
-      "community": 6,
-      "community_name": "product_form_view.dart",
+      "community": 46,
+      "community_name": "@freezed",
       "norm_label": "productrepositoryprovider"
     },
     {
@@ -3170,8 +3170,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_data_providers_product_providers_brandsprovider",
-      "community": 17,
-      "community_name": "productsProvider",
+      "community": 46,
+      "community_name": "@freezed",
       "norm_label": "brandsprovider"
     },
     {
@@ -3181,8 +3181,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_data_providers_product_providers_categoriesprovider",
-      "community": 17,
-      "community_name": "productsProvider",
+      "community": 46,
+      "community_name": "@freezed",
       "norm_label": "categoriesprovider"
     },
     {
@@ -3401,7 +3401,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_data_providers_user_providers_deliveryusersprovider",
-      "community": 85,
+      "community": 69,
       "community_name": "package:flutter_riverpod/flutter_riverpod.dart",
       "norm_label": "deliveryusersprovider"
     },
@@ -3445,8 +3445,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "config_supabase_config_dart",
-      "community": 69,
-      "community_name": "package:flutter_riverpod/flutter_riverpod.dart",
+      "community": 63,
+      "community_name": "config/supabase_config.dart",
       "norm_label": "config/supabase_config.dart"
     },
     {
@@ -3456,8 +3456,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "domain_models_user_dart",
-      "community": 69,
-      "community_name": "package:flutter_riverpod/flutter_riverpod.dart",
+      "community": 57,
+      "community_name": "auth_service.dart",
       "norm_label": "../../../../domain/models/user.dart"
     },
     {
@@ -3577,8 +3577,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "supabaseclient_get",
-      "community": 63,
-      "community_name": "config/supabase_config.dart",
+      "community": 57,
+      "community_name": "auth_service.dart",
       "norm_label": "supabaseclient get"
     },
     {
@@ -4864,8 +4864,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "package_pdf_widgets_dart",
-      "community": 48,
-      "community_name": "serial_printer_service_web.dart",
+      "community": 59,
+      "community_name": "bluetooth_printer_service_web.dart",
       "norm_label": "package:pdf/widgets.dart"
     },
     {
@@ -4875,8 +4875,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "printer_service_dart",
-      "community": 59,
-      "community_name": "bluetooth_printer_service_web.dart",
+      "community": 58,
+      "community_name": "windows_printer_service_web.dart",
       "norm_label": "printer_service.dart"
     },
     {
@@ -6173,8 +6173,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_data_services_window_size_window_size_service",
-      "community": 64,
-      "community_name": "window_size_service.dart",
+      "community": 29,
+      "community_name": "window_size_service_web.dart",
       "norm_label": "window_size_service.dart"
     },
     {
@@ -6184,8 +6184,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_data_services_window_size_window_size_service_windowsizeservice",
-      "community": 65,
-      "community_name": "window_size_service_stub.dart",
+      "community": 29,
+      "community_name": "window_size_service_web.dart",
       "norm_label": "windowsizeservice"
     },
     {
@@ -6195,8 +6195,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_data_services_window_size_window_size_service_instance",
-      "community": 64,
-      "community_name": "window_size_service.dart",
+      "community": 29,
+      "community_name": "window_size_service_web.dart",
       "norm_label": "_instance"
     },
     {
@@ -6206,8 +6206,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "static_final_windowsizeservice",
-      "community": 64,
-      "community_name": "window_size_service.dart",
+      "community": 29,
+      "community_name": "window_size_service_web.dart",
       "norm_label": "static final windowsizeservice"
     },
     {
@@ -6217,8 +6217,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "static_windowsizeservice_get",
-      "community": 64,
-      "community_name": "window_size_service.dart",
+      "community": 29,
+      "community_name": "window_size_service_web.dart",
       "norm_label": "static windowsizeservice get"
     },
     {
@@ -6228,8 +6228,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_data_services_window_size_window_size_service_initialize",
-      "community": 64,
-      "community_name": "window_size_service.dart",
+      "community": 29,
+      "community_name": "window_size_service_web.dart",
       "norm_label": "initialize"
     },
     {
@@ -6239,8 +6239,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_data_services_window_size_window_size_service_savesize",
-      "community": 64,
-      "community_name": "window_size_service.dart",
+      "community": 29,
+      "community_name": "window_size_service_web.dart",
       "norm_label": "savesize"
     },
     {
@@ -6250,8 +6250,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_data_services_window_size_window_size_service_getlastsize",
-      "community": 64,
-      "community_name": "window_size_service.dart",
+      "community": 29,
+      "community_name": "window_size_service_web.dart",
       "norm_label": "getlastsize"
     },
     {
@@ -6261,8 +6261,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "window_size_service_stub_dart",
-      "community": 64,
-      "community_name": "window_size_service.dart",
+      "community": 29,
+      "community_name": "window_size_service_web.dart",
       "norm_label": "window_size_service_stub.dart"
     },
     {
@@ -6272,8 +6272,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_data_services_window_size_window_size_service_stub",
-      "community": 65,
-      "community_name": "window_size_service_stub.dart",
+      "community": 29,
+      "community_name": "window_size_service_web.dart",
       "norm_label": "window_size_service_stub.dart"
     },
     {
@@ -6283,8 +6283,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_data_services_window_size_window_size_service_stub_windowsizeserviceimpl",
-      "community": 65,
-      "community_name": "window_size_service_stub.dart",
+      "community": 29,
+      "community_name": "window_size_service_web.dart",
       "norm_label": "windowsizeserviceimpl"
     },
     {
@@ -6294,8 +6294,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_data_services_window_size_window_size_service_stub_initialize",
-      "community": 65,
-      "community_name": "window_size_service_stub.dart",
+      "community": 29,
+      "community_name": "window_size_service_web.dart",
       "norm_label": "initialize"
     },
     {
@@ -6305,8 +6305,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_data_services_window_size_window_size_service_stub_savesize",
-      "community": 65,
-      "community_name": "window_size_service_stub.dart",
+      "community": 29,
+      "community_name": "window_size_service_web.dart",
       "norm_label": "savesize"
     },
     {
@@ -6316,8 +6316,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_data_services_window_size_window_size_service_stub_getlastsize",
-      "community": 65,
-      "community_name": "window_size_service_stub.dart",
+      "community": 29,
+      "community_name": "window_size_service_web.dart",
       "norm_label": "getlastsize"
     },
     {
@@ -6327,8 +6327,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "window_size_service_dart",
-      "community": 65,
-      "community_name": "window_size_service_stub.dart",
+      "community": 29,
+      "community_name": "window_size_service_web.dart",
       "norm_label": "window_size_service.dart"
     },
     {
@@ -6349,8 +6349,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_data_services_window_size_window_size_service_web_windowsizeserviceimpl",
-      "community": 65,
-      "community_name": "window_size_service_stub.dart",
+      "community": 29,
+      "community_name": "window_size_service_web.dart",
       "norm_label": "windowsizeserviceimpl"
     },
     {
@@ -6470,8 +6470,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_customer",
-      "community": 53,
-      "community_name": "customer.dart",
+      "community": 70,
+      "community_name": "json_helpers.dart",
       "norm_label": "customer.dart"
     },
     {
@@ -6481,8 +6481,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_customer_customertype",
-      "community": 53,
-      "community_name": "customer.dart",
+      "community": 70,
+      "community_name": "json_helpers.dart",
       "norm_label": "customertype"
     },
     {
@@ -6492,8 +6492,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_customer_customerstatus",
-      "community": 53,
-      "community_name": "customer.dart",
+      "community": 70,
+      "community_name": "json_helpers.dart",
       "norm_label": "customerstatus"
     },
     {
@@ -6503,8 +6503,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_customer_customer",
-      "community": 46,
-      "community_name": "@freezed",
+      "community": 70,
+      "community_name": "json_helpers.dart",
       "norm_label": "customer"
     },
     {
@@ -6514,8 +6514,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "annotation_freezed",
-      "community": 71,
-      "community_name": "user.dart",
+      "community": 70,
+      "community_name": "json_helpers.dart",
       "norm_label": "@freezed"
     },
     {
@@ -6525,8 +6525,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_customer_customertypex",
-      "community": 53,
-      "community_name": "customer.dart",
+      "community": 70,
+      "community_name": "json_helpers.dart",
       "norm_label": "customertypex"
     },
     {
@@ -6536,8 +6536,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_customer_customerstatusx",
-      "community": 53,
-      "community_name": "customer.dart",
+      "community": 70,
+      "community_name": "json_helpers.dart",
       "norm_label": "customerstatusx"
     },
     {
@@ -6547,8 +6547,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_customer_dbvalue",
-      "community": 53,
-      "community_name": "customer.dart",
+      "community": 70,
+      "community_name": "json_helpers.dart",
       "norm_label": "dbvalue"
     },
     {
@@ -6558,8 +6558,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "string_get",
-      "community": 53,
-      "community_name": "customer.dart",
+      "community": 40,
+      "community_name": "order.dart",
       "norm_label": "string get"
     },
     {
@@ -6569,8 +6569,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_customer_customertypefromdb",
-      "community": 53,
-      "community_name": "customer.dart",
+      "community": 70,
+      "community_name": "json_helpers.dart",
       "norm_label": "_customertypefromdb"
     },
     {
@@ -6580,8 +6580,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_customer_customerstatusfromdb",
-      "community": 53,
-      "community_name": "customer.dart",
+      "community": 70,
+      "community_name": "json_helpers.dart",
       "norm_label": "_customerstatusfromdb"
     },
     {
@@ -6591,8 +6591,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_customer_fromjson",
-      "community": 53,
-      "community_name": "customer.dart",
+      "community": 70,
+      "community_name": "json_helpers.dart",
       "norm_label": "fromjson"
     },
     {
@@ -6646,8 +6646,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_customer_basket_customerbasket",
-      "community": 71,
-      "community_name": "user.dart",
+      "community": 70,
+      "community_name": "json_helpers.dart",
       "norm_label": "customerbasket"
     },
     {
@@ -6701,8 +6701,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_customer_basket_extensions_customerbasketsupabaseextension",
-      "community": 71,
-      "community_name": "user.dart",
+      "community": 70,
+      "community_name": "json_helpers.dart",
       "norm_label": "customerbasketsupabaseextension"
     },
     {
@@ -6767,8 +6767,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_customer_extensions",
-      "community": 46,
-      "community_name": "@freezed",
+      "community": 70,
+      "community_name": "json_helpers.dart",
       "norm_label": "customer_extensions.dart"
     },
     {
@@ -6778,8 +6778,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_customer_extensions_customersupabaseextension",
-      "community": 46,
-      "community_name": "@freezed",
+      "community": 70,
+      "community_name": "json_helpers.dart",
       "norm_label": "customersupabaseextension"
     },
     {
@@ -6789,8 +6789,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_customer_extensions_tosupabasejson",
-      "community": 46,
-      "community_name": "@freezed",
+      "community": 70,
+      "community_name": "json_helpers.dart",
       "norm_label": "tosupabasejson"
     },
     {
@@ -6800,8 +6800,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "customer_dart",
-      "community": 46,
-      "community_name": "@freezed",
+      "community": 70,
+      "community_name": "json_helpers.dart",
       "norm_label": "customer.dart"
     },
     {
@@ -7031,8 +7031,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_order_order",
-      "community": 71,
-      "community_name": "user.dart",
+      "community": 86,
+      "community_name": "payment_form_dialog.dart",
       "norm_label": "order"
     },
     {
@@ -7130,8 +7130,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_order_extensions",
-      "community": 42,
-      "community_name": "order_extensions.dart",
+      "community": 27,
+      "community_name": "order_item.dart",
       "norm_label": "order_extensions.dart"
     },
     {
@@ -7141,8 +7141,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_order_extensions_ordersupabaseextension",
-      "community": 71,
-      "community_name": "user.dart",
+      "community": 86,
+      "community_name": "payment_form_dialog.dart",
       "norm_label": "ordersupabaseextension"
     },
     {
@@ -7163,8 +7163,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_order_extensions_orderitemlistextension",
-      "community": 22,
-      "community_name": "supabase_health_check_view.dart",
+      "community": 27,
+      "community_name": "order_item.dart",
       "norm_label": "orderitemlistextension"
     },
     {
@@ -7174,8 +7174,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_order_extensions_totalsubtotal",
-      "community": 42,
-      "community_name": "order_extensions.dart",
+      "community": 27,
+      "community_name": "order_item.dart",
       "norm_label": "totalsubtotal"
     },
     {
@@ -7185,8 +7185,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_order_extensions_totaldiscount",
-      "community": 42,
-      "community_name": "order_extensions.dart",
+      "community": 27,
+      "community_name": "order_item.dart",
       "norm_label": "totaldiscount"
     },
     {
@@ -7196,8 +7196,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_order_extensions_totalquantity",
-      "community": 42,
-      "community_name": "order_extensions.dart",
+      "community": 27,
+      "community_name": "order_item.dart",
       "norm_label": "totalquantity"
     },
     {
@@ -7207,8 +7207,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_order_extensions_tosupabasejson",
-      "community": 42,
-      "community_name": "order_extensions.dart",
+      "community": 27,
+      "community_name": "order_item.dart",
       "norm_label": "tosupabasejson"
     },
     {
@@ -7218,8 +7218,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_order_extensions_torpcjson",
-      "community": 42,
-      "community_name": "order_extensions.dart",
+      "community": 27,
+      "community_name": "order_item.dart",
       "norm_label": "torpcjson"
     },
     {
@@ -7229,8 +7229,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "order_dart",
-      "community": 42,
-      "community_name": "order_extensions.dart",
+      "community": 27,
+      "community_name": "order_item.dart",
       "norm_label": "order.dart"
     },
     {
@@ -7240,8 +7240,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "order_item_dart",
-      "community": 42,
-      "community_name": "order_extensions.dart",
+      "community": 27,
+      "community_name": "order_item.dart",
       "norm_label": "order_item.dart"
     },
     {
@@ -7394,8 +7394,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_payment",
-      "community": 44,
-      "community_name": "payment.dart",
+      "community": 70,
+      "community_name": "json_helpers.dart",
       "norm_label": "payment.dart"
     },
     {
@@ -7405,8 +7405,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_payment_paymentmethod",
-      "community": 44,
-      "community_name": "payment.dart",
+      "community": 70,
+      "community_name": "json_helpers.dart",
       "norm_label": "paymentmethod"
     },
     {
@@ -7416,8 +7416,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_payment_paymentstatus",
-      "community": 44,
-      "community_name": "payment.dart",
+      "community": 70,
+      "community_name": "json_helpers.dart",
       "norm_label": "paymentstatus"
     },
     {
@@ -7427,8 +7427,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_payment_payment",
-      "community": 44,
-      "community_name": "payment.dart",
+      "community": 70,
+      "community_name": "json_helpers.dart",
       "norm_label": "payment"
     },
     {
@@ -7438,8 +7438,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_payment_paymentmethodx",
-      "community": 44,
-      "community_name": "payment.dart",
+      "community": 70,
+      "community_name": "json_helpers.dart",
       "norm_label": "paymentmethodx"
     },
     {
@@ -7449,8 +7449,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_payment_paymentstatusx",
-      "community": 44,
-      "community_name": "payment.dart",
+      "community": 70,
+      "community_name": "json_helpers.dart",
       "norm_label": "paymentstatusx"
     },
     {
@@ -7460,8 +7460,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_payment_paymentsupabaseextension",
-      "community": 44,
-      "community_name": "payment.dart",
+      "community": 70,
+      "community_name": "json_helpers.dart",
       "norm_label": "paymentsupabaseextension"
     },
     {
@@ -7471,8 +7471,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_payment_paymentmethodfromdb",
-      "community": 44,
-      "community_name": "payment.dart",
+      "community": 70,
+      "community_name": "json_helpers.dart",
       "norm_label": "_paymentmethodfromdb"
     },
     {
@@ -7482,8 +7482,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_payment_paymentstatusfromdb",
-      "community": 44,
-      "community_name": "payment.dart",
+      "community": 70,
+      "community_name": "json_helpers.dart",
       "norm_label": "_paymentstatusfromdb"
     },
     {
@@ -7493,8 +7493,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_payment_fromjson",
-      "community": 44,
-      "community_name": "payment.dart",
+      "community": 70,
+      "community_name": "json_helpers.dart",
       "norm_label": "fromjson"
     },
     {
@@ -7504,8 +7504,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_payment_tosupabasejson",
-      "community": 44,
-      "community_name": "payment.dart",
+      "community": 70,
+      "community_name": "json_helpers.dart",
       "norm_label": "tosupabasejson"
     },
     {
@@ -7570,8 +7570,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_product",
-      "community": 54,
-      "community_name": "product.dart",
+      "community": 70,
+      "community_name": "json_helpers.dart",
       "norm_label": "product.dart"
     },
     {
@@ -7581,8 +7581,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_product_productstatus",
-      "community": 54,
-      "community_name": "product.dart",
+      "community": 70,
+      "community_name": "json_helpers.dart",
       "norm_label": "productstatus"
     },
     {
@@ -7592,8 +7592,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_product_packagingtype",
-      "community": 54,
-      "community_name": "product.dart",
+      "community": 70,
+      "community_name": "json_helpers.dart",
       "norm_label": "packagingtype"
     },
     {
@@ -7603,8 +7603,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_product_product",
-      "community": 54,
-      "community_name": "product.dart",
+      "community": 70,
+      "community_name": "json_helpers.dart",
       "norm_label": "product"
     },
     {
@@ -7614,8 +7614,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_product_productsupabaseextension",
-      "community": 54,
-      "community_name": "product.dart",
+      "community": 70,
+      "community_name": "json_helpers.dart",
       "norm_label": "productsupabaseextension"
     },
     {
@@ -7625,8 +7625,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_product_packagingtypetodb",
-      "community": 54,
-      "community_name": "product.dart",
+      "community": 70,
+      "community_name": "json_helpers.dart",
       "norm_label": "packagingtypetodb"
     },
     {
@@ -7636,8 +7636,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_product_packagingtypefromdb",
-      "community": 54,
-      "community_name": "product.dart",
+      "community": 70,
+      "community_name": "json_helpers.dart",
       "norm_label": "_packagingtypefromdb"
     },
     {
@@ -7647,8 +7647,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_product_productstatusfromdb",
-      "community": 54,
-      "community_name": "product.dart",
+      "community": 70,
+      "community_name": "json_helpers.dart",
       "norm_label": "_productstatusfromdb"
     },
     {
@@ -7658,8 +7658,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_product_fromjson",
-      "community": 54,
-      "community_name": "product.dart",
+      "community": 70,
+      "community_name": "json_helpers.dart",
       "norm_label": "fromjson"
     },
     {
@@ -7669,8 +7669,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_product_tosupabasejson",
-      "community": 54,
-      "community_name": "product.dart",
+      "community": 70,
+      "community_name": "json_helpers.dart",
       "norm_label": "tosupabasejson"
     },
     {
@@ -7702,8 +7702,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_domain_models_user_user",
-      "community": 71,
-      "community_name": "user.dart",
+      "community": 70,
+      "community_name": "json_helpers.dart",
       "norm_label": "user"
     },
     {
@@ -8065,8 +8065,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_features_customers_views_customer_detail_view_customerdetailview",
-      "community": 41,
-      "community_name": "_OrderDetailViewState",
+      "community": 52,
+      "community_name": "_CustomerDetailViewState",
       "norm_label": "customerdetailview"
     },
     {
@@ -8076,8 +8076,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "consumerstatefulwidget",
-      "community": 41,
-      "community_name": "_OrderDetailViewState",
+      "community": 95,
+      "community_name": "_CustomerFormViewState",
       "norm_label": "consumerstatefulwidget"
     },
     {
@@ -8098,8 +8098,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "consumerstate",
-      "community": 35,
-      "community_name": "customers_view.dart",
+      "community": 95,
+      "community_name": "_CustomerFormViewState",
       "norm_label": "consumerstate"
     },
     {
@@ -8417,8 +8417,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "data_providers_customer_providers_dart",
-      "community": 35,
-      "community_name": "customers_view.dart",
+      "community": 62,
+      "community_name": "currentOrderCartProvider",
       "norm_label": "../../../../../data/providers/customer_providers.dart"
     },
     {
@@ -8791,8 +8791,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_features_customers_views_customers_view_customersview",
-      "community": 35,
-      "community_name": "customers_view.dart",
+      "community": 95,
+      "community_name": "_CustomerFormViewState",
       "norm_label": "customersview"
     },
     {
@@ -8802,8 +8802,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_features_customers_views_customers_view_customersviewstate",
-      "community": 35,
-      "community_name": "customers_view.dart",
+      "community": 95,
+      "community_name": "_CustomerFormViewState",
       "norm_label": "_customersviewstate"
     },
     {
@@ -9247,17 +9247,6 @@
       "norm_label": "_deliveryfeecontroller"
     },
     {
-      "label": "_productSearchController",
-      "file_type": "code",
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_ui_features_orders_views_order_create_view_productsearchcontroller",
-      "community": 2,
-      "community_name": "order_create_view.dart",
-      "norm_label": "_productsearchcontroller"
-    },
-    {
       "label": "_isLoading",
       "file_type": "code",
       "source_file": "lib/ui/features/orders/views/order_create_view.dart",
@@ -9280,39 +9269,6 @@
       "norm_label": "_currentuserid"
     },
     {
-      "label": "_defaultPriceType",
-      "file_type": "code",
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_ui_features_orders_views_order_create_view_defaultpricetype",
-      "community": 2,
-      "community_name": "order_create_view.dart",
-      "norm_label": "_defaultpricetype"
-    },
-    {
-      "label": "_selectedCategoryId",
-      "file_type": "code",
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_ui_features_orders_views_order_create_view_selectedcategoryid",
-      "community": 2,
-      "community_name": "order_create_view.dart",
-      "norm_label": "_selectedcategoryid"
-    },
-    {
-      "label": "_searchDebounce",
-      "file_type": "code",
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_ui_features_orders_views_order_create_view_searchdebounce",
-      "community": 2,
-      "community_name": "order_create_view.dart",
-      "norm_label": "_searchdebounce"
-    },
-    {
       "label": "createState",
       "file_type": "code",
       "source_file": "lib/ui/features/orders/views/order_create_view.dart",
@@ -9330,8 +9286,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_features_orders_views_order_create_view_initstate",
-      "community": 2,
-      "community_name": "order_create_view.dart",
+      "community": 44,
+      "community_name": "payment.dart",
       "norm_label": "initstate"
     },
     {
@@ -9357,91 +9313,14 @@
       "norm_label": "_loadcurrentuser"
     },
     {
-      "label": "_onSearchChanged",
-      "file_type": "code",
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_ui_features_orders_views_order_create_view_onsearchchanged",
-      "community": 2,
-      "community_name": "order_create_view.dart",
-      "norm_label": "_onsearchchanged"
-    },
-    {
-      "label": "_onCategorySelected",
-      "file_type": "code",
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_ui_features_orders_views_order_create_view_oncategoryselected",
-      "community": 17,
-      "community_name": "productsProvider",
-      "norm_label": "_oncategoryselected"
-    },
-    {
-      "label": "_onProductIncrement",
-      "file_type": "code",
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_ui_features_orders_views_order_create_view_onproductincrement",
-      "community": 2,
-      "community_name": "order_create_view.dart",
-      "norm_label": "_onproductincrement"
-    },
-    {
-      "label": "_onProductDecrement",
-      "file_type": "code",
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_ui_features_orders_views_order_create_view_onproductdecrement",
-      "community": 2,
-      "community_name": "order_create_view.dart",
-      "norm_label": "_onproductdecrement"
-    },
-    {
-      "label": "_resolvePrice",
-      "file_type": "code",
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_ui_features_orders_views_order_create_view_resolveprice",
-      "community": 2,
-      "community_name": "order_create_view.dart",
-      "norm_label": "_resolveprice"
-    },
-    {
-      "label": "_quantityInCart",
-      "file_type": "code",
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_ui_features_orders_views_order_create_view_quantityincart",
-      "community": 2,
-      "community_name": "order_create_view.dart",
-      "norm_label": "_quantityincart"
-    },
-    {
-      "label": "_totalQuantityInCart",
-      "file_type": "code",
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_ui_features_orders_views_order_create_view_totalquantityincart",
-      "community": 2,
-      "community_name": "order_create_view.dart",
-      "norm_label": "_totalquantityincart"
-    },
-    {
       "label": "build",
       "file_type": "code",
       "source_file": "lib/ui/features/orders/views/order_create_view.dart",
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_features_orders_views_order_create_view_build",
-      "community": 2,
-      "community_name": "order_create_view.dart",
+      "community": 44,
+      "community_name": "payment.dart",
       "norm_label": "build"
     },
     {
@@ -9467,80 +9346,14 @@
       "norm_label": "_buildheader"
     },
     {
-      "label": "_buildCatalogPanel",
-      "file_type": "code",
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_ui_features_orders_views_order_create_view_buildcatalogpanel",
-      "community": 17,
-      "community_name": "productsProvider",
-      "norm_label": "_buildcatalogpanel"
-    },
-    {
-      "label": "_buildProductCard",
-      "file_type": "code",
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_ui_features_orders_views_order_create_view_buildproductcard",
-      "community": 2,
-      "community_name": "order_create_view.dart",
-      "norm_label": "_buildproductcard"
-    },
-    {
-      "label": "_buildCartPanel",
-      "file_type": "code",
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_ui_features_orders_views_order_create_view_buildcartpanel",
-      "community": 2,
-      "community_name": "order_create_view.dart",
-      "norm_label": "_buildcartpanel"
-    },
-    {
-      "label": "_buildCartItem",
-      "file_type": "code",
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_ui_features_orders_views_order_create_view_buildcartitem",
-      "community": 2,
-      "community_name": "order_create_view.dart",
-      "norm_label": "_buildcartitem"
-    },
-    {
-      "label": "_buildItemPriceTypeChip",
-      "file_type": "code",
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_ui_features_orders_views_order_create_view_builditempricetypechip",
-      "community": 2,
-      "community_name": "order_create_view.dart",
-      "norm_label": "_builditempricetypechip"
-    },
-    {
-      "label": "_showItemPriceTypeSelector",
-      "file_type": "code",
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_ui_features_orders_views_order_create_view_showitempricetypeselector",
-      "community": 2,
-      "community_name": "order_create_view.dart",
-      "norm_label": "_showitempricetypeselector"
-    },
-    {
       "label": "_buildCustomerSection",
       "file_type": "code",
       "source_file": "lib/ui/features/orders/views/order_create_view.dart",
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_features_orders_views_order_create_view_buildcustomersection",
-      "community": 2,
-      "community_name": "order_create_view.dart",
+      "community": 44,
+      "community_name": "payment.dart",
       "norm_label": "_buildcustomersection"
     },
     {
@@ -9555,47 +9368,14 @@
       "norm_label": "_buildtypesection"
     },
     {
-      "label": "_buildDeliverySection",
-      "file_type": "code",
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_ui_features_orders_views_order_create_view_builddeliverysection",
-      "community": 2,
-      "community_name": "order_create_view.dart",
-      "norm_label": "_builddeliverysection"
-    },
-    {
-      "label": "_buildNotesSection",
-      "file_type": "code",
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_ui_features_orders_views_order_create_view_buildnotessection",
-      "community": 2,
-      "community_name": "order_create_view.dart",
-      "norm_label": "_buildnotessection"
-    },
-    {
-      "label": "_buildBottomBar",
-      "file_type": "code",
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_ui_features_orders_views_order_create_view_buildbottombar",
-      "community": 2,
-      "community_name": "order_create_view.dart",
-      "norm_label": "_buildbottombar"
-    },
-    {
       "label": "_selectCustomer",
       "file_type": "code",
       "source_file": "lib/ui/features/orders/views/order_create_view.dart",
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_features_orders_views_order_create_view_selectcustomer",
-      "community": 2,
-      "community_name": "order_create_view.dart",
+      "community": 44,
+      "community_name": "payment.dart",
       "norm_label": "_selectcustomer"
     },
     {
@@ -9621,28 +9401,6 @@
       "norm_label": "_showsnack"
     },
     {
-      "label": "../../../../data/providers/order_providers.dart",
-      "file_type": "code",
-      "source_file": null,
-      "source_location": null,
-      "_origin": "ast",
-      "id": "data_providers_order_providers_dart",
-      "community": 12,
-      "community_name": "orders_view.dart",
-      "norm_label": "../../../../data/providers/order_providers.dart"
-    },
-    {
-      "label": "../../../../data/providers/product_providers.dart",
-      "file_type": "code",
-      "source_file": null,
-      "source_location": null,
-      "_origin": "ast",
-      "id": "data_providers_product_providers_dart",
-      "community": 30,
-      "community_name": "product_detail_view.dart",
-      "norm_label": "../../../../data/providers/product_providers.dart"
-    },
-    {
       "label": "../../../../core/responsive.dart",
       "file_type": "code",
       "source_file": null,
@@ -9654,15 +9412,15 @@
       "norm_label": "../../../../core/responsive.dart"
     },
     {
-      "label": "widgets/add_remove_button.dart",
+      "label": "../../../../../data/providers/order_providers.dart",
       "file_type": "code",
       "source_file": null,
       "source_location": null,
       "_origin": "ast",
-      "id": "widgets_add_remove_button_dart",
-      "community": 2,
-      "community_name": "order_create_view.dart",
-      "norm_label": "widgets/add_remove_button.dart"
+      "id": "data_providers_order_providers_dart",
+      "community": 54,
+      "community_name": "product.dart",
+      "norm_label": "../../../../../data/providers/order_providers.dart"
     },
     {
       "label": "widgets/customer_selector_dialog.dart",
@@ -9674,6 +9432,39 @@
       "community": 2,
       "community_name": "order_create_view.dart",
       "norm_label": "widgets/customer_selector_dialog.dart"
+    },
+    {
+      "label": "widgets/order_cart_panel.dart",
+      "file_type": "code",
+      "source_file": null,
+      "source_location": null,
+      "_origin": "ast",
+      "id": "widgets_order_cart_panel_dart",
+      "community": 2,
+      "community_name": "order_create_view.dart",
+      "norm_label": "widgets/order_cart_panel.dart"
+    },
+    {
+      "label": "widgets/order_catalog_panel.dart",
+      "file_type": "code",
+      "source_file": null,
+      "source_location": null,
+      "_origin": "ast",
+      "id": "widgets_order_catalog_panel_dart",
+      "community": 2,
+      "community_name": "order_create_view.dart",
+      "norm_label": "widgets/order_catalog_panel.dart"
+    },
+    {
+      "label": "widgets/order_create_bottom_bar.dart",
+      "file_type": "code",
+      "source_file": null,
+      "source_location": null,
+      "_origin": "ast",
+      "id": "widgets_order_create_bottom_bar_dart",
+      "community": 2,
+      "community_name": "order_create_view.dart",
+      "norm_label": "widgets/order_create_bottom_bar.dart"
     },
     {
       "label": "order_detail_view.dart",
@@ -9693,8 +9484,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_features_orders_views_order_detail_view_orderdetailview",
-      "community": 41,
-      "community_name": "_OrderDetailViewState",
+      "community": 95,
+      "community_name": "_CustomerFormViewState",
       "norm_label": "orderdetailview"
     },
     {
@@ -10325,7 +10116,7 @@
       "norm_label": "onpressed"
     },
     {
-      "label": "VoidCallback?",
+      "label": "VoidCallback",
       "file_type": "code",
       "source_file": null,
       "source_location": null,
@@ -10333,7 +10124,7 @@
       "id": "voidcallback",
       "community": 89,
       "community_name": "add_remove_button.dart",
-      "norm_label": "voidcallback?"
+      "norm_label": "voidcallback"
     },
     {
       "label": "build",
@@ -10375,8 +10166,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_features_orders_views_widgets_customer_selector_dialog_customerselectordialog",
-      "community": 62,
-      "community_name": "currentOrderCartProvider",
+      "community": 95,
+      "community_name": "_CustomerFormViewState",
       "norm_label": "customerselectordialog"
     },
     {
@@ -10386,8 +10177,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_features_orders_views_widgets_customer_selector_dialog_customerselectordialogstate",
-      "community": 62,
-      "community_name": "currentOrderCartProvider",
+      "community": 95,
+      "community_name": "_CustomerFormViewState",
       "norm_label": "_customerselectordialogstate"
     },
     {
@@ -10606,7 +10397,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_features_orders_views_widgets_delivery_person_selector_dialog",
-      "community": 85,
+      "community": 69,
       "community_name": "package:flutter_riverpod/flutter_riverpod.dart",
       "norm_label": "delivery_person_selector_dialog.dart"
     },
@@ -10617,7 +10408,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_features_orders_views_widgets_delivery_person_selector_dialog_deliverypersonselectordialog",
-      "community": 85,
+      "community": 69,
       "community_name": "package:flutter_riverpod/flutter_riverpod.dart",
       "norm_label": "deliverypersonselectordialog"
     },
@@ -10628,8 +10419,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "consumerwidget",
-      "community": 85,
-      "community_name": "package:flutter_riverpod/flutter_riverpod.dart",
+      "community": 44,
+      "community_name": "payment.dart",
       "norm_label": "consumerwidget"
     },
     {
@@ -10639,7 +10430,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_features_orders_views_widgets_delivery_person_selector_dialog_build",
-      "community": 85,
+      "community": 69,
       "community_name": "package:flutter_riverpod/flutter_riverpod.dart",
       "norm_label": "build"
     },
@@ -10650,9 +10441,449 @@
       "source_location": null,
       "_origin": "ast",
       "id": "data_providers_user_providers_dart",
-      "community": 85,
+      "community": 69,
       "community_name": "package:flutter_riverpod/flutter_riverpod.dart",
       "norm_label": "../../../../../data/providers/user_providers.dart"
+    },
+    {
+      "label": "order_cart_panel.dart",
+      "file_type": "code",
+      "source_file": "lib/ui/features/orders/views/widgets/order_cart_panel.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_ui_features_orders_views_widgets_order_cart_panel",
+      "community": 53,
+      "community_name": "customer.dart",
+      "norm_label": "order_cart_panel.dart"
+    },
+    {
+      "label": "OrderCartPanel",
+      "file_type": "code",
+      "source_file": "lib/ui/features/orders/views/widgets/order_cart_panel.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_ui_features_orders_views_widgets_order_cart_panel_ordercartpanel",
+      "community": 44,
+      "community_name": "payment.dart",
+      "norm_label": "ordercartpanel"
+    },
+    {
+      "label": "addressController",
+      "file_type": "code",
+      "source_file": "lib/ui/features/orders/views/widgets/order_cart_panel.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_ui_features_orders_views_widgets_order_cart_panel_addresscontroller",
+      "community": 53,
+      "community_name": "customer.dart",
+      "norm_label": "addresscontroller"
+    },
+    {
+      "label": "TextEditingController",
+      "file_type": "code",
+      "source_file": null,
+      "source_location": null,
+      "_origin": "ast",
+      "id": "texteditingcontroller",
+      "community": 53,
+      "community_name": "customer.dart",
+      "norm_label": "texteditingcontroller"
+    },
+    {
+      "label": "deliveryFeeController",
+      "file_type": "code",
+      "source_file": "lib/ui/features/orders/views/widgets/order_cart_panel.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_ui_features_orders_views_widgets_order_cart_panel_deliveryfeecontroller",
+      "community": 53,
+      "community_name": "customer.dart",
+      "norm_label": "deliveryfeecontroller"
+    },
+    {
+      "label": "notesController",
+      "file_type": "code",
+      "source_file": "lib/ui/features/orders/views/widgets/order_cart_panel.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_ui_features_orders_views_widgets_order_cart_panel_notescontroller",
+      "community": 53,
+      "community_name": "customer.dart",
+      "norm_label": "notescontroller"
+    },
+    {
+      "label": "build",
+      "file_type": "code",
+      "source_file": "lib/ui/features/orders/views/widgets/order_cart_panel.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_ui_features_orders_views_widgets_order_cart_panel_build",
+      "community": 53,
+      "community_name": "customer.dart",
+      "norm_label": "build"
+    },
+    {
+      "label": "_buildCartItem",
+      "file_type": "code",
+      "source_file": "lib/ui/features/orders/views/widgets/order_cart_panel.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_ui_features_orders_views_widgets_order_cart_panel_buildcartitem",
+      "community": 53,
+      "community_name": "customer.dart",
+      "norm_label": "_buildcartitem"
+    },
+    {
+      "label": "_buildItemPriceTypeChip",
+      "file_type": "code",
+      "source_file": "lib/ui/features/orders/views/widgets/order_cart_panel.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_ui_features_orders_views_widgets_order_cart_panel_builditempricetypechip",
+      "community": 53,
+      "community_name": "customer.dart",
+      "norm_label": "_builditempricetypechip"
+    },
+    {
+      "label": "_showItemPriceTypeSelector",
+      "file_type": "code",
+      "source_file": "lib/ui/features/orders/views/widgets/order_cart_panel.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_ui_features_orders_views_widgets_order_cart_panel_showitempricetypeselector",
+      "community": 53,
+      "community_name": "customer.dart",
+      "norm_label": "_showitempricetypeselector"
+    },
+    {
+      "label": "_buildDeliverySection",
+      "file_type": "code",
+      "source_file": "lib/ui/features/orders/views/widgets/order_cart_panel.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_ui_features_orders_views_widgets_order_cart_panel_builddeliverysection",
+      "community": 53,
+      "community_name": "customer.dart",
+      "norm_label": "_builddeliverysection"
+    },
+    {
+      "label": "_buildNotesSection",
+      "file_type": "code",
+      "source_file": "lib/ui/features/orders/views/widgets/order_cart_panel.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_ui_features_orders_views_widgets_order_cart_panel_buildnotessection",
+      "community": 53,
+      "community_name": "customer.dart",
+      "norm_label": "_buildnotessection"
+    },
+    {
+      "label": "order_catalog_panel.dart",
+      "file_type": "code",
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_ui_features_orders_views_widgets_order_catalog_panel",
+      "community": 42,
+      "community_name": "order_extensions.dart",
+      "norm_label": "order_catalog_panel.dart"
+    },
+    {
+      "label": "OrderCatalogPanel",
+      "file_type": "code",
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_ui_features_orders_views_widgets_order_catalog_panel_ordercatalogpanel",
+      "community": 42,
+      "community_name": "order_extensions.dart",
+      "norm_label": "ordercatalogpanel"
+    },
+    {
+      "label": "_OrderCatalogPanelState",
+      "file_type": "code",
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_ui_features_orders_views_widgets_order_catalog_panel_ordercatalogpanelstate",
+      "community": 42,
+      "community_name": "order_extensions.dart",
+      "norm_label": "_ordercatalogpanelstate"
+    },
+    {
+      "label": "_productSearchController",
+      "file_type": "code",
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_ui_features_orders_views_widgets_order_catalog_panel_productsearchcontroller",
+      "community": 42,
+      "community_name": "order_extensions.dart",
+      "norm_label": "_productsearchcontroller"
+    },
+    {
+      "label": "_searchDebounce",
+      "file_type": "code",
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_ui_features_orders_views_widgets_order_catalog_panel_searchdebounce",
+      "community": 42,
+      "community_name": "order_extensions.dart",
+      "norm_label": "_searchdebounce"
+    },
+    {
+      "label": "_selectedCategoryId",
+      "file_type": "code",
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_ui_features_orders_views_widgets_order_catalog_panel_selectedcategoryid",
+      "community": 42,
+      "community_name": "order_extensions.dart",
+      "norm_label": "_selectedcategoryid"
+    },
+    {
+      "label": "_defaultPriceType",
+      "file_type": "code",
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_ui_features_orders_views_widgets_order_catalog_panel_defaultpricetype",
+      "community": 42,
+      "community_name": "order_extensions.dart",
+      "norm_label": "_defaultpricetype"
+    },
+    {
+      "label": "createState",
+      "file_type": "code",
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_ui_features_orders_views_widgets_order_catalog_panel_createstate",
+      "community": 42,
+      "community_name": "order_extensions.dart",
+      "norm_label": "createstate"
+    },
+    {
+      "label": "initState",
+      "file_type": "code",
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_ui_features_orders_views_widgets_order_catalog_panel_initstate",
+      "community": 17,
+      "community_name": "productsProvider",
+      "norm_label": "initstate"
+    },
+    {
+      "label": "dispose",
+      "file_type": "code",
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_ui_features_orders_views_widgets_order_catalog_panel_dispose",
+      "community": 42,
+      "community_name": "order_extensions.dart",
+      "norm_label": "dispose"
+    },
+    {
+      "label": "_onSearchChanged",
+      "file_type": "code",
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_ui_features_orders_views_widgets_order_catalog_panel_onsearchchanged",
+      "community": 42,
+      "community_name": "order_extensions.dart",
+      "norm_label": "_onsearchchanged"
+    },
+    {
+      "label": "_onCategorySelected",
+      "file_type": "code",
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_ui_features_orders_views_widgets_order_catalog_panel_oncategoryselected",
+      "community": 17,
+      "community_name": "productsProvider",
+      "norm_label": "_oncategoryselected"
+    },
+    {
+      "label": "_onProductIncrement",
+      "file_type": "code",
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_ui_features_orders_views_widgets_order_catalog_panel_onproductincrement",
+      "community": 42,
+      "community_name": "order_extensions.dart",
+      "norm_label": "_onproductincrement"
+    },
+    {
+      "label": "_onProductDecrement",
+      "file_type": "code",
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_ui_features_orders_views_widgets_order_catalog_panel_onproductdecrement",
+      "community": 44,
+      "community_name": "payment.dart",
+      "norm_label": "_onproductdecrement"
+    },
+    {
+      "label": "_resolvePrice",
+      "file_type": "code",
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_ui_features_orders_views_widgets_order_catalog_panel_resolveprice",
+      "community": 42,
+      "community_name": "order_extensions.dart",
+      "norm_label": "_resolveprice"
+    },
+    {
+      "label": "_quantityInCart",
+      "file_type": "code",
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_ui_features_orders_views_widgets_order_catalog_panel_quantityincart",
+      "community": 44,
+      "community_name": "payment.dart",
+      "norm_label": "_quantityincart"
+    },
+    {
+      "label": "_totalQuantityInCart",
+      "file_type": "code",
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_ui_features_orders_views_widgets_order_catalog_panel_totalquantityincart",
+      "community": 44,
+      "community_name": "payment.dart",
+      "norm_label": "_totalquantityincart"
+    },
+    {
+      "label": "build",
+      "file_type": "code",
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_ui_features_orders_views_widgets_order_catalog_panel_build",
+      "community": 46,
+      "community_name": "@freezed",
+      "norm_label": "build"
+    },
+    {
+      "label": "_buildProductCard",
+      "file_type": "code",
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_ui_features_orders_views_widgets_order_catalog_panel_buildproductcard",
+      "community": 42,
+      "community_name": "order_extensions.dart",
+      "norm_label": "_buildproductcard"
+    },
+    {
+      "label": "_showSnack",
+      "file_type": "code",
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_ui_features_orders_views_widgets_order_catalog_panel_showsnack",
+      "community": 42,
+      "community_name": "order_extensions.dart",
+      "norm_label": "_showsnack"
+    },
+    {
+      "label": "../../../../data/providers/product_providers.dart",
+      "file_type": "code",
+      "source_file": null,
+      "source_location": null,
+      "_origin": "ast",
+      "id": "data_providers_product_providers_dart",
+      "community": 30,
+      "community_name": "product_detail_view.dart",
+      "norm_label": "../../../../data/providers/product_providers.dart"
+    },
+    {
+      "label": "add_remove_button.dart",
+      "file_type": "code",
+      "source_file": null,
+      "source_location": null,
+      "_origin": "ast",
+      "id": "add_remove_button_dart",
+      "community": 42,
+      "community_name": "order_extensions.dart",
+      "norm_label": "add_remove_button.dart"
+    },
+    {
+      "label": "order_create_bottom_bar.dart",
+      "file_type": "code",
+      "source_file": "lib/ui/features/orders/views/widgets/order_create_bottom_bar.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_ui_features_orders_views_widgets_order_create_bottom_bar",
+      "community": 54,
+      "community_name": "product.dart",
+      "norm_label": "order_create_bottom_bar.dart"
+    },
+    {
+      "label": "OrderCreateBottomBar",
+      "file_type": "code",
+      "source_file": "lib/ui/features/orders/views/widgets/order_create_bottom_bar.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_ui_features_orders_views_widgets_order_create_bottom_bar_ordercreatebottombar",
+      "community": 44,
+      "community_name": "payment.dart",
+      "norm_label": "ordercreatebottombar"
+    },
+    {
+      "label": "isLoading",
+      "file_type": "code",
+      "source_file": "lib/ui/features/orders/views/widgets/order_create_bottom_bar.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_ui_features_orders_views_widgets_order_create_bottom_bar_isloading",
+      "community": 54,
+      "community_name": "product.dart",
+      "norm_label": "isloading"
+    },
+    {
+      "label": "canSave",
+      "file_type": "code",
+      "source_file": "lib/ui/features/orders/views/widgets/order_create_bottom_bar.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_ui_features_orders_views_widgets_order_create_bottom_bar_cansave",
+      "community": 54,
+      "community_name": "product.dart",
+      "norm_label": "cansave"
+    },
+    {
+      "label": "onSave",
+      "file_type": "code",
+      "source_file": "lib/ui/features/orders/views/widgets/order_create_bottom_bar.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_ui_features_orders_views_widgets_order_create_bottom_bar_onsave",
+      "community": 54,
+      "community_name": "product.dart",
+      "norm_label": "onsave"
+    },
+    {
+      "label": "build",
+      "file_type": "code",
+      "source_file": "lib/ui/features/orders/views/widgets/order_create_bottom_bar.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_ui_features_orders_views_widgets_order_create_bottom_bar_build",
+      "community": 54,
+      "community_name": "product.dart",
+      "norm_label": "build"
     },
     {
       "label": "payment_form_dialog.dart",
@@ -11090,8 +11321,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_features_products_views_product_form_view_productformview",
-      "community": 6,
-      "community_name": "product_form_view.dart",
+      "community": 46,
+      "community_name": "@freezed",
       "norm_label": "productformview"
     },
     {
@@ -11101,8 +11332,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_features_products_views_product_form_view_productformviewstate",
-      "community": 6,
-      "community_name": "product_form_view.dart",
+      "community": 46,
+      "community_name": "@freezed",
       "norm_label": "_productformviewstate"
     },
     {
@@ -11420,8 +11651,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_features_products_views_product_form_view_loadproduct",
-      "community": 6,
-      "community_name": "product_form_view.dart",
+      "community": 46,
+      "community_name": "@freezed",
       "norm_label": "_loadproduct"
     },
     {
@@ -11453,8 +11684,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_features_products_views_product_form_view_build",
-      "community": 17,
-      "community_name": "productsProvider",
+      "community": 46,
+      "community_name": "@freezed",
       "norm_label": "build"
     },
     {
@@ -11574,8 +11805,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_features_products_views_products_view_build",
-      "community": 17,
-      "community_name": "productsProvider",
+      "community": 46,
+      "community_name": "@freezed",
       "norm_label": "build"
     },
     {
@@ -11585,8 +11816,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "route_products_scan",
-      "community": 17,
-      "community_name": "productsProvider",
+      "community": 46,
+      "community_name": "@freezed",
       "norm_label": "route /products/scan"
     },
     {
@@ -11596,8 +11827,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "route_products_create",
-      "community": 17,
-      "community_name": "productsProvider",
+      "community": 46,
+      "community_name": "@freezed",
       "norm_label": "route /products/create"
     },
     {
@@ -12025,8 +12256,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_features_settings_views_supabase_health_check_view",
-      "community": 22,
-      "community_name": "supabase_health_check_view.dart",
+      "community": 27,
+      "community_name": "order_item.dart",
       "norm_label": "supabase_health_check_view.dart"
     },
     {
@@ -12036,8 +12267,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_features_settings_views_supabase_health_check_view_supabasehealthcheckview",
-      "community": 22,
-      "community_name": "supabase_health_check_view.dart",
+      "community": 27,
+      "community_name": "order_item.dart",
       "norm_label": "supabasehealthcheckview"
     },
     {
@@ -12047,8 +12278,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_features_settings_views_supabase_health_check_view_supabasehealthcheckviewstate",
-      "community": 22,
-      "community_name": "supabase_health_check_view.dart",
+      "community": 27,
+      "community_name": "order_item.dart",
       "norm_label": "_supabasehealthcheckviewstate"
     },
     {
@@ -12058,8 +12289,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_features_settings_views_supabase_health_check_view_service",
-      "community": 22,
-      "community_name": "supabase_health_check_view.dart",
+      "community": 27,
+      "community_name": "order_item.dart",
       "norm_label": "_service"
     },
     {
@@ -12069,8 +12300,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_features_settings_views_supabase_health_check_view_results",
-      "community": 22,
-      "community_name": "supabase_health_check_view.dart",
+      "community": 27,
+      "community_name": "order_item.dart",
       "norm_label": "_results"
     },
     {
@@ -12080,8 +12311,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_features_settings_views_supabase_health_check_view_isloading",
-      "community": 22,
-      "community_name": "supabase_health_check_view.dart",
+      "community": 27,
+      "community_name": "order_item.dart",
       "norm_label": "_isloading"
     },
     {
@@ -12091,8 +12322,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_features_settings_views_supabase_health_check_view_createstate",
-      "community": 22,
-      "community_name": "supabase_health_check_view.dart",
+      "community": 27,
+      "community_name": "order_item.dart",
       "norm_label": "createstate"
     },
     {
@@ -12102,8 +12333,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_features_settings_views_supabase_health_check_view_initstate",
-      "community": 22,
-      "community_name": "supabase_health_check_view.dart",
+      "community": 27,
+      "community_name": "order_item.dart",
       "norm_label": "initstate"
     },
     {
@@ -12113,8 +12344,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_features_settings_views_supabase_health_check_view_runchecks",
-      "community": 22,
-      "community_name": "supabase_health_check_view.dart",
+      "community": 27,
+      "community_name": "order_item.dart",
       "norm_label": "_runchecks"
     },
     {
@@ -12124,8 +12355,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_features_settings_views_supabase_health_check_view_build",
-      "community": 22,
-      "community_name": "supabase_health_check_view.dart",
+      "community": 27,
+      "community_name": "order_item.dart",
       "norm_label": "build"
     },
     {
@@ -12135,8 +12366,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_features_settings_views_supabase_health_check_view_buildresults",
-      "community": 22,
-      "community_name": "supabase_health_check_view.dart",
+      "community": 27,
+      "community_name": "order_item.dart",
       "norm_label": "_buildresults"
     },
     {
@@ -12146,8 +12377,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_features_settings_views_supabase_health_check_view_buildresultcard",
-      "community": 22,
-      "community_name": "supabase_health_check_view.dart",
+      "community": 27,
+      "community_name": "order_item.dart",
       "norm_label": "_buildresultcard"
     },
     {
@@ -12157,8 +12388,8 @@
       "source_location": null,
       "_origin": "ast",
       "id": "data_services_supabase_health_check_service_dart",
-      "community": 22,
-      "community_name": "supabase_health_check_view.dart",
+      "community": 27,
+      "community_name": "order_item.dart",
       "norm_label": "../../../../data/services/supabase_health_check_service.dart"
     },
     {
@@ -16068,6 +16299,39 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_cart_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_cart_panel",
+      "target": "package_flutter_material_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel",
+      "target": "package_flutter_material_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_create_bottom_bar.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_create_bottom_bar",
+      "target": "package_flutter_material_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
       "source_file": "lib/ui/features/orders/views/widgets/payment_form_dialog.dart",
       "source_location": null,
       "weight": 1.0,
@@ -17726,6 +17990,39 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_cart_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_cart_panel",
+      "target": "package_flutter_riverpod_flutter_riverpod_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel",
+      "target": "package_flutter_riverpod_flutter_riverpod_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_create_bottom_bar.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_create_bottom_bar",
+      "target": "package_flutter_riverpod_flutter_riverpod_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
       "source_file": "lib/ui/features/orders/views/widgets/payments_dialog.dart",
       "source_location": null,
       "weight": 1.0,
@@ -18343,18 +18640,6 @@
       "weight": 1.0,
       "context": "riverpod_reference",
       "_origin": "ast",
-      "source": "lib_ui_features_orders_views_order_create_view_buildnotessection",
-      "target": "lib_data_providers_order_cart_providers_currentordercartprovider"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "context": "riverpod_reference",
-      "_origin": "ast",
       "source": "lib_ui_features_orders_views_order_create_view_initstate",
       "target": "lib_data_providers_order_cart_providers_currentordercartprovider"
     },
@@ -18367,43 +18652,7 @@
       "weight": 1.0,
       "context": "riverpod_reference",
       "_origin": "ast",
-      "source": "lib_ui_features_orders_views_order_create_view_onproductdecrement",
-      "target": "lib_data_providers_order_cart_providers_currentordercartprovider"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "context": "riverpod_reference",
-      "_origin": "ast",
-      "source": "lib_ui_features_orders_views_order_create_view_onproductincrement",
-      "target": "lib_data_providers_order_cart_providers_currentordercartprovider"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "context": "riverpod_reference",
-      "_origin": "ast",
       "source": "lib_ui_features_orders_views_order_create_view_ordercreateviewstate",
-      "target": "lib_data_providers_order_cart_providers_currentordercartprovider"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "context": "riverpod_reference",
-      "_origin": "ast",
-      "source": "lib_ui_features_orders_views_order_create_view_quantityincart",
       "target": "lib_data_providers_order_cart_providers_currentordercartprovider"
     },
     {
@@ -18434,12 +18683,132 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
+      "source_file": "lib/ui/features/orders/views/widgets/order_cart_panel.dart",
       "source_location": null,
       "weight": 1.0,
       "context": "riverpod_reference",
       "_origin": "ast",
-      "source": "lib_ui_features_orders_views_order_create_view_totalquantityincart",
+      "source": "lib_ui_features_orders_views_widgets_order_cart_panel_build",
+      "target": "lib_data_providers_order_cart_providers_currentordercartprovider"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_cart_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "riverpod_reference",
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_cart_panel_builddeliverysection",
+      "target": "lib_data_providers_order_cart_providers_currentordercartprovider"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_cart_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "riverpod_reference",
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_cart_panel_buildnotessection",
+      "target": "lib_data_providers_order_cart_providers_currentordercartprovider"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_cart_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "riverpod_reference",
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_cart_panel_ordercartpanel",
+      "target": "lib_data_providers_order_cart_providers_currentordercartprovider"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "riverpod_reference",
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel_onproductdecrement",
+      "target": "lib_data_providers_order_cart_providers_currentordercartprovider"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "riverpod_reference",
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel_onproductincrement",
+      "target": "lib_data_providers_order_cart_providers_currentordercartprovider"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "riverpod_reference",
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel_ordercatalogpanelstate",
+      "target": "lib_data_providers_order_cart_providers_currentordercartprovider"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "riverpod_reference",
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel_quantityincart",
+      "target": "lib_data_providers_order_cart_providers_currentordercartprovider"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "riverpod_reference",
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel_totalquantityincart",
+      "target": "lib_data_providers_order_cart_providers_currentordercartprovider"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_create_bottom_bar.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "riverpod_reference",
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_create_bottom_bar_build",
+      "target": "lib_data_providers_order_cart_providers_currentordercartprovider"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_create_bottom_bar.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "riverpod_reference",
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_create_bottom_bar_ordercreatebottombar",
       "target": "lib_data_providers_order_cart_providers_currentordercartprovider"
     },
     {
@@ -18537,17 +18906,6 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "lib_ui_features_orders_views_order_create_view",
-      "target": "domain_models_order_item_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "lib/ui/features/orders/views/order_detail_view.dart",
       "source_location": null,
       "weight": 1.0,
@@ -18564,6 +18922,28 @@
       "weight": 1.0,
       "_origin": "ast",
       "source": "lib_ui_features_orders_views_widgets_delivery_items_dialog",
+      "target": "domain_models_order_item_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_cart_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_cart_panel",
+      "target": "domain_models_order_item_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel",
       "target": "domain_models_order_item_dart"
     },
     {
@@ -20165,11 +20545,11 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
       "source_location": null,
       "weight": 1.0,
       "_origin": "ast",
-      "source": "lib_ui_features_orders_views_order_create_view",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel",
       "target": "dart_async"
     },
     {
@@ -20852,48 +21232,48 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
       "source_location": null,
       "weight": 1.0,
       "context": "riverpod_reference",
       "_origin": "ast",
-      "source": "lib_ui_features_orders_views_order_create_view_buildcatalogpanel",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel_build",
       "target": "lib_data_providers_product_providers_productsprovider"
     },
     {
       "relation": "references",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
       "source_location": null,
       "weight": 1.0,
       "context": "riverpod_reference",
       "_origin": "ast",
-      "source": "lib_ui_features_orders_views_order_create_view_initstate",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel_initstate",
       "target": "lib_data_providers_product_providers_productsprovider"
     },
     {
       "relation": "references",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
       "source_location": null,
       "weight": 1.0,
       "context": "riverpod_reference",
       "_origin": "ast",
-      "source": "lib_ui_features_orders_views_order_create_view_oncategoryselected",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel_oncategoryselected",
       "target": "lib_data_providers_product_providers_productsprovider"
     },
     {
       "relation": "references",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
       "source_location": null,
       "weight": 1.0,
       "context": "riverpod_reference",
       "_origin": "ast",
-      "source": "lib_ui_features_orders_views_order_create_view_ordercreateviewstate",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel_ordercatalogpanelstate",
       "target": "lib_data_providers_product_providers_productsprovider"
     },
     {
@@ -21056,24 +21436,24 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
       "source_location": null,
       "weight": 1.0,
       "context": "riverpod_reference",
       "_origin": "ast",
-      "source": "lib_ui_features_orders_views_order_create_view_buildcatalogpanel",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel_build",
       "target": "lib_data_providers_product_providers_categoriesprovider"
     },
     {
       "relation": "references",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
       "source_location": null,
       "weight": 1.0,
       "context": "riverpod_reference",
       "_origin": "ast",
-      "source": "lib_ui_features_orders_views_order_create_view_ordercreateviewstate",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel_ordercatalogpanelstate",
       "target": "lib_data_providers_product_providers_categoriesprovider"
     },
     {
@@ -21185,11 +21565,11 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
       "source_location": null,
       "weight": 1.0,
       "_origin": "ast",
-      "source": "lib_ui_features_orders_views_order_create_view",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel",
       "target": "domain_models_product_dart"
     },
     {
@@ -24618,12 +24998,12 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
       "source_location": null,
       "weight": 1.0,
       "context": "variable_type",
       "_origin": "ast",
-      "source": "lib_ui_features_orders_views_order_create_view",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel",
       "target": "timer"
     },
     {
@@ -25940,12 +26320,24 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
+      "source_file": "lib/ui/features/orders/views/widgets/order_cart_panel.dart",
       "source_location": null,
       "weight": 1.0,
       "context": "type_lookup",
       "_origin": "ast",
-      "source": "lib_ui_features_orders_views_order_create_view",
+      "source": "lib_ui_features_orders_views_widgets_order_cart_panel",
+      "target": "lib_domain_models_order_item_orderitempricetype"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "type_lookup",
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel",
       "target": "lib_domain_models_order_item_orderitempricetype"
     },
     {
@@ -27313,6 +27705,17 @@
       "relation": "inherits",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel_ordercatalogpanel",
+      "target": "consumerstatefulwidget"
+    },
+    {
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
       "source_file": "lib/ui/features/products/views/product_form_view.dart",
       "source_location": null,
       "weight": 1.0,
@@ -27428,6 +27831,17 @@
       "weight": 1.0,
       "_origin": "ast",
       "source": "lib_ui_features_orders_views_widgets_customer_selector_dialog_customerselectordialogstate",
+      "target": "consumerstate"
+    },
+    {
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel_ordercatalogpanelstate",
       "target": "consumerstate"
     },
     {
@@ -28293,17 +28707,6 @@
       "target": "data_providers_order_providers_dart"
     },
     {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "lib_ui_features_orders_views_order_create_view",
-      "target": "data_providers_product_providers_dart"
-    },
-    {
       "relation": "defines",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
@@ -28334,62 +28737,7 @@
       "weight": 1.0,
       "_origin": "ast",
       "source": "lib_ui_features_orders_views_order_create_view",
-      "target": "lib_ui_features_orders_views_order_create_view_buildbottombar"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "lib_ui_features_orders_views_order_create_view",
-      "target": "lib_ui_features_orders_views_order_create_view_buildcartitem"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "lib_ui_features_orders_views_order_create_view",
-      "target": "lib_ui_features_orders_views_order_create_view_buildcartpanel"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "lib_ui_features_orders_views_order_create_view",
-      "target": "lib_ui_features_orders_views_order_create_view_buildcatalogpanel"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "lib_ui_features_orders_views_order_create_view",
       "target": "lib_ui_features_orders_views_order_create_view_buildcustomersection"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "lib_ui_features_orders_views_order_create_view",
-      "target": "lib_ui_features_orders_views_order_create_view_builddeliverysection"
     },
     {
       "relation": "defines",
@@ -28411,40 +28759,7 @@
       "weight": 1.0,
       "_origin": "ast",
       "source": "lib_ui_features_orders_views_order_create_view",
-      "target": "lib_ui_features_orders_views_order_create_view_builditempricetypechip"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "lib_ui_features_orders_views_order_create_view",
       "target": "lib_ui_features_orders_views_order_create_view_buildmobilebody"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "lib_ui_features_orders_views_order_create_view",
-      "target": "lib_ui_features_orders_views_order_create_view_buildnotessection"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "lib_ui_features_orders_views_order_create_view",
-      "target": "lib_ui_features_orders_views_order_create_view_buildproductcard"
     },
     {
       "relation": "defines",
@@ -28478,17 +28793,6 @@
       "_origin": "ast",
       "source": "lib_ui_features_orders_views_order_create_view",
       "target": "lib_ui_features_orders_views_order_create_view_currentuserid"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "lib_ui_features_orders_views_order_create_view",
-      "target": "lib_ui_features_orders_views_order_create_view_defaultpricetype"
     },
     {
       "relation": "defines",
@@ -28565,50 +28869,6 @@
       "weight": 1.0,
       "_origin": "ast",
       "source": "lib_ui_features_orders_views_order_create_view",
-      "target": "lib_ui_features_orders_views_order_create_view_oncategoryselected"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "lib_ui_features_orders_views_order_create_view",
-      "target": "lib_ui_features_orders_views_order_create_view_onproductdecrement"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "lib_ui_features_orders_views_order_create_view",
-      "target": "lib_ui_features_orders_views_order_create_view_onproductincrement"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "lib_ui_features_orders_views_order_create_view",
-      "target": "lib_ui_features_orders_views_order_create_view_onsearchchanged"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "lib_ui_features_orders_views_order_create_view",
       "target": "lib_ui_features_orders_views_order_create_view_ordercreateview"
     },
     {
@@ -28631,51 +28891,7 @@
       "weight": 1.0,
       "_origin": "ast",
       "source": "lib_ui_features_orders_views_order_create_view",
-      "target": "lib_ui_features_orders_views_order_create_view_productsearchcontroller"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "lib_ui_features_orders_views_order_create_view",
-      "target": "lib_ui_features_orders_views_order_create_view_quantityincart"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "lib_ui_features_orders_views_order_create_view",
-      "target": "lib_ui_features_orders_views_order_create_view_resolveprice"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "lib_ui_features_orders_views_order_create_view",
       "target": "lib_ui_features_orders_views_order_create_view_saveorder"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "lib_ui_features_orders_views_order_create_view",
-      "target": "lib_ui_features_orders_views_order_create_view_searchdebounce"
     },
     {
       "relation": "defines",
@@ -28697,40 +28913,7 @@
       "weight": 1.0,
       "_origin": "ast",
       "source": "lib_ui_features_orders_views_order_create_view",
-      "target": "lib_ui_features_orders_views_order_create_view_selectedcategoryid"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "lib_ui_features_orders_views_order_create_view",
-      "target": "lib_ui_features_orders_views_order_create_view_showitempricetypeselector"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "lib_ui_features_orders_views_order_create_view",
       "target": "lib_ui_features_orders_views_order_create_view_showsnack"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "lib_ui_features_orders_views_order_create_view",
-      "target": "lib_ui_features_orders_views_order_create_view_totalquantityincart"
     },
     {
       "relation": "references",
@@ -28753,7 +28936,7 @@
       "weight": 1.0,
       "_origin": "ast",
       "source": "lib_ui_features_orders_views_order_create_view",
-      "target": "widgets_add_remove_button_dart"
+      "target": "widgets_customer_selector_dialog_dart"
     },
     {
       "relation": "imports",
@@ -28764,7 +28947,29 @@
       "weight": 1.0,
       "_origin": "ast",
       "source": "lib_ui_features_orders_views_order_create_view",
-      "target": "widgets_customer_selector_dialog_dart"
+      "target": "widgets_order_cart_panel_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_order_create_view",
+      "target": "widgets_order_catalog_panel_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/order_create_view.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_order_create_view",
+      "target": "widgets_order_create_bottom_bar_dart"
     },
     {
       "relation": "references",
@@ -28803,34 +29008,34 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "lib/ui/features/products/views/product_detail_view.dart",
+      "source_file": "lib/ui/features/orders/views/widgets/order_cart_panel.dart",
       "source_location": null,
       "weight": 1.0,
       "_origin": "ast",
-      "source": "lib_ui_features_products_views_product_detail_view",
-      "target": "data_providers_product_providers_dart"
+      "source": "lib_ui_features_orders_views_widgets_order_cart_panel",
+      "target": "data_providers_order_providers_dart"
     },
     {
       "relation": "imports",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "lib/ui/features/products/views/product_form_view.dart",
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
       "source_location": null,
       "weight": 1.0,
       "_origin": "ast",
-      "source": "lib_ui_features_products_views_product_form_view",
-      "target": "data_providers_product_providers_dart"
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel",
+      "target": "data_providers_order_providers_dart"
     },
     {
       "relation": "imports",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "lib/ui/features/products/views/products_view.dart",
+      "source_file": "lib/ui/features/orders/views/widgets/order_create_bottom_bar.dart",
       "source_location": null,
       "weight": 1.0,
       "_origin": "ast",
-      "source": "lib_ui_features_products_views_products_view",
-      "target": "data_providers_product_providers_dart"
+      "source": "lib_ui_features_orders_views_widgets_order_create_bottom_bar",
+      "target": "data_providers_order_providers_dart"
     },
     {
       "relation": "imports",
@@ -29530,6 +29735,18 @@
       "target": "voidcallback"
     },
     {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_create_bottom_bar.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "variable_type",
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_create_bottom_bar",
+      "target": "voidcallback"
+    },
+    {
       "relation": "defines",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
@@ -29831,6 +30048,28 @@
       "relation": "inherits",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_cart_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_cart_panel_ordercartpanel",
+      "target": "consumerwidget"
+    },
+    {
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_create_bottom_bar.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_create_bottom_bar_ordercreatebottombar",
+      "target": "consumerwidget"
+    },
+    {
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
       "source_file": "lib/ui/features/orders/views/widgets/payments_dialog.dart",
       "source_location": null,
       "weight": 1.0,
@@ -29848,6 +30087,458 @@
       "_origin": "ast",
       "source": "lib_ui_features_products_views_product_detail_view_productdetailview",
       "target": "consumerwidget"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_cart_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_cart_panel",
+      "target": "lib_ui_features_orders_views_widgets_order_cart_panel_addresscontroller"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_cart_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_cart_panel",
+      "target": "lib_ui_features_orders_views_widgets_order_cart_panel_build"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_cart_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_cart_panel",
+      "target": "lib_ui_features_orders_views_widgets_order_cart_panel_buildcartitem"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_cart_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_cart_panel",
+      "target": "lib_ui_features_orders_views_widgets_order_cart_panel_builddeliverysection"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_cart_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_cart_panel",
+      "target": "lib_ui_features_orders_views_widgets_order_cart_panel_builditempricetypechip"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_cart_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_cart_panel",
+      "target": "lib_ui_features_orders_views_widgets_order_cart_panel_buildnotessection"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_cart_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_cart_panel",
+      "target": "lib_ui_features_orders_views_widgets_order_cart_panel_deliveryfeecontroller"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_cart_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_cart_panel",
+      "target": "lib_ui_features_orders_views_widgets_order_cart_panel_notescontroller"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_cart_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_cart_panel",
+      "target": "lib_ui_features_orders_views_widgets_order_cart_panel_ordercartpanel"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_cart_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_cart_panel",
+      "target": "lib_ui_features_orders_views_widgets_order_cart_panel_showitempricetypeselector"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_cart_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "variable_type",
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_cart_panel",
+      "target": "texteditingcontroller"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel",
+      "target": "add_remove_button_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel",
+      "target": "data_providers_product_providers_dart"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel",
+      "target": "lib_ui_features_orders_views_widgets_order_catalog_panel_build"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel",
+      "target": "lib_ui_features_orders_views_widgets_order_catalog_panel_buildproductcard"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel",
+      "target": "lib_ui_features_orders_views_widgets_order_catalog_panel_createstate"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel",
+      "target": "lib_ui_features_orders_views_widgets_order_catalog_panel_defaultpricetype"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel",
+      "target": "lib_ui_features_orders_views_widgets_order_catalog_panel_dispose"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel",
+      "target": "lib_ui_features_orders_views_widgets_order_catalog_panel_initstate"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel",
+      "target": "lib_ui_features_orders_views_widgets_order_catalog_panel_oncategoryselected"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel",
+      "target": "lib_ui_features_orders_views_widgets_order_catalog_panel_onproductdecrement"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel",
+      "target": "lib_ui_features_orders_views_widgets_order_catalog_panel_onproductincrement"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel",
+      "target": "lib_ui_features_orders_views_widgets_order_catalog_panel_onsearchchanged"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel",
+      "target": "lib_ui_features_orders_views_widgets_order_catalog_panel_ordercatalogpanel"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel",
+      "target": "lib_ui_features_orders_views_widgets_order_catalog_panel_ordercatalogpanelstate"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel",
+      "target": "lib_ui_features_orders_views_widgets_order_catalog_panel_productsearchcontroller"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel",
+      "target": "lib_ui_features_orders_views_widgets_order_catalog_panel_quantityincart"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel",
+      "target": "lib_ui_features_orders_views_widgets_order_catalog_panel_resolveprice"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel",
+      "target": "lib_ui_features_orders_views_widgets_order_catalog_panel_searchdebounce"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel",
+      "target": "lib_ui_features_orders_views_widgets_order_catalog_panel_selectedcategoryid"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel",
+      "target": "lib_ui_features_orders_views_widgets_order_catalog_panel_showsnack"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel",
+      "target": "lib_ui_features_orders_views_widgets_order_catalog_panel_totalquantityincart"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_catalog_panel.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_catalog_panel_ordercatalogpanelstate",
+      "target": "lib_ui_features_orders_views_widgets_order_catalog_panel_ordercatalogpanel"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/products/views/product_detail_view.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_products_views_product_detail_view",
+      "target": "data_providers_product_providers_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/products/views/product_form_view.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_products_views_product_form_view",
+      "target": "data_providers_product_providers_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/products/views/products_view.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_products_views_products_view",
+      "target": "data_providers_product_providers_dart"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_create_bottom_bar.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_create_bottom_bar",
+      "target": "lib_ui_features_orders_views_widgets_order_create_bottom_bar_build"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_create_bottom_bar.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_create_bottom_bar",
+      "target": "lib_ui_features_orders_views_widgets_order_create_bottom_bar_cansave"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_create_bottom_bar.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_create_bottom_bar",
+      "target": "lib_ui_features_orders_views_widgets_order_create_bottom_bar_isloading"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_create_bottom_bar.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_create_bottom_bar",
+      "target": "lib_ui_features_orders_views_widgets_order_create_bottom_bar_onsave"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/ui/features/orders/views/widgets/order_create_bottom_bar.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "lib_ui_features_orders_views_widgets_order_create_bottom_bar",
+      "target": "lib_ui_features_orders_views_widgets_order_create_bottom_bar_ordercreatebottombar"
     },
     {
       "relation": "defines",
@@ -34517,5 +35208,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "c79a37dfaeb85488745204baa5df981fabc465e0"
+  "built_at_commit": "8374ac95a7c6c919a3b9621bb87b68362ea4b4ac"
 }
