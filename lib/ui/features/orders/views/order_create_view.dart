@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../data/providers/customer_providers.dart';
 import '../../../../data/providers/order_providers.dart';
 import '../../../../data/providers/product_providers.dart';
 
@@ -14,6 +13,8 @@ import '../../../../domain/models/customer.dart';
 import '../../../../domain/models/order.dart';
 import '../../../../domain/models/order_item.dart';
 import '../../../../domain/models/product.dart';
+import 'widgets/add_remove_button.dart';
+import 'widgets/customer_selector_dialog.dart';
 
 class OrderCreateView extends ConsumerStatefulWidget {
   const OrderCreateView({super.key});
@@ -89,7 +90,7 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
   void _onProductIncrement(Product product) {
     final price = _resolvePrice(product, _defaultPriceType);
     if (price <= 0) {
-      _showSnack('Este producto no tiene precio para ${orderItemPriceTypeLabel(_defaultPriceType).toLowerCase()}', isError: true);
+      _showSnack('Este producto no tiene precio para ${_defaultPriceType.label.toLowerCase()}', isError: true);
       return;
     }
     ref.read(currentOrderCartProvider.notifier).incrementItem(
@@ -456,7 +457,7 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    _IconButton(
+                    AddRemoveButton(
                       icon: Icons.remove,
                       onPressed: quantityForDefault > 0
                           ? () => _onProductDecrement(product)
@@ -472,7 +473,7 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
                         ),
                       ),
                     ),
-                    _IconButton(
+                    AddRemoveButton(
                       icon: Icons.add,
                       onPressed: hasPrice
                           ? () => _onProductIncrement(product)
@@ -1020,9 +1021,9 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
   }
 
   Future<void> _selectCustomer() async {
-    final result = await showDialog<_CustomerSelectionResult>(
+    final result = await showDialog<CustomerSelectionResult>(
       context: context,
-      builder: (context) => const _CustomerSelectorDialog(),
+      builder: (context) => const CustomerSelectorDialog(),
     );
 
     if (result == null || result.cancelled) return;
@@ -1132,220 +1133,4 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
       ),
     );
   }
-}
-
-class _IconButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback? onPressed;
-
-  const _IconButton({required this.icon, this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onPressed,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: onPressed == null
-              ? Colors.grey.shade200
-              : Theme.of(context).colorScheme.primaryContainer,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Icon(
-          icon,
-          size: 20,
-          color: onPressed == null
-              ? Colors.grey
-              : Theme.of(context).colorScheme.onPrimaryContainer,
-        ),
-      ),
-    );
-  }
-}
-
-class _CustomerSelectionResult {
-  final bool cancelled;
-  final bool isOccasional;
-  final Customer? customer;
-
-  const _CustomerSelectionResult._({
-    this.cancelled = false,
-    this.isOccasional = false,
-    this.customer,
-  });
-
-  factory _CustomerSelectionResult.cancelled() =>
-      const _CustomerSelectionResult._(cancelled: true);
-
-  factory _CustomerSelectionResult.occasional() =>
-      const _CustomerSelectionResult._(isOccasional: true);
-
-  factory _CustomerSelectionResult.customer(Customer customer) =>
-      _CustomerSelectionResult._(customer: customer);
-}
-
-class _CustomerSelectorDialog extends ConsumerStatefulWidget {
-  const _CustomerSelectorDialog();
-
-  @override
-  ConsumerState<_CustomerSelectorDialog> createState() =>
-      _CustomerSelectorDialogState();
-}
-
-class _CustomerSelectorDialogState
-    extends ConsumerState<_CustomerSelectorDialog> {
-  final _searchController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _searchController.clear();
-      ref.read(customersProvider.notifier).clearFilters();
-    });
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final customersState = ref.watch(customersProvider);
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return AlertDialog(
-      title: const Text('Seleccionar Cliente'),
-      content: SizedBox(
-        width: double.maxFinite,
-        height: 400,
-        child: Column(
-          children: [
-            TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Buscar cliente...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: () {
-                    _searchController.clear();
-                    ref.read(customersProvider.notifier).setSearch(null);
-                  },
-                ),
-                border: const OutlineInputBorder(),
-              ),
-              onChanged: (value) {
-                ref
-                    .read(customersProvider.notifier)
-                    .setSearch(value.isEmpty ? null : value);
-              },
-            ),
-            const SizedBox(height: 8),
-            if (customersState.error != null)
-              Container(
-                padding: const EdgeInsets.all(12),
-                margin: const EdgeInsets.only(bottom: 8),
-                decoration: BoxDecoration(
-                  color: colorScheme.errorContainer,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.error_outline, color: colorScheme.error),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        customersState.error!,
-                        style: TextStyle(color: colorScheme.onErrorContainer),
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.refresh),
-                      onPressed: () =>
-                          ref.read(customersProvider.notifier).loadCustomers(),
-                    ),
-                  ],
-                ),
-              ),
-            Expanded(
-              child: customersState.isLoading && customersState.customers.isEmpty
-                  ? const Center(child: CircularProgressIndicator())
-                  : customersState.customers.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.people_outline,
-                                  size: 48,
-                                  color: Colors.grey.shade700),
-                              const SizedBox(height: 8),
-                              Text(
-                                customersState.error != null
-                                    ? 'No se pudieron cargar los clientes'
-                                    : 'No hay clientes registrados',
-                                style: TextStyle(
-                                    color: Colors.grey.shade700),
-                              ),
-                            ],
-                          ),
-                        )
-                      : ListView.builder(
-                          itemCount: customersState.customers.length + 1,
-                          itemBuilder: (context, index) {
-                            if (index == 0) {
-                              return ListTile(
-                                leading: CircleAvatar(
-                                  backgroundColor: Colors.grey.shade200,
-                                  child: Icon(Icons.person_outline,
-                                      color: Colors.grey.shade700),
-                                ),
-                                title: const Text('Cliente ocasional'),
-                                subtitle: const Text(
-                                    'Venta sin cliente registrado'),
-                                onTap: () => Navigator.pop(
-                                  context,
-                                  _CustomerSelectionResult.occasional(),
-                                ),
-                              );
-                            }
-                            final customer =
-                                customersState.customers[index - 1];
-                            return ListTile(
-                              leading: CircleAvatar(
-                                child: Text(
-                                    customer.fullName[0].toUpperCase()),
-                              ),
-                              title: Text(customer.fullName),
-                              subtitle: Text(customer.phone),
-                              onTap: () => Navigator.pop(
-                                context,
-                                _CustomerSelectionResult.customer(customer),
-                              ),
-                            );
-                          },
-                        ),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(
-            context,
-            _CustomerSelectionResult.cancelled(),
-          ),
-          child: const Text('Cancelar'),
-        ),
-      ],
-    );
-  }
-}
-
-String orderItemPriceTypeLabel(OrderItemPriceType type) {
-  return type.label;
 }
