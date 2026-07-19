@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../data/providers/product_providers.dart';
+import '../../../../data/repositories/brand_repository.dart';
+import '../../../../data/repositories/category_repository.dart';
 import '../../../../domain/models/product.dart';
 
 class ProductFormView extends ConsumerStatefulWidget {
@@ -153,6 +155,23 @@ class _ProductFormViewState extends ConsumerState<ProductFormView> {
       return;
     }
 
+    if (_barcodeController.text.isNotEmpty) {
+      final existing = await ref
+          .read(productsProvider.notifier)
+          .getByBarcode(_barcodeController.text);
+      if (existing != null && existing.id != (widget.productId ?? '')) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('El código de barras ya está en uso: ${existing.name}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
+      }
+    }
+
     setState(() => _isLoading = true);
 
     try {
@@ -240,318 +259,29 @@ class _ProductFormViewState extends ConsumerState<ProductFormView> {
                 children: [
                   _buildSectionTitle('Información Básica'),
                   const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        flex: 2,
-                        child: TextFormField(
-                          controller: _codeController,
-                          decoration: const InputDecoration(
-                            labelText: 'Código *',
-                            prefixIcon: Icon(Icons.tag),
-                          ),
-                          keyboardType: TextInputType.number,
-                          enabled: !_isEditing,
-                          validator: (value) => value?.isEmpty == true ? 'Requerido' : null,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        flex: 3,
-                        child: TextFormField(
-                          controller: _barcodeController,
-                          decoration: InputDecoration(
-                            labelText: 'Código de Barras',
-                            prefixIcon: const Icon(Icons.qr_code),
-                            suffixIcon: IconButton(
-                              icon: const Icon(Icons.qr_code_scanner),
-                              onPressed: () => _scanBarcode(),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                  _buildBasicInfoCard(),
                   const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _nameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Nombre *',
-                      prefixIcon: Icon(Icons.label),
-                    ),
-                    validator: (value) => value?.isEmpty == true ? 'Requerido' : null,
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: brandsAsync.when(
-                          data: (brands) => DropdownButtonFormField<String>(
-                            initialValue: _selectedBrandId,
-                            decoration: const InputDecoration(
-                              labelText: 'Marca *',
-                              prefixIcon: Icon(Icons.branding_watermark),
-                            ),
-                            items: brands
-                                .map((b) => DropdownMenuItem(value: b.id, child: Text(b.name)))
-                                .toList(),
-                            onChanged: (value) => setState(() => _selectedBrandId = value),
-                            validator: (value) => value == null ? 'Requerido' : null,
-                          ),
-                          loading: () => const Center(child: CircularProgressIndicator()),
-                          error: (error, _) => Text('Error: $error'),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: categoriesAsync.when(
-                          data: (categories) => DropdownButtonFormField<String>(
-                            initialValue: _selectedCategoryId,
-                            decoration: const InputDecoration(
-                              labelText: 'Categoría *',
-                              prefixIcon: Icon(Icons.category),
-                            ),
-                            items: categories
-                                .map((c) => DropdownMenuItem(value: c.id, child: Text(c.name)))
-                                .toList(),
-                            onChanged: (value) => setState(() => _selectedCategoryId = value),
-                            validator: (value) => value == null ? 'Requerido' : null,
-                          ),
-                          loading: () => const Center(child: CircularProgressIndicator()),
-                          error: (error, _) => Text('Error: $error'),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextFormField(
-                          controller: _presentationController,
-                          decoration: const InputDecoration(
-                            labelText: 'Presentación *',
-                            hintText: '330ml, 750ml, etc.',
-                            prefixIcon: Icon(Icons.straighten),
-                          ),
-                          validator: (value) => value?.isEmpty == true ? 'Requerido' : null,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: TextFormField(
-                          controller: _volumeController,
-                          decoration: const InputDecoration(
-                            labelText: 'Volumen (ml)',
-                            prefixIcon: Icon(Icons.local_drink),
-                          ),
-                          keyboardType: TextInputType.number,
-                        ),
-                      ),
-                    ],
-                  ),
+                  _buildBrandCategoryRow(brandsAsync, categoriesAsync),
                   const SizedBox(height: 24),
                   _buildSectionTitle('Empaque'),
                   const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: DropdownButtonFormField<PackagingType>(
-                          initialValue: _packagingType,
-                          decoration: const InputDecoration(
-                            labelText: 'Tipo de Empaque *',
-                            prefixIcon: Icon(Icons.inventory_2),
-                          ),
-                          items: PackagingType.values
-                              .map((t) => DropdownMenuItem(
-                                    value: t,
-                                    child: Text(_getPackagingName(t)),
-                                  ))
-                              .toList(),
-                          onChanged: (value) => setState(() => _packagingType = value!),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: TextFormField(
-                          controller: _unitsPerPackageController,
-                          decoration: const InputDecoration(
-                            labelText: 'Unidades/Empaque *',
-                            prefixIcon: Icon(Icons.format_list_numbered),
-                          ),
-                          keyboardType: TextInputType.number,
-                          validator: (value) => value?.isEmpty == true ? 'Requerido' : null,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: SwitchListTile(
-                          title: const Text('Frío'),
-                          subtitle: const Text('Requiere refrigeración'),
-                          value: _isCold,
-                          onChanged: (value) => setState(() => _isCold = value),
-                        ),
-                      ),
-                      Expanded(
-                        child: SwitchListTile(
-                          title: const Text('Retornable'),
-                          subtitle: const Text('Envase retornable'),
-                          value: _isReturnable,
-                          onChanged: (value) => setState(() => _isReturnable = value),
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (_isReturnable) ...[
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _returnableDepositController,
-                      decoration: const InputDecoration(
-                        labelText: 'Depósito Retornable',
-                        prefixIcon: Icon(Icons.attach_money),
-                      ),
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    ),
-                  ],
+                  _buildPackagingCard(),
                   const SizedBox(height: 24),
                   _buildSectionTitle('Precios'),
                   const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextFormField(
-                          controller: _priceRetailController,
-                          decoration: const InputDecoration(
-                            labelText: 'Precio Detal *',
-                            prefixIcon: Icon(Icons.attach_money),
-                          ),
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                          validator: (value) => value?.isEmpty == true ? 'Requerido' : null,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: TextFormField(
-                          controller: _priceWholesaleController,
-                          decoration: const InputDecoration(
-                            labelText: 'Precio Mayorista *',
-                            prefixIcon: Icon(Icons.attach_money),
-                          ),
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                          validator: (value) => value?.isEmpty == true ? 'Requerido' : null,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextFormField(
-                          controller: _priceColdController,
-                          decoration: const InputDecoration(
-                            labelText: 'Precio Frio',
-                            prefixIcon: Icon(Icons.attach_money),
-                          ),
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: TextFormField(
-                          controller: _costController,
-                          decoration: const InputDecoration(
-                            labelText: 'Costo *',
-                            prefixIcon: Icon(Icons.money_off),
-                          ),
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                          validator: (value) => value?.isEmpty == true ? 'Requerido' : null,
-                        ),
-                      ),
-                    ],
-                  ),
+                  _buildPricesCard(),
                   const SizedBox(height: 24),
                   _buildSectionTitle('Inventario'),
                   const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextFormField(
-                          controller: _stockCurrentController,
-                          decoration: const InputDecoration(
-                            labelText: 'Stock Actual *',
-                            prefixIcon: Icon(Icons.inventory),
-                          ),
-                          keyboardType: TextInputType.number,
-                          validator: (value) => value?.isEmpty == true ? 'Requerido' : null,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: TextFormField(
-                          controller: _stockMinController,
-                          decoration: const InputDecoration(
-                            labelText: 'Stock Mínimo *',
-                            prefixIcon: Icon(Icons.warning),
-                          ),
-                          keyboardType: TextInputType.number,
-                          validator: (value) => value?.isEmpty == true ? 'Requerido' : null,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: TextFormField(
-                          controller: _stockMaxController,
-                          decoration: const InputDecoration(
-                            labelText: 'Stock Máximo *',
-                            prefixIcon: Icon(Icons.check_circle),
-                          ),
-                          keyboardType: TextInputType.number,
-                          validator: (value) => value?.isEmpty == true ? 'Requerido' : null,
-                        ),
-                      ),
-                    ],
-                  ),
+                  _buildInventoryCard(),
                   const SizedBox(height: 24),
                   _buildSectionTitle('Estado'),
                   const SizedBox(height: 12),
-                  DropdownButtonFormField<ProductStatus>(
-                    initialValue: _status,
-                    decoration: const InputDecoration(
-                      labelText: 'Estado *',
-                      prefixIcon: Icon(Icons.info),
-                    ),
-                    items: const [
-                      DropdownMenuItem(
-                        value: ProductStatus.active,
-                        child: Text('Activo'),
-                      ),
-                      DropdownMenuItem(
-                        value: ProductStatus.outOfStock,
-                        child: Text('Sin Stock'),
-                      ),
-                      DropdownMenuItem(
-                        value: ProductStatus.discontinued,
-                        child: Text('Descontinuado'),
-                      ),
-                    ],
-                    onChanged: (value) => setState(() => _status = value!),
-                  ),
+                  _buildStatusCard(),
                   const SizedBox(height: 24),
                   _buildSectionTitle('Descripción'),
                   const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _descriptionController,
-                    decoration: const InputDecoration(
-                      labelText: 'Descripción',
-                      prefixIcon: Icon(Icons.description),
-                    ),
-                    maxLines: 3,
-                  ),
+                  _buildDescriptionCard(),
                   const SizedBox(height: 32),
                   SizedBox(
                     width: double.infinity,
@@ -565,6 +295,455 @@ class _ProductFormViewState extends ConsumerState<ProductFormView> {
                 ],
               ),
             ),
+    );
+  }
+
+  /// Código + escáner de barras en una fila amplia.
+  Widget _buildBasicInfoCard() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: TextFormField(
+                    controller: _codeController,
+                    decoration: const InputDecoration(
+                      labelText: 'Código interno',
+                      prefixIcon: Icon(Icons.tag),
+                      helperText: 'Generado automáticamente',
+                    ),
+                    keyboardType: TextInputType.number,
+                    enabled: false,
+                    validator: (value) => value?.isEmpty == true ? 'Requerido' : null,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 3,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextFormField(
+                        controller: _barcodeController,
+                        decoration: InputDecoration(
+                          labelText: 'Código de barras',
+                          prefixIcon: const Icon(Icons.qr_code),
+                          suffixIcon: IconButton(
+                            icon: const Icon(Icons.qr_code_scanner),
+                            tooltip: 'Escanear con cámara',
+                            onPressed: () => _scanBarcode(),
+                          ),
+                        ),
+                        keyboardType: TextInputType.number,
+                      ),
+                      const SizedBox(height: 6),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: () => _scanBarcode(),
+                          icon: const Icon(Icons.camera_alt),
+                          label: const Text('Capturar código de barras'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _nameController,
+              decoration: const InputDecoration(
+                labelText: 'Nombre *',
+                prefixIcon: Icon(Icons.label),
+              ),
+              validator: (value) => value?.isEmpty == true ? 'Requerido' : null,
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _presentationController,
+                    decoration: const InputDecoration(
+                      labelText: 'Presentación *',
+                      hintText: '330ml, 750ml, etc.',
+                      prefixIcon: Icon(Icons.straighten),
+                    ),
+                    validator: (value) => value?.isEmpty == true ? 'Requerido' : null,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextFormField(
+                    controller: _volumeController,
+                    decoration: const InputDecoration(
+                      labelText: 'Volumen (ml)',
+                      prefixIcon: Icon(Icons.local_drink),
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBrandCategoryRow(
+    AsyncValue<List<Brand>> brandsAsync,
+    AsyncValue<List<Category>> categoriesAsync,
+  ) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final useRow = constraints.maxWidth >= 500;
+        final children = [
+          Expanded(
+            child: brandsAsync.when(
+              data: (brands) => DropdownButtonFormField<String>(
+                value: _selectedBrandId,
+                isExpanded: true,
+                decoration: const InputDecoration(
+                  labelText: 'Marca *',
+                  prefixIcon: Icon(Icons.branding_watermark),
+                ),
+                items: brands
+                    .map((b) => DropdownMenuItem(value: b.id, child: Text(b.name)))
+                    .toList(),
+                onChanged: (value) => setState(() => _selectedBrandId = value),
+                validator: (value) => value == null ? 'Requerido' : null,
+              ),
+              loading: () => const LinearProgressIndicator(),
+              error: (error, _) => Text('Error: $error'),
+            ),
+          ),
+          Expanded(
+            child: categoriesAsync.when(
+              data: (categories) => DropdownButtonFormField<String>(
+                value: _selectedCategoryId,
+                isExpanded: true,
+                decoration: const InputDecoration(
+                  labelText: 'Categoría *',
+                  prefixIcon: Icon(Icons.category),
+                ),
+                items: categories
+                    .map((c) => DropdownMenuItem(value: c.id, child: Text(c.name)))
+                    .toList(),
+                onChanged: (value) => setState(() => _selectedCategoryId = value),
+                validator: (value) => value == null ? 'Requerido' : null,
+              ),
+              loading: () => const LinearProgressIndicator(),
+              error: (error, _) => Text('Error: $error'),
+            ),
+          ),
+        ];
+        return useRow
+            ? Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  children[0],
+                  const SizedBox(width: 16),
+                  children[1],
+                ],
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  children[0],
+                  const SizedBox(height: 16),
+                  children[1],
+                ],
+              );
+      },
+    );
+  }
+
+  Widget _buildPackagingCard() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<PackagingType>(
+                    value: _packagingType,
+                    isExpanded: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Tipo de Empaque *',
+                      prefixIcon: Icon(Icons.inventory_2),
+                    ),
+                    items: PackagingType.values
+                        .map((t) => DropdownMenuItem(
+                              value: t,
+                              child: Text(_getPackagingName(t)),
+                            ))
+                        .toList(),
+                    onChanged: (value) => setState(() => _packagingType = value!),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextFormField(
+                    controller: _unitsPerPackageController,
+                    decoration: const InputDecoration(
+                      labelText: 'Unidades/Empaque *',
+                      prefixIcon: Icon(Icons.format_list_numbered),
+                    ),
+                    keyboardType: TextInputType.number,
+                    validator: (value) => value?.isEmpty == true ? 'Requerido' : null,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final useRow = constraints.maxWidth >= 500;
+                final children = [
+                  _buildSwitchTile(
+                    'Frío',
+                    'Requiere refrigeración',
+                    _isCold,
+                    (value) => setState(() => _isCold = value),
+                  ),
+                  _buildSwitchTile(
+                    'Retornable',
+                    'Envase retornable',
+                    _isReturnable,
+                    (value) => setState(() => _isReturnable = value),
+                  ),
+                ];
+                return useRow
+                    ? Row(children: children.map((c) => Expanded(child: c)).toList())
+                    : Column(children: children);
+              },
+            ),
+            if (_isReturnable) ...[
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _returnableDepositController,
+                decoration: const InputDecoration(
+                  labelText: 'Depósito Retornable',
+                  prefixIcon: Icon(Icons.attach_money),
+                ),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSwitchTile(
+    String title,
+    String subtitle,
+    bool value,
+    ValueChanged<bool> onChanged,
+  ) {
+    return SwitchListTile(
+      title: Text(title),
+      subtitle: Text(subtitle),
+      value: value,
+      onChanged: onChanged,
+      contentPadding: EdgeInsets.zero,
+    );
+  }
+
+  Widget _buildPricesCard() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            _buildTextFieldRow(
+              _priceRetailController,
+              'Precio Detal *',
+              Icons.attach_money,
+              const TextInputType.numberWithOptions(decimal: true),
+              validator: (value) => value?.isEmpty == true ? 'Requerido' : null,
+            ),
+            const SizedBox(height: 16),
+            _buildTextFieldRow(
+              _priceWholesaleController,
+              'Precio Mayorista *',
+              Icons.attach_money,
+              const TextInputType.numberWithOptions(decimal: true),
+              validator: (value) => value?.isEmpty == true ? 'Requerido' : null,
+            ),
+            const SizedBox(height: 16),
+            _buildTextFieldRow(
+              _priceColdController,
+              'Precio Frío',
+              Icons.ac_unit,
+              const TextInputType.numberWithOptions(decimal: true),
+            ),
+            const SizedBox(height: 16),
+            _buildTextFieldRow(
+              _costController,
+              'Costo *',
+              Icons.money_off,
+              const TextInputType.numberWithOptions(decimal: true),
+              validator: (value) => value?.isEmpty == true ? 'Requerido' : null,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInventoryCard() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final children = [
+              _buildInventoryField(
+                _stockCurrentController,
+                'Stock Actual *',
+                Icons.inventory,
+              ),
+              const SizedBox(width: 12),
+              _buildInventoryField(
+                _stockMinController,
+                'Stock Mínimo *',
+                Icons.warning,
+              ),
+              const SizedBox(width: 12),
+              _buildInventoryField(
+                _stockMaxController,
+                'Stock Máximo *',
+                Icons.check_circle,
+              ),
+            ];
+            if (constraints.maxWidth < 600) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildInventoryField(
+                    _stockCurrentController,
+                    'Stock Actual *',
+                    Icons.inventory,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildInventoryField(
+                    _stockMinController,
+                    'Stock Mínimo *',
+                    Icons.warning,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildInventoryField(
+                    _stockMaxController,
+                    'Stock Máximo *',
+                    Icons.check_circle,
+                  ),
+                ],
+              );
+            }
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: children,
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInventoryField(
+    TextEditingController controller,
+    String label,
+    IconData icon,
+  ) {
+    return Expanded(
+      child: TextFormField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon),
+        ),
+        keyboardType: TextInputType.number,
+        validator: (value) => value?.isEmpty == true ? 'Requerido' : null,
+      ),
+    );
+  }
+
+  Widget _buildStatusCard() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: DropdownButtonFormField<ProductStatus>(
+          value: _status,
+          // TODO: reemplazar por initialValue cuando Flutter sea >= 3.33
+          isExpanded: true,
+          decoration: const InputDecoration(
+            labelText: 'Estado *',
+            prefixIcon: Icon(Icons.info),
+          ),
+          items: const [
+            DropdownMenuItem(
+              value: ProductStatus.active,
+              child: Text('Activo'),
+            ),
+            DropdownMenuItem(
+              value: ProductStatus.outOfStock,
+              child: Text('Sin Stock'),
+            ),
+            DropdownMenuItem(
+              value: ProductStatus.discontinued,
+              child: Text('Descontinuado'),
+            ),
+          ],
+          onChanged: (value) => setState(() => _status = value!),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDescriptionCard() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: TextFormField(
+          controller: _descriptionController,
+          decoration: const InputDecoration(
+            labelText: 'Descripción',
+            prefixIcon: Icon(Icons.description),
+          ),
+          maxLines: 3,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextFieldRow(
+    TextEditingController controller,
+    String label,
+    IconData icon,
+    TextInputType keyboardType, {
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon),
+      ),
+      keyboardType: keyboardType,
+      validator: validator,
     );
   }
 

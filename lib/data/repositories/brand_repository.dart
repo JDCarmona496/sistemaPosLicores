@@ -58,4 +58,21 @@ class BrandRepository {
 
     return Brand.fromJson(data);
   }
+
+  Future<Brand> update(Brand brand) async {
+    final data = await _client
+        .from('brands')
+        .update({
+          'name': brand.name,
+          'slug': brand.slug,
+          'description': brand.description,
+          'logo_url': brand.logoUrl,
+          'is_active': brand.isActive,
+        })
+        .eq('id', brand.id)
+        .select()
+        .single();
+
+    return Brand.fromJson(data);
+  }
 }

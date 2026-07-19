@@ -33,6 +33,22 @@ class SettingsView extends ConsumerWidget {
             onTap: () => _editGeocodingContext(context, ref, geocodingContext),
           ),
           const Divider(),
+          ListTile(
+            leading: const Icon(Icons.branding_watermark),
+            title: const Text('Marcas'),
+            subtitle: const Text('Administrar marcas de productos'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/settings/brands'),
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.category),
+            title: const Text('Categorías'),
+            subtitle: const Text('Administrar categorías de productos'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/settings/categories'),
+          ),
+          const Divider(),
           const ListTile(
             leading: Icon(Icons.info_outline),
             title: Text('Acerca de'),

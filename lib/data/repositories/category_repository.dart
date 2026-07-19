@@ -62,4 +62,22 @@ class CategoryRepository {
 
     return Category.fromJson(data);
   }
+
+  Future<Category> update(Category category) async {
+    final data = await _client
+        .from('categories')
+        .update({
+          'name': category.name,
+          'slug': category.slug,
+          'description': category.description,
+          'parent_id': category.parentId,
+          'icon_url': category.iconUrl,
+          'is_active': category.isActive,
+        })
+        .eq('id', category.id)
+        .select()
+        .single();
+
+    return Category.fromJson(data);
+  }
 }

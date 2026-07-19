@@ -17,6 +17,8 @@ import '../ui/features/delivery/views/delivery_order_detail_view.dart';
 import '../ui/features/reports/views/reports_view.dart';
 import '../ui/features/settings/views/settings_view.dart';
 import '../ui/features/settings/views/printer_settings_view.dart';
+import '../ui/features/settings/views/brand_settings_view.dart';
+import '../ui/features/settings/views/category_settings_view.dart';
 import '../ui/features/settings/views/supabase_health_check_view.dart';
 
 final GoRouter router = GoRouter(
@@ -164,6 +166,16 @@ final GoRouter router = GoRouter(
           path: 'printer',
           name: 'printer-settings',
           builder: (context, state) => const PrinterSettingsView(),
+        ),
+        GoRoute(
+          path: 'brands',
+          name: 'brand-settings',
+          builder: (context, state) => const BrandSettingsView(),
+        ),
+        GoRoute(
+          path: 'categories',
+          name: 'category-settings',
+          builder: (context, state) => const CategorySettingsView(),
         ),
       ],
     ),
