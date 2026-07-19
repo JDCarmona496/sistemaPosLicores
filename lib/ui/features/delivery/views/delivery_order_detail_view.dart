@@ -6,7 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../data/providers/order_providers.dart';
 import '../../../../domain/models/order.dart';
 import '../../../../domain/models/order_item.dart';
-import 'widgets/delivery_completion_dialog.dart';
+import 'widgets/delivery_signature_dialog.dart';
 
 class DeliveryOrderDetailView extends ConsumerStatefulWidget {
   final String orderId;
@@ -20,26 +20,31 @@ class DeliveryOrderDetailView extends ConsumerStatefulWidget {
 
 class _DeliveryOrderDetailViewState
     extends ConsumerState<DeliveryOrderDetailView> {
+  /// Cantidad total entregada por ítem (editable en pantalla).
+  final Map<String, int> _deliveredQuantities = {};
+  String? _validationError;
+
   @override
   Widget build(BuildContext context) {
     final orderAsync = ref.watch(orderByIdProvider(widget.orderId));
     final itemsAsync = ref.watch(orderItemsProvider(widget.orderId));
 
+    // Inicializar cantidades locales cuando llegan los items.
+    itemsAsync.whenData((items) {
+      if (_deliveredQuantities.isEmpty) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          setState(() {
+            for (final item in items) {
+              _deliveredQuantities[item.id] = item.quantityDelivered;
+            }
+          });
+        });
+      }
+    });
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Detalle de Entrega'),
-        actions: [
-          orderAsync.when(
-            data: (order) => order != null
-                ? PopupMenuButton<String>(
-                    onSelected: (value) => _handleMenuAction(value, order),
-                    itemBuilder: (context) => _buildMenuItems(order),
-                  )
-                : const SizedBox.shrink(),
-            loading: () => const SizedBox.shrink(),
-            error: (_, _) => const SizedBox.shrink(),
-          ),
-        ],
       ),
       body: orderAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -76,13 +81,7 @@ class _DeliveryOrderDetailViewState
                   child: _buildNotes(order),
                 ),
               SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(
-                    'Productos (${itemsAsync.valueOrNull?.length ?? 0})',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                ),
+                child: _buildProductsHeader(order, itemsAsync),
               ),
               itemsAsync.when(
                 loading: () => const SliverFillRemaining(
@@ -99,7 +98,7 @@ class _DeliveryOrderDetailViewState
                 ),
               ),
               const SliverToBoxAdapter(
-                child: SizedBox(height: 100),
+                child: SizedBox(height: 120),
               ),
             ],
           );
@@ -114,62 +113,10 @@ class _DeliveryOrderDetailViewState
     );
   }
 
-  List<PopupMenuItem<String>> _buildMenuItems(Order order) {
-    final items = <PopupMenuItem<String>>[];
-
-    if (_canDeliver(order)) {
-      items.add(
-        const PopupMenuItem(
-          value: 'complete',
-          child: Row(
-            children: [
-              Icon(Icons.check_circle, color: Colors.green),
-              SizedBox(width: 8),
-              Text('Marcar como entregado'),
-            ],
-          ),
-        ),
-      );
-    }
-
-    if (order.customerPhone != null) {
-      items.add(
-        PopupMenuItem(
-          value: 'call',
-          child: Row(
-            children: [
-              Icon(Icons.phone, color: Colors.blue.shade700),
-              const SizedBox(width: 8),
-              const Text('Llamar al cliente'),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return items;
-  }
-
   bool _canDeliver(Order order) {
     return order.status == OrderStatus.inTransit ||
         order.status == OrderStatus.ready ||
         order.status == OrderStatus.partiallyDelivered;
-  }
-
-  void _handleMenuAction(String action, Order order) async {
-    switch (action) {
-      case 'complete':
-        await _completeDelivery(order, deliverAll: true);
-        break;
-      case 'call':
-        if (order.customerPhone != null) {
-          final uri = Uri(scheme: 'tel', path: order.customerPhone!);
-          if (await canLaunchUrl(uri)) {
-            await launchUrl(uri);
-          }
-        }
-        break;
-    }
   }
 
   Widget _buildOrderHeader(Order order) {
@@ -312,9 +259,51 @@ class _DeliveryOrderDetailViewState
     );
   }
 
+  Widget _buildProductsHeader(
+      Order order, AsyncValue<List<OrderItem>> itemsAsync) {
+    final items = itemsAsync.valueOrNull ?? [];
+    final canDeliver = _canDeliver(order);
+    final hasPending = items.any((i) => i.pendingQuantity > 0);
+
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Productos (${items.length})',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              if (canDeliver && hasPending)
+                TextButton.icon(
+                  onPressed: _markAllDelivered,
+                  icon: const Icon(Icons.checklist, size: 18),
+                  label: const Text('Entregar todo'),
+                ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Ajusta la cantidad entregada de cada producto. Luego presiona el botón Entregar.',
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.grey.shade600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildItemCard(OrderItem item) {
     final pending = item.quantity - item.quantityDelivered;
     final isFullyDelivered = pending == 0;
+    final currentTotal = _deliveredQuantities[item.id] ?? item.quantityDelivered;
+    final isValid = currentTotal >= item.quantityDelivered &&
+        currentTotal <= item.quantity;
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -369,10 +358,32 @@ class _DeliveryOrderDetailViewState
                 ],
               ),
             ),
-            Icon(
-              isFullyDelivered ? Icons.check_circle : Icons.radio_button_unchecked,
-              color: isFullyDelivered ? Colors.green : Colors.grey,
-            ),
+            if (isFullyDelivered)
+              const Icon(Icons.check_circle, color: Colors.green)
+            else
+              SizedBox(
+                width: 70,
+                child: TextField(
+                  controller: TextEditingController(
+                    text: '$currentTotal',
+                  ),
+                  keyboardType: TextInputType.number,
+                  textAlign: TextAlign.center,
+                  decoration: InputDecoration(
+                    border: const OutlineInputBorder(),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    errorText: isValid ? null : '',
+                  ),
+                  onChanged: (value) {
+                    final total = int.tryParse(value) ?? 0;
+                    setState(() {
+                      _deliveredQuantities[item.id] = total;
+                      _validationError = null;
+                    });
+                  },
+                ),
+              ),
           ],
         ),
       ),
@@ -382,8 +393,13 @@ class _DeliveryOrderDetailViewState
   Widget _buildBottomBar(
       Order order, AsyncValue<List<OrderItem>> itemsAsync) {
     final items = itemsAsync.valueOrNull ?? [];
-    final pendingItems = items.where((i) => i.pendingQuantity > 0).toList();
     final canDeliver = _canDeliver(order);
+    final itemsToDeliver = _buildItemsToDeliver(items);
+    final hasDeliveries = itemsToDeliver.isNotEmpty;
+    final allValid = items.every((item) {
+      final total = _deliveredQuantities[item.id] ?? item.quantityDelivered;
+      return total >= item.quantityDelivered && total <= item.quantity;
+    });
 
     return SafeArea(
       child: Container(
@@ -414,38 +430,36 @@ class _DeliveryOrderDetailViewState
                 ),
               ],
             ),
+            if (_validationError != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  _validationError!,
+                  style: TextStyle(
+                    color: Colors.red.shade700,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
             const SizedBox(height: 12),
             if (canDeliver)
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
-                  onPressed: pendingItems.isEmpty
-                      ? null
-                      : () => _completeDelivery(order, deliverAll: true),
+                  onPressed: hasDeliveries && allValid
+                      ? () => _confirmDelivery(order, items)
+                      : null,
                   icon: const Icon(Icons.check_circle),
                   label: Text(
-                    pendingItems.isEmpty
-                        ? 'Entrega completada'
-                        : 'Entregar todo (${pendingItems.length} productos)',
+                    hasDeliveries
+                        ? 'Entregar (${itemsToDeliver.length} cambios)'
+                        : 'Sin cambios para entregar',
                   ),
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     backgroundColor: Colors.green,
                     foregroundColor: Colors.white,
                   ),
-                ),
-              ),
-            if (canDeliver)
-              const SizedBox(height: 8),
-            if (canDeliver)
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: pendingItems.isEmpty
-                      ? null
-                      : () => _completeDelivery(order, deliverAll: false),
-                  icon: const Icon(Icons.edit_note),
-                  label: const Text('Entrega parcial / seleccionar cantidades'),
                 ),
               ),
             if (!canDeliver && order.status == OrderStatus.delivered)
@@ -477,23 +491,59 @@ class _DeliveryOrderDetailViewState
     );
   }
 
-  Future<void> _completeDelivery(Order order,
-      {required bool deliverAll}) async {
-    final itemsAsync = ref.read(orderItemsProvider(order.id));
-    final items = itemsAsync.valueOrNull ?? [];
+  List<({String orderItemId, int quantityDelivered})> _buildItemsToDeliver(
+      List<OrderItem> items) {
+    final result = <({String orderItemId, int quantityDelivered})>[];
+    for (final item in items) {
+      final total = _deliveredQuantities[item.id] ?? item.quantityDelivered;
+      if (total > item.quantityDelivered && total <= item.quantity) {
+        result.add((
+          orderItemId: item.id,
+          quantityDelivered: total,
+        ));
+      }
+    }
+    return result;
+  }
 
-    if (items.isEmpty) return;
+  void _markAllDelivered() {
+    setState(() {
+      final itemsAsync = ref.read(orderItemsProvider(widget.orderId));
+      final items = itemsAsync.valueOrNull ?? [];
+      for (final item in items) {
+        _deliveredQuantities[item.id] = item.quantity;
+      }
+      _validationError = null;
+    });
+  }
 
-    final result = await DeliveryCompletionDialog.show(
+  Future<void> _confirmDelivery(Order order, List<OrderItem> items) async {
+    final itemsToDeliver = _buildItemsToDeliver(items);
+    if (itemsToDeliver.isEmpty) return;
+
+    final allValid = items.every((item) {
+      final total = _deliveredQuantities[item.id] ?? item.quantityDelivered;
+      return total >= item.quantityDelivered && total <= item.quantity;
+    });
+
+    if (!allValid) {
+      setState(() => _validationError =
+          'Revisa las cantidades: no puedes entregar menos de lo ya entregado ni más de lo pedido.');
+      return;
+    }
+
+    setState(() => _validationError = null);
+
+    final result = await DeliverySignatureDialog.show(
       context,
       order: order,
-      items: items,
-      deliverAll: deliverAll,
+      itemsToDeliver: itemsToDeliver,
     );
 
     if (result == true && mounted) {
       ref.invalidate(orderByIdProvider(order.id));
       ref.invalidate(orderItemsProvider(order.id));
+      setState(() => _deliveredQuantities.clear());
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Entrega registrada correctamente')),
       );
