@@ -2,9 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 import '../../../../../data/providers/customer_providers.dart';
 import '../../../../../data/providers/delivery_providers.dart';
@@ -14,7 +13,7 @@ import '../../../../../domain/models/order.dart';
 import '../../../../../domain/models/order_item.dart';
 import 'signature_pad.dart';
 
-/// Diálogo completo de entrega de un pedido: selecciona ítems, firma y foto.
+/// Diálogo de entrega: ítems + firma. Fuerza orientación horizontal en móvil.
 class DeliveryCompletionDialog extends ConsumerStatefulWidget {
   final Order order;
   final List<OrderItem> items;
@@ -54,9 +53,7 @@ class DeliveryCompletionDialog extends ConsumerStatefulWidget {
 class _DeliveryCompletionDialogState
     extends ConsumerState<DeliveryCompletionDialog> {
   final _signatureKey = GlobalKey<SignaturePadState>();
-  final ImagePicker _imagePicker = ImagePicker();
   final Map<String, int> _totalDelivered = {};
-  XFile? _photoFile;
   bool _isLoading = false;
   String? _error;
 
@@ -67,6 +64,30 @@ class _DeliveryCompletionDialogState
       _totalDelivered[item.id] = widget.deliverAll
           ? item.quantity
           : item.quantityDelivered;
+    }
+    _forceLandscapeIfMobile();
+  }
+
+  @override
+  void dispose() {
+    _restorePortraitIfMobile();
+    super.dispose();
+  }
+
+  Future<void> _forceLandscapeIfMobile() async {
+    if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
+      await SystemChrome.setPreferredOrientations([
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ]);
+    }
+  }
+
+  Future<void> _restorePortraitIfMobile() async {
+    if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
+      await SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+      ]);
     }
   }
 
@@ -92,9 +113,9 @@ class _DeliveryCompletionDialogState
             ? const Center(child: CircularProgressIndicator())
             : LayoutBuilder(
                 builder: (context, constraints) {
-                  final isWide = constraints.maxWidth >= 600;
+                  final isWide = constraints.maxWidth >= 500;
                   return isWide
-                      ? _buildHorizontalLayout(constraints)
+                      ? _buildHorizontalLayout()
                       : _buildVerticalLayout();
                 },
               ),
@@ -121,15 +142,12 @@ class _DeliveryCompletionDialogState
         const SizedBox(height: 16),
         _buildSectionTitle('Firma del cliente'),
         Expanded(child: SignaturePad(key: _signatureKey)),
-        const SizedBox(height: 16),
-        _buildSectionTitle('Foto de entrega (opcional)'),
-        _buildPhotoPicker(),
         if (_error != null) _buildError(),
       ],
     );
   }
 
-  Widget _buildHorizontalLayout(BoxConstraints constraints) {
+  Widget _buildHorizontalLayout() {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -152,12 +170,6 @@ class _DeliveryCompletionDialogState
               _buildSectionTitle('Firma del cliente'),
               Expanded(
                 child: SignaturePad(key: _signatureKey),
-              ),
-              const SizedBox(height: 16),
-              _buildSectionTitle('Foto de entrega (opcional)'),
-              SizedBox(
-                height: 160,
-                child: _buildPhotoPicker(),
               ),
             ],
           ),
@@ -236,48 +248,6 @@ class _DeliveryCompletionDialogState
     );
   }
 
-  Widget _buildPhotoPicker() {
-    return InkWell(
-      onTap: _isLoading ? null : _pickPhoto,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        height: 120,
-        decoration: BoxDecoration(
-          color: Colors.grey.shade100,
-          border: Border.all(color: Colors.grey.shade400),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: _photoFile == null
-            ? const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.camera_alt, size: 32),
-                    SizedBox(height: 8),
-                    Text('Toca para adjuntar foto (opcional)'),
-                  ],
-                ),
-              )
-            : FutureBuilder<Uint8List?>(
-                future: _photoFile!.readAsBytes(),
-                builder: (context, snapshot) {
-                  if (!snapshot.hasData) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  return ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.memory(
-                      snapshot.data!,
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                    ),
-                  );
-                },
-              ),
-      ),
-    );
-  }
-
   Widget _buildError() {
     return Padding(
       padding: const EdgeInsets.only(top: 12),
@@ -286,36 +256,6 @@ class _DeliveryCompletionDialogState
         style: TextStyle(color: Colors.red.shade700),
       ),
     );
-  }
-
-  Future<void> _pickPhoto() async {
-    try {
-      if (_isMobile()) {
-        final cameraStatus = await Permission.camera.request();
-        if (cameraStatus.isPermanentlyDenied) {
-          setState(() => _error =
-              'Permiso de cámara bloqueado. Actívalo en configuración de la app.');
-          return;
-        }
-        if (!cameraStatus.isGranted) {
-          setState(() => _error =
-              'Se necesita permiso de cámara para la foto de entrega.');
-          return;
-        }
-      }
-
-      final source = _isMobile() ? ImageSource.camera : ImageSource.gallery;
-      final file = await _imagePicker.pickImage(source: source);
-      if (file != null) {
-        setState(() => _photoFile = file);
-      }
-    } catch (e) {
-      setState(() => _error = 'No se pudo seleccionar la foto: $e');
-    }
-  }
-
-  bool _isMobile() {
-    return !kIsWeb && (Platform.isAndroid || Platform.isIOS);
   }
 
   bool _isAllDelivered() {
@@ -401,31 +341,18 @@ class _DeliveryCompletionDialogState
         bytes: signatureBytes,
       );
 
-      // 3. Subir foto si existe.
-      String? photoUrl;
-      if (_photoFile != null) {
-        final photoBytes = await _photoFile!.readAsBytes();
-        final ext = _photoFile!.name.split('.').lastOrNull;
-        photoUrl = await evidenceService.uploadPhoto(
-          orderId: widget.order.id,
-          bytes: photoBytes,
-          fileExtension: ext,
-        );
-      }
-
-      // 4. Registrar evidencia en el pedido.
+      // 3. Registrar evidencia en el pedido.
       final repository = ref.read(orderRepositoryProvider);
       await repository.recordDeliveryEvidence(
         orderId: widget.order.id,
-        photoUrl: photoUrl,
         signatureBase64: signatureUrl,
         deliveredAt: DateTime.now(),
       );
 
-      // 5. Capturar coordenada actual del domiciliario y actualizar cliente.
+      // 4. Capturar coordenada actual del domiciliario y actualizar cliente.
       await _updateCustomerCoordinates();
 
-      // 6. Refrescar listado de domicilios.
+      // 5. Refrescar listado de domicilios.
       ref.invalidate(deliveryOrdersProvider);
 
       if (mounted) {
