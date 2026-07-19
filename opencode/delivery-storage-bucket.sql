@@ -22,9 +22,9 @@ CREATE POLICY "delivery_evidence_insert_authenticated"
 ON storage.objects
 FOR INSERT
 TO authenticated
-WITH CHECK (
+  WITH CHECK (
   bucket_id = 'delivery-evidence'
-  AND storage.foldername(name)[1] = 'orders'
+  AND (storage.foldername(name))[1] = 'orders'
 );
 
 -- Todos los usuarios autenticados pueden leer las evidencias
