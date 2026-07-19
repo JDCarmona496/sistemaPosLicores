@@ -159,7 +159,7 @@ class _DeliveryOrderDetailViewState
   void _handleMenuAction(String action, Order order) async {
     switch (action) {
       case 'complete':
-        await _completeDelivery(order);
+        await _completeDelivery(order, deliverAll: true);
         break;
       case 'call':
         if (order.customerPhone != null) {
@@ -421,18 +421,31 @@ class _DeliveryOrderDetailViewState
                 child: FilledButton.icon(
                   onPressed: pendingItems.isEmpty
                       ? null
-                      : () => _completeDelivery(order),
+                      : () => _completeDelivery(order, deliverAll: true),
                   icon: const Icon(Icons.check_circle),
                   label: Text(
                     pendingItems.isEmpty
                         ? 'Entrega completada'
-                        : 'Completar entrega (${pendingItems.length} pendientes)',
+                        : 'Entregar todo (${pendingItems.length} productos)',
                   ),
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     backgroundColor: Colors.green,
                     foregroundColor: Colors.white,
                   ),
+                ),
+              ),
+            if (canDeliver)
+              const SizedBox(height: 8),
+            if (canDeliver)
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: pendingItems.isEmpty
+                      ? null
+                      : () => _completeDelivery(order, deliverAll: false),
+                  icon: const Icon(Icons.edit_note),
+                  label: const Text('Entrega parcial / seleccionar cantidades'),
                 ),
               ),
             if (!canDeliver && order.status == OrderStatus.delivered)
@@ -464,7 +477,8 @@ class _DeliveryOrderDetailViewState
     );
   }
 
-  Future<void> _completeDelivery(Order order) async {
+  Future<void> _completeDelivery(Order order,
+      {required bool deliverAll}) async {
     final itemsAsync = ref.read(orderItemsProvider(order.id));
     final items = itemsAsync.valueOrNull ?? [];
 
@@ -474,6 +488,7 @@ class _DeliveryOrderDetailViewState
       context,
       order: order,
       items: items,
+      deliverAll: deliverAll,
     );
 
     if (result == true && mounted) {

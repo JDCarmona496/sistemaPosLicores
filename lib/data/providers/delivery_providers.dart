@@ -72,11 +72,14 @@ extension DeliveryFilterX on DeliveryFilter {
   }
 }
 
+enum DeliveryViewMode { list, zones }
+
 class DeliveryOrdersState {
   final List<Order> orders;
   final bool isLoading;
   final String? error;
   final DeliveryFilter filter;
+  final DeliveryViewMode viewMode;
   final Position? currentPosition;
   final bool locationPermissionDenied;
 
@@ -85,6 +88,7 @@ class DeliveryOrdersState {
     this.isLoading = false,
     this.error,
     this.filter = DeliveryFilter.active,
+    this.viewMode = DeliveryViewMode.zones,
     this.currentPosition,
     this.locationPermissionDenied = false,
   });
@@ -94,6 +98,7 @@ class DeliveryOrdersState {
     bool? isLoading,
     String? error,
     DeliveryFilter? filter,
+    DeliveryViewMode? viewMode,
     Position? currentPosition,
     bool? locationPermissionDenied,
     bool clearPosition = false,
@@ -104,6 +109,7 @@ class DeliveryOrdersState {
       isLoading: isLoading ?? this.isLoading,
       error: clearError ? null : (error ?? this.error),
       filter: filter ?? this.filter,
+      viewMode: viewMode ?? this.viewMode,
       currentPosition: clearPosition ? null : (currentPosition ?? this.currentPosition),
       locationPermissionDenied:
           locationPermissionDenied ?? this.locationPermissionDenied,
@@ -141,13 +147,17 @@ class DeliveryOrdersNotifier extends StateNotifier<DeliveryOrdersState> {
         statuses: null,
       );
 
+      // Orden de llegada: primero los pedidos más antiguos (FIFO).
+      orders.sort((a, b) {
+        final dateA = a.createdAt ?? DateTime.now();
+        final dateB = b.createdAt ?? DateTime.now();
+        return dateA.compareTo(dateB);
+      });
+
       state = state.copyWith(
         orders: orders,
         isLoading: false,
       );
-
-      // La ubicación se intenta en paralelo, no bloquea la carga.
-      _captureCurrentPosition();
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -162,27 +172,8 @@ class DeliveryOrdersNotifier extends StateNotifier<DeliveryOrdersState> {
     state = state.copyWith(filter: filter);
   }
 
-  Future<void> _captureCurrentPosition() async {
-    final locationService = _ref.read(locationServiceProvider);
-    try {
-      final position = await locationService.captureCurrentPosition();
-      if (mounted) {
-        state = state.copyWith(
-          currentPosition: position,
-          locationPermissionDenied: false,
-        );
-      }
-    } on LocationServiceException catch (e) {
-      if (mounted) {
-        state = state.copyWith(
-          locationPermissionDenied:
-              e.code == LocationServiceErrorCode.permissionDenied ||
-              e.code == LocationServiceErrorCode.permissionDeniedForever,
-        );
-      }
-    } catch (_) {
-      // Silencioso: la ruta funciona sin GPS.
-    }
+  void setViewMode(DeliveryViewMode viewMode) {
+    state = state.copyWith(viewMode: viewMode);
   }
 
   Future<void> updateOrderInPlace(Order order) async {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../data/providers/delivery_providers.dart';
+import '../../../../domain/services/order_zone_grouper.dart';
 import 'widgets/delivery_order_card.dart';
 import 'widgets/delivery_zone_group_card.dart';
 
@@ -32,7 +33,7 @@ class _DeliveryViewState extends ConsumerState<DeliveryView> {
       body: Column(
         children: [
           _buildFilterBar(deliveryState, colorScheme),
-          _buildLocationBanner(deliveryState, colorScheme),
+          _buildViewModeBar(deliveryState, colorScheme),
           Expanded(
             child: _buildContent(deliveryState),
           ),
@@ -144,52 +145,54 @@ class _DeliveryViewState extends ConsumerState<DeliveryView> {
     );
   }
 
-  Widget _buildLocationBanner(
-      DeliveryOrdersState state, ColorScheme colorScheme) {
-    if (state.locationPermissionDenied) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        color: Colors.orange.shade50,
-        child: Row(
-          children: [
-            Icon(Icons.location_off, size: 16, color: Colors.orange.shade700),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'Permiso de ubicación denegado. Los pedidos no se ordenan por distancia.',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.orange.shade800,
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
+  Widget _buildViewModeBar(DeliveryOrdersState state, ColorScheme colorScheme) {
+    if (state.filter == DeliveryFilter.delivered) {
+      // Para entregados solo lista
+      return const SizedBox.shrink();
     }
-    if (state.currentPosition != null) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        color: Colors.green.shade50,
-        child: Row(
-          children: [
-            Icon(Icons.gps_fixed, size: 16, color: Colors.green.shade700),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'Ubicación activa · Pedidos ordenados por cercanía',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.green.shade800,
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      color: Colors.grey.shade50,
+      child: Row(
+        children: [
+          Expanded(
+            child: SegmentedButton<DeliveryViewMode>(
+              segments: const [
+                ButtonSegment(
+                  value: DeliveryViewMode.list,
+                  label: Text('Lista'),
+                  icon: Icon(Icons.list),
                 ),
-              ),
+                ButtonSegment(
+                  value: DeliveryViewMode.zones,
+                  label: Text('Por zona'),
+                  icon: Icon(Icons.map),
+                ),
+              ],
+              selected: {state.viewMode},
+              onSelectionChanged: (selection) {
+                if (selection.isNotEmpty) {
+                  ref
+                      .read(deliveryOrdersProvider.notifier)
+                      .setViewMode(selection.first);
+                }
+              },
             ),
-          ],
-        ),
-      );
-    }
-    return const SizedBox.shrink();
+          ),
+          const SizedBox(width: 12),
+          Text(
+            state.viewMode == DeliveryViewMode.zones
+                ? 'Agrupado por cercanía'
+                : 'Orden de llegada',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey.shade600,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildContent(DeliveryOrdersState state) {
@@ -266,12 +269,8 @@ class _DeliveryViewState extends ConsumerState<DeliveryView> {
       );
     }
 
-    // Agrupar por zonas
-    final grouper = ref.read(orderZoneGrouperProvider);
-    final zoneResult = grouper.group(orders);
-
+    // Entregados: siempre lista
     if (state.filter == DeliveryFilter.delivered) {
-      // Sin zonas para entregados, lista directa
       return RefreshIndicator(
         onRefresh: () =>
             ref.read(deliveryOrdersProvider.notifier).refresh(),
@@ -280,12 +279,47 @@ class _DeliveryViewState extends ConsumerState<DeliveryView> {
           itemCount: orders.length,
           itemBuilder: (context, index) => DeliveryOrderCard(
             order: orders[index],
-            currentPosition: state.currentPosition,
+            currentPosition: null,
             onComplete: null,
           ),
         ),
       );
     }
+
+    // Vista Lista
+    if (state.viewMode == DeliveryViewMode.list) {
+      return RefreshIndicator(
+        onRefresh: () =>
+            ref.read(deliveryOrdersProvider.notifier).refresh(),
+        child: ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: orders.length,
+          itemBuilder: (context, index) => DeliveryOrderCard(
+            order: orders[index],
+            currentPosition: null,
+            onComplete: () =>
+                ref.read(deliveryOrdersProvider.notifier).refresh(),
+          ),
+        ),
+      );
+    }
+
+    // Vista Por zona
+    final grouper = ref.read(orderZoneGrouperProvider);
+    final zoneResult = grouper.group(orders);
+
+    // Dentro de cada zona, mantener orden de llegada (FIFO).
+    final sortedZones = zoneResult.zones.map((zone) {
+      final sortedOrders = [...zone.orders]..sort((a, b) {
+          final dateA = a.createdAt ?? DateTime.now();
+          final dateB = b.createdAt ?? DateTime.now();
+          return dateA.compareTo(dateB);
+        });
+      return OrderZone(
+        zoneNumber: zone.zoneNumber,
+        orders: sortedOrders,
+      );
+    }).toList();
 
     return RefreshIndicator(
       onRefresh: () =>
@@ -302,12 +336,12 @@ class _DeliveryViewState extends ConsumerState<DeliveryView> {
             sliver: SliverList(
               delegate: SliverChildBuilderDelegate(
                 (context, index) => DeliveryZoneGroupCard(
-                  zone: zoneResult.zones[index],
-                  currentPosition: state.currentPosition,
+                  zone: sortedZones[index],
+                  currentPosition: null,
                   onComplete: () =>
                       ref.read(deliveryOrdersProvider.notifier).refresh(),
                 ),
-                childCount: zoneResult.zones.length,
+                childCount: sortedZones.length,
               ),
             ),
           ),

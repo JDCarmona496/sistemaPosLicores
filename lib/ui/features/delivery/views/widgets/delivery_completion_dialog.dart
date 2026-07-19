@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -19,24 +18,29 @@ import 'signature_pad.dart';
 class DeliveryCompletionDialog extends ConsumerStatefulWidget {
   final Order order;
   final List<OrderItem> items;
+  final bool deliverAll;
 
   const DeliveryCompletionDialog({
     super.key,
     required this.order,
     required this.items,
+    this.deliverAll = false,
   });
 
   static Future<bool> show(
     BuildContext context, {
     required Order order,
     required List<OrderItem> items,
+    bool deliverAll = false,
   }) async {
     return await showDialog<bool>(
           context: context,
           barrierDismissible: false,
+          useSafeArea: true,
           builder: (context) => DeliveryCompletionDialog(
             order: order,
             items: items,
+            deliverAll: deliverAll,
           ),
         ) ??
         false;
@@ -60,41 +64,39 @@ class _DeliveryCompletionDialogState
   void initState() {
     super.initState();
     for (final item in widget.items) {
-      _totalDelivered[item.id] = item.quantityDelivered;
+      _totalDelivered[item.id] = widget.deliverAll
+          ? item.quantity
+          : item.quantityDelivered;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Completar entrega'),
+      insetPadding: const EdgeInsets.all(8),
+      title: Row(
+        children: [
+          const Expanded(child: Text('Completar entrega')),
+          if (!_isAllDelivered())
+            TextButton.icon(
+              onPressed: _isLoading ? null : _deliverAll,
+              icon: const Icon(Icons.checklist, size: 18),
+              label: const Text('Entregar todo'),
+            ),
+        ],
+      ),
       content: SizedBox(
         width: double.maxFinite,
-        height: 520,
+        height: MediaQuery.of(context).size.height * 0.75,
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
-            : SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _buildSectionTitle('Ítems entregados'),
-                    ...widget.items.map(_buildItemField),
-                    const SizedBox(height: 16),
-                    _buildSectionTitle('Firma del cliente'),
-                    SignaturePad(key: _signatureKey),
-                    const SizedBox(height: 16),
-                    _buildSectionTitle('Foto de entrega (opcional)'),
-                    _buildPhotoPicker(),
-                    if (_error != null) ...[
-                      const SizedBox(height: 12),
-                      Text(
-                        _error!,
-                        style: TextStyle(color: Colors.red.shade700),
-                      ),
-                    ],
-                  ],
-                ),
+            : LayoutBuilder(
+                builder: (context, constraints) {
+                  final isWide = constraints.maxWidth >= 600;
+                  return isWide
+                      ? _buildHorizontalLayout(constraints)
+                      : _buildVerticalLayout();
+                },
               ),
       ),
       actions: [
@@ -107,6 +109,70 @@ class _DeliveryCompletionDialogState
           icon: const Icon(Icons.check),
           label: const Text('Confirmar entrega'),
         ),
+      ],
+    );
+  }
+
+  Widget _buildVerticalLayout() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildItemsSection(),
+        const SizedBox(height: 16),
+        _buildSectionTitle('Firma del cliente'),
+        Expanded(child: SignaturePad(key: _signatureKey)),
+        const SizedBox(height: 16),
+        _buildSectionTitle('Foto de entrega (opcional)'),
+        _buildPhotoPicker(),
+        if (_error != null) _buildError(),
+      ],
+    );
+  }
+
+  Widget _buildHorizontalLayout(BoxConstraints constraints) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildItemsSection(),
+                if (_error != null) _buildError(),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSectionTitle('Firma del cliente'),
+              Expanded(
+                child: SignaturePad(key: _signatureKey),
+              ),
+              const SizedBox(height: 16),
+              _buildSectionTitle('Foto de entrega (opcional)'),
+              SizedBox(
+                height: 160,
+                child: _buildPhotoPicker(),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildItemsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildSectionTitle('Ítems entregados'),
+        ...widget.items.map(_buildItemField),
       ],
     );
   }
@@ -157,7 +223,8 @@ class _DeliveryCompletionDialogState
               textAlign: TextAlign.center,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 8, vertical: 8),
               ),
               onChanged: (value) {
                 _totalDelivered[item.id] = int.tryParse(value) ?? 0;
@@ -187,7 +254,7 @@ class _DeliveryCompletionDialogState
                   children: [
                     Icon(Icons.camera_alt, size: 32),
                     SizedBox(height: 8),
-                    Text('Toca para adjuntar foto'),
+                    Text('Toca para adjuntar foto (opcional)'),
                   ],
                 ),
               )
@@ -211,6 +278,16 @@ class _DeliveryCompletionDialogState
     );
   }
 
+  Widget _buildError() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Text(
+        _error!,
+        style: TextStyle(color: Colors.red.shade700),
+      ),
+    );
+  }
+
   Future<void> _pickPhoto() async {
     try {
       if (_isMobile()) {
@@ -221,7 +298,8 @@ class _DeliveryCompletionDialogState
           return;
         }
         if (!cameraStatus.isGranted) {
-          setState(() => _error = 'Se necesita permiso de cámara para la foto de entrega.');
+          setState(() => _error =
+              'Se necesita permiso de cámara para la foto de entrega.');
           return;
         }
       }
@@ -238,6 +316,21 @@ class _DeliveryCompletionDialogState
 
   bool _isMobile() {
     return !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+  }
+
+  bool _isAllDelivered() {
+    return widget.items.every((item) {
+      final total = _totalDelivered[item.id] ?? 0;
+      return total >= item.quantity;
+    });
+  }
+
+  void _deliverAll() {
+    setState(() {
+      for (final item in widget.items) {
+        _totalDelivered[item.id] = item.quantity;
+      }
+    });
   }
 
   Future<void> _updateCustomerCoordinates() async {

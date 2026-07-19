@@ -6,8 +6,9 @@ import 'package:flutter/material.dart';
 /// Lienzo simple de firma digital. Exporta la firma como PNG.
 class SignaturePad extends StatefulWidget {
   final void Function(Uint8List? bytes)? onChanged;
+  final double? height;
 
-  const SignaturePad({super.key, this.onChanged});
+  const SignaturePad({super.key, this.onChanged, this.height});
 
   @override
   State<SignaturePad> createState() => SignaturePadState();
@@ -49,7 +50,7 @@ class SignaturePadState extends State<SignaturePad> {
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        height: 150,
+        height: widget.height,
         decoration: BoxDecoration(
           color: Colors.white,
           border: Border.all(color: Colors.grey.shade400),
