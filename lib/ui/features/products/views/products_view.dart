@@ -5,6 +5,7 @@ import '../../../../data/providers/product_providers.dart';
 import '../../../../data/repositories/brand_repository.dart';
 import '../../../../data/repositories/category_repository.dart';
 import '../../../../domain/models/product.dart';
+import 'widgets/product_barcode_scanner_modal.dart';
 
 class ProductsView extends ConsumerStatefulWidget {
   const ProductsView({super.key});
@@ -35,8 +36,8 @@ class _ProductsViewState extends ConsumerState<ProductsView> {
         actions: [
           IconButton(
             icon: const Icon(Icons.qr_code_scanner),
-            onPressed: () => context.push('/products/scan'),
-            tooltip: 'Escanear código',
+            onPressed: _openScannerModal,
+            tooltip: 'Escanear precio',
           ),
           IconButton(
             icon: Icon(_showFilters ? Icons.filter_alt : Icons.filter_alt_outlined),
@@ -352,6 +353,16 @@ class _ProductsViewState extends ConsumerState<ProductsView> {
           ),
         ),
       ),
+    );
+  }
+
+  void _openScannerModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      enableDrag: false,
+      builder: (context) => const ProductBarcodeScannerModal(),
     );
   }
 
