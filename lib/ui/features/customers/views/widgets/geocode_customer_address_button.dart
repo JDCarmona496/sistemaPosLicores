@@ -67,7 +67,7 @@ class _GeocodeCustomerAddressButtonState
 
       widget.latitudeController.text = result.latitude.toStringAsFixed(8);
       widget.longitudeController.text = result.longitude.toStringAsFixed(8);
-      _showSnack('Coordenada encontrada: ${result.displayName ?? ''}');
+      _showSnack('Coordenada encontrada: ${result.displayName}');
     } catch (e) {
       if (!mounted) return;
       _showSnack('Error al geocodificar: $e', isError: true);

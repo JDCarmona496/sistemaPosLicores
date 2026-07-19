@@ -137,12 +137,14 @@ class CurrentOrderCartNotifier
     state = state.copyWith(notes: notes);
   }
 
-  void setDeliveryAddress(String? address) {
-    // Editar la direccion invalida las coordenadas capturadas antes:
-    // ya no corresponden al texto nuevo.
+  void setDeliveryAddress(String? address,
+      {bool clearCoordinates = true}) {
+    // Editar la direccion manualmente invalida las coordenadas capturadas antes:
+    // ya no corresponden al texto nuevo. Cuando la direccion viene del cliente
+    // se conservan las coordenadas del cliente.
     state = state.copyWith(
       deliveryAddress: address,
-      clearDeliveryCoordinates: true,
+      clearDeliveryCoordinates: clearCoordinates,
     );
   }
 

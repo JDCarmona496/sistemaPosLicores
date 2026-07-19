@@ -396,5 +396,15 @@ void main() {
 
       expect(cart.state.hasDeliveryCoordinates, isFalse);
     });
+
+    test('setDeliveryAddress desde cliente conserva coordenadas', () {
+      cart.setDeliveryCoordinates(3.5373, -76.3036);
+      cart.setDeliveryAddress('Direccion del cliente', clearCoordinates: false);
+
+      expect(cart.state.deliveryAddress, 'Direccion del cliente');
+      expect(cart.state.hasDeliveryCoordinates, isTrue);
+      expect(cart.state.deliveryLatitude, closeTo(3.5373, 0.0001));
+      expect(cart.state.deliveryLongitude, closeTo(-76.3036, 0.0001));
+    });
   });
 }

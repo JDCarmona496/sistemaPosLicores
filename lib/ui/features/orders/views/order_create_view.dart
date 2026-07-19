@@ -377,7 +377,7 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
       _addressController.text = selected.address!;
       ref
           .read(currentOrderCartProvider.notifier)
-          .setDeliveryAddress(selected.address!);
+          .setDeliveryAddress(selected.address!, clearCoordinates: false);
     }
 
     if (selected.type == CustomerType.occasional &&

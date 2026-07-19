@@ -125,11 +125,9 @@ class DeliveryOrdersNotifier extends StateNotifier<DeliveryOrdersState> {
   final OrderRepository _repository;
 
   DeliveryOrdersNotifier({
-    required Ref ref,
-    required OrderRepository repository,
-  })  : _ref = ref,
-        _repository = repository,
-        super(const DeliveryOrdersState()) {
+    required this._ref,
+    required this._repository,
+  }) : super(const DeliveryOrdersState()) {
     loadOrders();
   }
 

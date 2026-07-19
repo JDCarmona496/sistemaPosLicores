@@ -45,7 +45,9 @@ class GeolocatorDataSource implements LocationDataSource {
   @override
   Future<Position> getCurrentPosition({LocationAccuracy? desiredAccuracy}) {
     return Geolocator.getCurrentPosition(
-      desiredAccuracy: desiredAccuracy ?? LocationAccuracy.high,
+      locationSettings: AndroidSettings(
+        accuracy: desiredAccuracy ?? LocationAccuracy.high,
+      ),
     );
   }
 
@@ -63,8 +65,7 @@ class GeolocatorDataSource implements LocationDataSource {
 class LocationService {
   final LocationDataSource _dataSource;
 
-  const LocationService({required LocationDataSource dataSource})
-      : _dataSource = dataSource;
+  const LocationService({required this._dataSource});
 
   /// Captura la posición actual del dispositivo.
   ///
