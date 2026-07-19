@@ -3,34 +3,39 @@
 -- Ejecutar en Supabase SQL Editor antes de usar el módulo.
 -- ============================================================
 
--- 1. Crear bucket para evidencias de entrega
+-- 1. Asegurar que RLS esté activo en storage.objects
+ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+
+-- 2. Crear bucket para evidencias de entrega
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('delivery-evidence', 'delivery-evidence', true)
 ON CONFLICT (id) DO NOTHING;
 
--- 2. Políticas RLS para el bucket
--- Los domiciliarios y admins pueden subir evidencias
-CREATE POLICY IF NOT EXISTS "delivery_evidence_insert_authenticated"
+-- 3. Eliminar políticas viejas si existen
+DROP POLICY IF EXISTS "delivery_evidence_insert_authenticated" ON storage.objects;
+DROP POLICY IF EXISTS "delivery_evidence_select_authenticated" ON storage.objects;
+DROP POLICY IF EXISTS "delivery_evidence_delete_owner" ON storage.objects;
+
+-- 4. Políticas RLS para el bucket
+-- Los domiciliarios pueden subir evidencias de sus pedidos
+CREATE POLICY "delivery_evidence_insert_authenticated"
 ON storage.objects
 FOR INSERT
 TO authenticated
 WITH CHECK (
   bucket_id = 'delivery-evidence'
-  AND (
-    -- Solo permitir subir en la estructura orders/{order_id}/...
-    storage.foldername(name)[1] = 'orders'
-  )
+  AND storage.foldername(name)[1] = 'orders'
 );
 
 -- Todos los usuarios autenticados pueden leer las evidencias
-CREATE POLICY IF NOT EXISTS "delivery_evidence_select_authenticated"
+CREATE POLICY "delivery_evidence_select_authenticated"
 ON storage.objects
 FOR SELECT
 TO authenticated
 USING (bucket_id = 'delivery-evidence');
 
--- Los usuarios pueden eliminar sus propias evidencias
-CREATE POLICY IF NOT EXISTS "delivery_evidence_delete_owner"
+-- Cada usuario puede eliminar sus propias evidencias
+CREATE POLICY "delivery_evidence_delete_owner"
 ON storage.objects
 FOR DELETE
 TO authenticated
@@ -39,7 +44,7 @@ USING (
   AND owner = auth.uid()
 );
 
--- 3. Verificar que el bucket se creó correctamente
+-- 5. Verificar que el bucket se creó correctamente
 SELECT
   id,
   name,
