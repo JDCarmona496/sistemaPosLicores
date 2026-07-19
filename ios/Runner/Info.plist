@@ -47,6 +47,12 @@
 			</array>
 		</dict>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>Se usa la cámara para tomar una foto de evidencia de la entrega.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Se usa la ubicación para ordenar las entregas por cercanía y optimizar la ruta.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Se usa la galería para adjuntar una foto de evidencia de la entrega.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../../data/providers/delivery_providers.dart';
+import '../../../../../data/providers/order_providers.dart';
+import '../../../../../data/providers/user_providers.dart';
 import '../../../../../domain/models/order.dart';
 import '../../../../../domain/services/route_optimizer.dart';
 import 'package:geolocator/geolocator.dart';
 
-class DeliveryOrderCard extends StatelessWidget {
+class DeliveryOrderCard extends ConsumerWidget {
   final Order order;
   final Position? currentPosition;
   final VoidCallback? onComplete;
@@ -19,7 +23,7 @@ class DeliveryOrderCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
     final distance = currentPosition != null
         ? RouteOptimizer.distanceToOrder(currentPosition!, order)
@@ -35,7 +39,7 @@ class DeliveryOrderCard extends StatelessWidget {
           children: [
             _buildHeader(context, colorScheme),
             _buildBody(context, colorScheme, distance),
-            _buildActions(context, colorScheme),
+            _buildActions(context, ref, colorScheme),
           ],
         ),
       ),
@@ -160,7 +164,7 @@ class DeliveryOrderCard extends StatelessWidget {
     );
   }
 
-  Widget _buildActions(BuildContext context, ColorScheme colorScheme) {
+  Widget _buildActions(BuildContext context, WidgetRef ref, ColorScheme colorScheme) {
     return Container(
       decoration: BoxDecoration(
         border: Border(top: BorderSide(color: Colors.grey.shade200)),
@@ -189,6 +193,14 @@ class DeliveryOrderCard extends StatelessWidget {
               label: 'Entregar',
               color: colorScheme.primary,
               onTap: onComplete,
+              filled: true,
+            ),
+          if (_canDeliver)
+            _buildActionChip(
+              icon: Icons.cancel,
+              label: 'No entregó',
+              color: Colors.red,
+              onTap: () => _showDeliveryFailureDialog(context, ref),
               filled: true,
             ),
         ],
@@ -262,6 +274,62 @@ class DeliveryOrderCard extends StatelessWidget {
     final uri = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$lat,$lng');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
+    }
+  }
+
+  Future<void> _showDeliveryFailureDialog(BuildContext context, WidgetRef ref) async {
+    final reason = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('No se pudo entregar'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Selecciona el motivo:'),
+            const SizedBox(height: 16),
+            ...[
+              'Cliente no responde',
+              'Dirección errada',
+              'Cliente no disponible',
+              'Producto dañado/perdido',
+              'Otro',
+            ].map((r) => ListTile(
+                  title: Text(r),
+                  onTap: () => Navigator.pop(context, r),
+                )),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+        ],
+      ),
+    );
+
+    if (reason == null) return;
+
+    try {
+      await ref.read(ordersProvider.notifier).cancelOrder(
+            id: order.id,
+            reason: 'Domicilio no entregado: $reason',
+            cancelledBy: ref.read(currentUserProvider).valueOrNull?.id ??
+                order.deliveryPersonId ??
+                'unknown',
+          );
+      ref.invalidate(deliveryOrdersProvider);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Entrega no completada registrada')),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
     }
   }
 

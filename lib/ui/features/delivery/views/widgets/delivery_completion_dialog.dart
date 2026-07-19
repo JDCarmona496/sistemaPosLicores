@@ -1,9 +1,13 @@
-import 'dart:typed_data';
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 
+import '../../../../../data/providers/customer_providers.dart';
 import '../../../../../data/providers/delivery_providers.dart';
 import '../../../../../data/providers/order_providers.dart';
 import '../../../../../data/services/delivery_evidence_service.dart';
@@ -209,12 +213,47 @@ class _DeliveryCompletionDialogState
 
   Future<void> _pickPhoto() async {
     try {
-      final file = await _imagePicker.pickImage(source: ImageSource.gallery);
+      if (_isMobile()) {
+        final cameraStatus = await Permission.camera.request();
+        if (cameraStatus.isPermanentlyDenied) {
+          setState(() => _error =
+              'Permiso de cámara bloqueado. Actívalo en configuración de la app.');
+          return;
+        }
+        if (!cameraStatus.isGranted) {
+          setState(() => _error = 'Se necesita permiso de cámara para la foto de entrega.');
+          return;
+        }
+      }
+
+      final source = _isMobile() ? ImageSource.camera : ImageSource.gallery;
+      final file = await _imagePicker.pickImage(source: source);
       if (file != null) {
         setState(() => _photoFile = file);
       }
     } catch (e) {
       setState(() => _error = 'No se pudo seleccionar la foto: $e');
+    }
+  }
+
+  bool _isMobile() {
+    return !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+  }
+
+  Future<void> _updateCustomerCoordinates() async {
+    final customerId = widget.order.customerId;
+    if (customerId == null) return;
+
+    try {
+      final locationService = ref.read(locationServiceProvider);
+      final position = await locationService.captureCurrentPosition();
+      await ref.read(customersProvider.notifier).updateCoordinates(
+            customerId,
+            latitude: position.latitude,
+            longitude: position.longitude,
+          );
+    } catch (_) {
+      // Silencioso: la entrega no debe fallar si no se puede capturar GPS.
     }
   }
 
@@ -290,7 +329,10 @@ class _DeliveryCompletionDialogState
         deliveredAt: DateTime.now(),
       );
 
-      // 5. Refrescar listado de domicilios.
+      // 5. Capturar coordenada actual del domiciliario y actualizar cliente.
+      await _updateCustomerCoordinates();
+
+      // 6. Refrescar listado de domicilios.
       ref.invalidate(deliveryOrdersProvider);
 
       if (mounted) {
