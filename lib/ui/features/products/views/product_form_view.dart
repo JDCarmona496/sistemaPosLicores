@@ -805,12 +805,14 @@ class _ProductFormViewState extends ConsumerState<ProductFormView> {
   }
 
   Future<void> _scanBarcode() async {
+    debugPrint('[ProductForm] Opening barcode scanner modal');
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => ProductBarcodeScannerModal(
         onBarcode: (barcode) {
+          debugPrint('[ProductForm] Barcode received: $barcode');
           if (mounted) {
             _barcodeController.text = barcode;
           }

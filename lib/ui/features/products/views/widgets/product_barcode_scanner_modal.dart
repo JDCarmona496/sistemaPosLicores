@@ -28,6 +28,7 @@ class _ProductBarcodeScannerModalState
   );
 
   bool _hasScanned = false;
+  bool _isProcessing = false;
   bool _isTorchOn = false;
   models.Product? _scannedProduct;
   String? _errorMessage;
@@ -451,6 +452,7 @@ class _ProductBarcodeScannerModalState
     await _controller.stop();
 
     if (widget.onBarcode != null) {
+      debugPrint('[BarcodeScanner] Callback mode - barcode: $rawValue');
       widget.onBarcode!(rawValue);
       if (mounted) {
         Navigator.pop(context);
@@ -458,6 +460,7 @@ class _ProductBarcodeScannerModalState
       return;
     }
 
+    debugPrint('[BarcodeScanner] Search mode - barcode: $rawValue');
     try {
       final product = await ref
           .read(productsProvider.notifier)
