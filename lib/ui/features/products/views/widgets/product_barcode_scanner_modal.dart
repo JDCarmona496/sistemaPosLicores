@@ -28,7 +28,6 @@ class _ProductBarcodeScannerModalState
   );
 
   bool _hasScanned = false;
-  bool _isProcessing = false;
   bool _isTorchOn = false;
   models.Product? _scannedProduct;
   String? _errorMessage;

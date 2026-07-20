@@ -80,16 +80,49 @@ class BluetoothPrinterService implements PrinterService {
       debugPrint(
         '[BluetoothPrinterService] CONNECT START name=${config.name} address=${config.address} type=${config.connectionType}',
       );
-      final printers = await _plugin.devicesStream.first.timeout(
-        const Duration(seconds: 5),
-        onTimeout: () => [],
-      );
+
+      // Verificar si Bluetooth está encendido
+      final isOn = await _plugin.isBleTurnedOn();
+      if (!isOn) {
+        debugPrint('[BluetoothPrinterService] Bluetooth está apagado');
+        return const PrinterResult.error(
+          'Bluetooth apagado. Enciende el Bluetooth e intenta de nuevo.',
+        );
+      }
+
+      // Intentar obtener dispositivos con retry
+      List<ftp.Printer> printers = [];
+      for (int attempt = 0; attempt < 3; attempt++) {
+        debugPrint('[BluetoothPrinterService] Intento ${attempt + 1}/3 de obtener dispositivos...');
+        try {
+          printers = await _plugin.devicesStream.first.timeout(
+            const Duration(seconds: 8),
+            onTimeout: () => [],
+          );
+          if (printers.isNotEmpty) break;
+          await Future.delayed(const Duration(seconds: 1));
+        } catch (e) {
+          debugPrint('[BluetoothPrinterService] Error en intento ${attempt + 1}: $e');
+          if (attempt == 2) {
+            return PrinterResult.error(
+              'No se pudieron obtener dispositivos después de 3 intentos: $e',
+            );
+          }
+        }
+      }
+
       debugPrint(
         '[BluetoothPrinterService] Printers in stream: ${printers.length}',
       );
       for (final p in printers) {
         debugPrint(
           '  candidate: name=${p.name} address=${p.address} type=${p.connectionType} connected=${p.isConnected}',
+        );
+      }
+
+      if (printers.isEmpty) {
+        return const PrinterResult.error(
+          'No se encontraron impresoras. Asegúrate de que la impresora esté encendida y en rango.',
         );
       }
 
@@ -112,7 +145,7 @@ class BluetoothPrinterService implements PrinterService {
           _connectedPrinter = printer;
           _connectedBtDevice = null;
           debugPrint('[BluetoothPrinterService] USB CONNECT OK');
-          return const PrinterResult.success('Conectado');
+          return const PrinterResult.success('Conectado por USB');
         }
         debugPrint('[BluetoothPrinterService] USB CONNECT FAILED');
         return const PrinterResult.error('No se pudo conectar por USB');
@@ -136,32 +169,45 @@ class BluetoothPrinterService implements PrinterService {
       debugPrint(
         '[BluetoothPrinterService] BLE connect() call name=${printer.name} address=${printer.address}',
       );
-      await btDevice.connect(
-        timeout: const Duration(seconds: 10),
-        mtu: 512,
-        autoConnect: false,
-      );
+      
+      // Intentar conectar con retry
+      for (int attempt = 0; attempt < 2; attempt++) {
+        try {
+          await btDevice.connect(
+            timeout: const Duration(seconds: 15),
+            mtu: 512,
+            autoConnect: false,
+          );
 
-      final isConnected = await _waitForConnection(
-        btDevice,
-        timeout: const Duration(seconds: 5),
-      );
-      debugPrint(
-        '[BluetoothPrinterService] BLE connection confirmed=$isConnected device.isConnected=${btDevice.isConnected}',
-      );
+          final isConnected = await _waitForConnection(
+            btDevice,
+            timeout: const Duration(seconds: 8),
+          );
+          debugPrint(
+            '[BluetoothPrinterService] BLE connection confirmed=$isConnected device.isConnected=${btDevice.isConnected}',
+          );
 
-      if (isConnected) {
-        _connectedPrinter = printer;
-        _connectedBtDevice = btDevice;
-        debugPrint('[BluetoothPrinterService] BLE CONNECT OK');
-        await _logBleServices(btDevice);
-        return const PrinterResult.success('Conectado');
-      } else {
-        debugPrint('[BluetoothPrinterService] No se confirmó la conexión BLE');
-        return const PrinterResult.error(
-          'No se pudo conectar. Asegurate de que la impresora esté encendida y emparejada.',
-        );
+          if (isConnected) {
+            _connectedPrinter = printer;
+            _connectedBtDevice = btDevice;
+            debugPrint('[BluetoothPrinterService] BLE CONNECT OK');
+            await _logBleServices(btDevice);
+            return const PrinterResult.success('Conectado por Bluetooth');
+          }
+        } catch (e) {
+          debugPrint('[BluetoothPrinterService] Intento ${attempt + 1} falló: $e');
+          if (attempt == 1) {
+            return PrinterResult.error(
+              'No se pudo conectar después de 2 intentos. Asegúrate de que la impresora esté encendida y emparejada.',
+            );
+          }
+          await Future.delayed(const Duration(seconds: 2));
+        }
       }
+
+      return const PrinterResult.error(
+        'No se pudo conectar. Asegúrate de que la impresora esté encendida y emparejada.',
+      );
     } catch (e, stack) {
       debugPrint('[BluetoothPrinterService] Error al conectar: $e');
       debugPrint(stack.toString());

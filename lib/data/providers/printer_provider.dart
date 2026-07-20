@@ -77,6 +77,56 @@ final printerServiceProvider = Provider<PrinterService?>((ref) {
   }
 });
 
+/// Estado de conexión de la impresora.
+enum PrinterConnectionStatus {
+  disconnected,
+  connecting,
+  connected,
+  error,
+}
+
+/// Provider que expone el estado de conexión actual de la impresora.
+final printerConnectionStatusProvider =
+    StateNotifierProvider<PrinterConnectionStatusNotifier, PrinterConnectionStatus>((ref) {
+  return PrinterConnectionStatusNotifier(ref);
+});
+
+class PrinterConnectionStatusNotifier extends StateNotifier<PrinterConnectionStatus> {
+  final Ref _ref;
+
+  PrinterConnectionStatusNotifier(this._ref) : super(PrinterConnectionStatus.disconnected);
+
+  void setStatus(PrinterConnectionStatus status) {
+    state = status;
+  }
+
+  /// Verifica el estado de conexión actual intentando conectar si es necesario.
+  Future<void> checkConnection() async {
+    final service = _ref.read(printerServiceProvider);
+    final config = _ref.read(printerConfigProvider);
+
+    if (service == null || config == null) {
+      state = PrinterConnectionStatus.disconnected;
+      return;
+    }
+
+    if (service.isConnected) {
+      state = PrinterConnectionStatus.connected;
+      return;
+    }
+
+    state = PrinterConnectionStatus.connecting;
+    try {
+      final result = await service.connect(config);
+      state = result.success
+          ? PrinterConnectionStatus.connected
+          : PrinterConnectionStatus.error;
+    } catch (e) {
+      state = PrinterConnectionStatus.error;
+    }
+  }
+}
+
 /// Tipo de conexión seleccionado actualmente en la UI de configuración.
 ///
 /// Permite escanear dispositivos sin depender de la configuración guardada.
@@ -135,6 +185,9 @@ final printTicketProvider = Provider<Future<PrinterResult> Function(Uint8List)>(
       debugPrint('[printTicketProvider] No hay impresora configurada');
       return const PrinterResult.error('No hay impresora configurada');
     }
+
+    final statusNotifier = ref.read(printerConnectionStatusProvider.notifier);
+
     if (!service.isConnected) {
       final config = ref.read(printerConfigProvider);
       if (config == null) {
@@ -142,9 +195,14 @@ final printTicketProvider = Provider<Future<PrinterResult> Function(Uint8List)>(
         return const PrinterResult.error('No hay configuración de impresora');
       }
       debugPrint('[printTicketProvider] Connecting $config');
+      statusNotifier.setStatus(PrinterConnectionStatus.connecting);
       final connectResult = await service.connect(config);
       debugPrint('[printTicketProvider] connect result=$connectResult');
-      if (!connectResult.success) return connectResult;
+      if (!connectResult.success) {
+        statusNotifier.setStatus(PrinterConnectionStatus.error);
+        return connectResult;
+      }
+      statusNotifier.setStatus(PrinterConnectionStatus.connected);
     }
     debugPrint('[printTicketProvider] Sending bytes...');
     final result = await service.printBytes(bytes);
@@ -166,6 +224,8 @@ final printOrderReceiptProvider = Provider<Future<PrinterResult> Function(Order,
       return const PrinterResult.error('No hay impresora configurada');
     }
 
+    final statusNotifier = ref.read(printerConnectionStatusProvider.notifier);
+
     if (!service.isConnected) {
       final config = ref.read(printerConfigProvider);
       if (config == null) {
@@ -173,9 +233,14 @@ final printOrderReceiptProvider = Provider<Future<PrinterResult> Function(Order,
         return const PrinterResult.error('No hay configuración de impresora');
       }
       debugPrint('[printOrderReceiptProvider] Connecting $config');
+      statusNotifier.setStatus(PrinterConnectionStatus.connecting);
       final connectResult = await service.connect(config);
       debugPrint('[printOrderReceiptProvider] connect result=$connectResult');
-      if (!connectResult.success) return connectResult;
+      if (!connectResult.success) {
+        statusNotifier.setStatus(PrinterConnectionStatus.error);
+        return connectResult;
+      }
+      statusNotifier.setStatus(PrinterConnectionStatus.connected);
     }
 
     final config = ref.read(printerConfigProvider);
@@ -232,12 +297,19 @@ final printTestPageProvider = Provider<Future<PrinterResult> Function()>((ref) {
     }
     debugPrint('[printTestPageProvider] Config: $config');
 
+    final statusNotifier = ref.read(printerConnectionStatusProvider.notifier);
+
     debugPrint('[printTestPageProvider] Disconnecting any previous connection...');
     await service.disconnect();
     debugPrint('[printTestPageProvider] Connecting...');
+    statusNotifier.setStatus(PrinterConnectionStatus.connecting);
     final connectResult = await service.connect(config);
     debugPrint('[printTestPageProvider] connect result=$connectResult');
-    if (!connectResult.success) return connectResult;
+    if (!connectResult.success) {
+      statusNotifier.setStatus(PrinterConnectionStatus.error);
+      return connectResult;
+    }
+    statusNotifier.setStatus(PrinterConnectionStatus.connected);
 
     if (service.supportsPdf) {
       debugPrint('[printTestPageProvider] Generating PDF test page...');

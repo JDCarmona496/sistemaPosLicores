@@ -431,7 +431,7 @@ class _ProductFormViewState extends ConsumerState<ProductFormView> {
   ) {
     final brandDropdown = brandsAsync.when(
       data: (brands) => DropdownButtonFormField<String>(
-        value: _selectedBrandId,
+        initialValue: _selectedBrandId,
         isExpanded: true,
         decoration: const InputDecoration(
           labelText: 'Marca *',
@@ -449,7 +449,7 @@ class _ProductFormViewState extends ConsumerState<ProductFormView> {
 
     final categoryDropdown = categoriesAsync.when(
       data: (categories) => DropdownButtonFormField<String>(
-        value: _selectedCategoryId,
+        initialValue: _selectedCategoryId,
         isExpanded: true,
         decoration: const InputDecoration(
           labelText: 'Categoría *',
@@ -501,8 +501,8 @@ class _ProductFormViewState extends ConsumerState<ProductFormView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: DropdownButtonFormField<PackagingType>(
-                    value: _packagingType,
+                    child: DropdownButtonFormField<PackagingType>(
+                      initialValue: _packagingType,
                     isExpanded: true,
                     decoration: const InputDecoration(
                       labelText: 'Tipo de Empaque *',
@@ -714,8 +714,7 @@ class _ProductFormViewState extends ConsumerState<ProductFormView> {
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: DropdownButtonFormField<ProductStatus>(
-          value: _status,
-          // TODO: reemplazar por initialValue cuando Flutter sea >= 3.33
+          initialValue: _status,
           isExpanded: true,
           decoration: const InputDecoration(
             labelText: 'Estado *',

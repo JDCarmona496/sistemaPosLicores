@@ -40,6 +40,18 @@ class SerialPrinterService implements PrinterService {
     try {
       await disconnect();
 
+      // Verificar si el puerto existe
+      final availablePorts = SerialPort.getAvailablePorts();
+      debugPrint('[SerialPrinterService] Puertos disponibles: $availablePorts');
+      
+      if (!availablePorts.contains(config.comPort)) {
+        return PrinterResult.error(
+          'El puerto ${config.comPort} no está disponible. '
+          'Puertos encontrados: ${availablePorts.isEmpty ? "ninguno" : availablePorts.join(", ")}',
+        );
+      }
+
+      debugPrint('[SerialPrinterService] Abriendo ${config.comPort} a ${config.baudRate} baudios...');
       _port = SerialPort(
         config.comPort,
         openNow: true,
@@ -47,6 +59,12 @@ class SerialPrinterService implements PrinterService {
         ByteSize: 8,
       );
 
+      if (!_port!.isOpened) {
+        _port = null;
+        return PrinterResult.error('No se pudo abrir el puerto ${config.comPort}');
+      }
+
+      debugPrint('[SerialPrinterService] Puerto ${config.comPort} abierto correctamente');
       return const PrinterResult.success('Conectado al puerto COM');
     } catch (e) {
       _port = null;

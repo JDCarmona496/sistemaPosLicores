@@ -56,6 +56,7 @@ class _PrinterSettingsViewState extends ConsumerState<PrinterSettingsView> {
   Widget build(BuildContext context) {
     final config = ref.watch(printerConfigProvider);
     final isScanning = ref.watch(isPrinterScanningProvider);
+    final connectionStatus = ref.watch(printerConnectionStatusProvider);
     final devicesAsync = isScanning
         ? ref.watch(printerDevicesProvider)
         : const AsyncValue<List<PrinterDevice>>.data([]);
@@ -69,6 +70,8 @@ class _PrinterSettingsViewState extends ConsumerState<PrinterSettingsView> {
         children: [
           _buildInfoCard(),
           const SizedBox(height: 16),
+          if (config != null) _buildConnectionStatusCard(connectionStatus),
+          if (config != null) const SizedBox(height: 16),
           _buildConnectionTypeSelector(config),
           const SizedBox(height: 16),
           if (_connectionType == PrinterConnectionType.serial)
@@ -76,6 +79,8 @@ class _PrinterSettingsViewState extends ConsumerState<PrinterSettingsView> {
           if (_connectionType != PrinterConnectionType.serial)
             _buildDeviceScanner(devicesAsync, isScanning),
           const SizedBox(height: 24),
+          _buildTestConnectionButton(),
+          const SizedBox(height: 12),
           _buildTestButton(),
           const SizedBox(height: 12),
           _buildSaveButton(config),
@@ -111,6 +116,79 @@ class _PrinterSettingsViewState extends ConsumerState<PrinterSettingsView> {
                 color: Colors.grey.shade600,
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildConnectionStatusCard(PrinterConnectionStatus status) {
+    Color statusColor;
+    IconData statusIcon;
+    String statusText;
+
+    switch (status) {
+      case PrinterConnectionStatus.disconnected:
+        statusColor = Colors.grey;
+        statusIcon = Icons.link_off;
+        statusText = 'Desconectada';
+        break;
+      case PrinterConnectionStatus.connecting:
+        statusColor = Colors.orange;
+        statusIcon = Icons.hourglass_empty;
+        statusText = 'Conectando...';
+        break;
+      case PrinterConnectionStatus.connected:
+        statusColor = Colors.green;
+        statusIcon = Icons.link;
+        statusText = 'Conectada';
+        break;
+      case PrinterConnectionStatus.error:
+        statusColor = Colors.red;
+        statusIcon = Icons.error_outline;
+        statusText = 'Error de conexión';
+        break;
+    }
+
+    return Card(
+      color: statusColor.withValues(alpha: 0.1),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Icon(statusIcon, color: statusColor, size: 32),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Estado de conexión',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                  Text(
+                    statusText,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: statusColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (status == PrinterConnectionStatus.connecting)
+              SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(statusColor),
+                ),
+              ),
           ],
         ),
       ),
@@ -461,6 +539,23 @@ class _PrinterSettingsViewState extends ConsumerState<PrinterSettingsView> {
     );
   }
 
+  Widget _buildTestConnectionButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: _isTesting ? null : _testConnection,
+        icon: _isTesting
+            ? const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : const Icon(Icons.link),
+        label: const Text('Probar conexión'),
+      ),
+    );
+  }
+
   Widget _buildSaveButton(PrinterConfig? currentConfig) {
     return SizedBox(
       width: double.infinity,
@@ -515,6 +610,76 @@ class _PrinterSettingsViewState extends ConsumerState<PrinterSettingsView> {
     return bluetoothScan.isGranted && bluetoothConnect.isGranted;
   }
 
+  Future<void> _testConnection() async {
+    debugPrint('[PrinterSettingsView] _testConnection pressed');
+    setState(() => _isTesting = true);
+    try {
+      // Primero guardar la configuración actual
+      await _saveConfigSilent();
+      
+      // Luego verificar la conexión
+      await ref.read(printerConnectionStatusProvider.notifier).checkConnection();
+      
+      final status = ref.read(printerConnectionStatusProvider);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              status == PrinterConnectionStatus.connected
+                  ? 'Conexión exitosa'
+                  : 'Error de conexión. Verifica la configuración.',
+            ),
+            backgroundColor: status == PrinterConnectionStatus.connected
+                ? Colors.green
+                : Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e, stack) {
+      debugPrint('[PrinterSettingsView] _testConnection exception: $e');
+      debugPrint(stack.toString());
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error inesperado: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isTesting = false);
+    }
+  }
+
+  Future<void> _saveConfigSilent() async {
+    if (_connectionType == PrinterConnectionType.serial) {
+      final manualPort = _manualComController.text.trim().toUpperCase();
+      final comPort = _selectedAddress?.trim().toUpperCase() ??
+          (manualPort.isNotEmpty ? manualPort : null);
+
+      if (comPort == null || comPort.isEmpty) return;
+
+      final config = PrinterConfig(
+        connectionType: PrinterConnectionType.serial,
+        comPort: comPort,
+        address: comPort,
+        name: _selectedName ?? 'Puerto $comPort',
+        baudRate: _selectedBaudRate,
+      );
+      await ref.read(printerConfigProvider.notifier).save(config);
+    } else {
+      if (_selectedAddress == null) return;
+
+      final config = PrinterConfig(
+        connectionType: _connectionType,
+        address: _selectedAddress,
+        name: _selectedName,
+      );
+      await ref.read(printerConfigProvider.notifier).save(config);
+    }
+  }
   Future<void> _testPrint() async {
     debugPrint('[PrinterSettingsView] _testPrint pressed');
     setState(() => _isTesting = true);
