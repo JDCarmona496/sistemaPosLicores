@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../ui/features/auth/views/login_view.dart';
@@ -23,6 +24,15 @@ import '../ui/features/settings/views/supabase_health_check_view.dart';
 
 final GoRouter router = GoRouter(
   initialLocation: '/',
+  debugLogDiagnostics: true,
+  errorBuilder: (context, state) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Error de navegación')),
+      body: Center(
+        child: Text('Ruta no encontrada o error: ${state.error}\n${state.matchedLocation}'),
+      ),
+    );
+  },
   redirect: (context, state) {
     final session = Supabase.instance.client.auth.currentSession;
     final isLoggedIn = session != null;

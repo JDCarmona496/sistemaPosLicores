@@ -9,7 +9,11 @@ import 'package:applicoresestacion/domain/models/product.dart' as models;
 /// Modal escáner de código de barras que muestra el producto escaneado
 /// de forma minimalista con iconos y gráficos.
 class ProductBarcodeScannerModal extends ConsumerStatefulWidget {
-  const ProductBarcodeScannerModal({super.key});
+  /// Si se proporciona, al escanear un código válido se invoca este callback
+  /// y se cierra el modal inmediatamente sin buscar el producto.
+  final ValueChanged<String>? onBarcode;
+
+  const ProductBarcodeScannerModal({super.key, this.onBarcode});
 
   @override
   ConsumerState<ProductBarcodeScannerModal> createState() =>
@@ -445,6 +449,14 @@ class _ProductBarcodeScannerModalState
 
     setState(() => _hasScanned = true);
     await _controller.stop();
+
+    if (widget.onBarcode != null) {
+      widget.onBarcode!(rawValue);
+      if (mounted) {
+        Navigator.pop(context);
+      }
+      return;
+    }
 
     try {
       final product = await ref

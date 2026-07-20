@@ -5,6 +5,7 @@ import '../../../../data/providers/product_providers.dart';
 import '../../../../data/repositories/brand_repository.dart';
 import '../../../../data/repositories/category_repository.dart';
 import '../../../../domain/models/product.dart';
+import 'widgets/product_barcode_scanner_modal.dart';
 
 class ProductFormView extends ConsumerStatefulWidget {
   final String? productId;
@@ -235,22 +236,13 @@ class _ProductFormViewState extends ConsumerState<ProductFormView> {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('[ProductFormView] build iniciado - editing: $_isLoading');
     final categoriesAsync = ref.watch(categoriesProvider);
     final brandsAsync = ref.watch(brandsProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_isEditing ? 'Editar Producto' : 'Nuevo Producto'),
-        actions: [
-          if (!_isLoading)
-            IconButton(
-              icon: const Icon(Icons.save),
-              onPressed: _saveProduct,
-              tooltip: 'Guardar',
-            ),
-        ],
-      ),
-      body: _isLoading
+    Widget body;
+    try {
+      body = _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Form(
               key: _formKey,
@@ -294,7 +286,42 @@ class _ProductFormViewState extends ConsumerState<ProductFormView> {
                   const SizedBox(height: 32),
                 ],
               ),
+            );
+    } catch (e, st) {
+      debugPrint('[ProductFormView] ERROR en build: $e');
+      debugPrint(st.toString());
+      body = Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              const SizedBox(height: 16),
+              Text(
+                'Error al cargar el formulario:\n$e',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 16),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(_isEditing ? 'Editar Producto' : 'Nuevo Producto'),
+        actions: [
+          if (!_isLoading)
+            IconButton(
+              icon: const Icon(Icons.save),
+              onPressed: _saveProduct,
+              tooltip: 'Guardar',
             ),
+        ],
+      ),
+      body: body,
     );
   }
 
@@ -402,66 +429,63 @@ class _ProductFormViewState extends ConsumerState<ProductFormView> {
     AsyncValue<List<Brand>> brandsAsync,
     AsyncValue<List<Category>> categoriesAsync,
   ) {
+    final brandDropdown = brandsAsync.when(
+      data: (brands) => DropdownButtonFormField<String>(
+        value: _selectedBrandId,
+        isExpanded: true,
+        decoration: const InputDecoration(
+          labelText: 'Marca *',
+          prefixIcon: Icon(Icons.branding_watermark),
+        ),
+        items: brands
+            .map((b) => DropdownMenuItem(value: b.id, child: Text(b.name)))
+            .toList(),
+        onChanged: (value) => setState(() => _selectedBrandId = value),
+        validator: (value) => value == null ? 'Requerido' : null,
+      ),
+      loading: () => const LinearProgressIndicator(),
+      error: (error, _) => Text('Error: $error'),
+    );
+
+    final categoryDropdown = categoriesAsync.when(
+      data: (categories) => DropdownButtonFormField<String>(
+        value: _selectedCategoryId,
+        isExpanded: true,
+        decoration: const InputDecoration(
+          labelText: 'Categoría *',
+          prefixIcon: Icon(Icons.category),
+        ),
+        items: categories
+            .map((c) => DropdownMenuItem(value: c.id, child: Text(c.name)))
+            .toList(),
+        onChanged: (value) => setState(() => _selectedCategoryId = value),
+        validator: (value) => value == null ? 'Requerido' : null,
+      ),
+      loading: () => const LinearProgressIndicator(),
+      error: (error, _) => Text('Error: $error'),
+    );
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final useRow = constraints.maxWidth >= 500;
-        final children = [
-          Expanded(
-            child: brandsAsync.when(
-              data: (brands) => DropdownButtonFormField<String>(
-                value: _selectedBrandId,
-                isExpanded: true,
-                decoration: const InputDecoration(
-                  labelText: 'Marca *',
-                  prefixIcon: Icon(Icons.branding_watermark),
-                ),
-                items: brands
-                    .map((b) => DropdownMenuItem(value: b.id, child: Text(b.name)))
-                    .toList(),
-                onChanged: (value) => setState(() => _selectedBrandId = value),
-                validator: (value) => value == null ? 'Requerido' : null,
-              ),
-              loading: () => const LinearProgressIndicator(),
-              error: (error, _) => Text('Error: $error'),
-            ),
-          ),
-          Expanded(
-            child: categoriesAsync.when(
-              data: (categories) => DropdownButtonFormField<String>(
-                value: _selectedCategoryId,
-                isExpanded: true,
-                decoration: const InputDecoration(
-                  labelText: 'Categoría *',
-                  prefixIcon: Icon(Icons.category),
-                ),
-                items: categories
-                    .map((c) => DropdownMenuItem(value: c.id, child: Text(c.name)))
-                    .toList(),
-                onChanged: (value) => setState(() => _selectedCategoryId = value),
-                validator: (value) => value == null ? 'Requerido' : null,
-              ),
-              loading: () => const LinearProgressIndicator(),
-              error: (error, _) => Text('Error: $error'),
-            ),
-          ),
-        ];
-        return useRow
-            ? Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  children[0],
-                  const SizedBox(width: 16),
-                  children[1],
-                ],
-              )
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  children[0],
-                  const SizedBox(height: 16),
-                  children[1],
-                ],
-              );
+        if (useRow) {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: brandDropdown),
+              const SizedBox(width: 16),
+              Expanded(child: categoryDropdown),
+            ],
+          );
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(width: double.infinity, child: brandDropdown),
+            const SizedBox(height: 16),
+            SizedBox(width: double.infinity, child: categoryDropdown),
+          ],
+        );
       },
     );
   }
@@ -610,52 +634,58 @@ class _ProductFormViewState extends ConsumerState<ProductFormView> {
         padding: const EdgeInsets.all(16),
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final children = [
-              _buildInventoryField(
-                _stockCurrentController,
-                'Stock Actual *',
-                Icons.inventory,
-              ),
-              const SizedBox(width: 12),
-              _buildInventoryField(
-                _stockMinController,
-                'Stock Mínimo *',
-                Icons.warning,
-              ),
-              const SizedBox(width: 12),
-              _buildInventoryField(
-                _stockMaxController,
-                'Stock Máximo *',
-                Icons.check_circle,
-              ),
-            ];
-            if (constraints.maxWidth < 600) {
-              return Column(
+            final useRow = constraints.maxWidth >= 600;
+            if (useRow) {
+              return Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildInventoryField(
-                    _stockCurrentController,
-                    'Stock Actual *',
-                    Icons.inventory,
+                  Expanded(
+                    child: _buildInventoryField(
+                      _stockCurrentController,
+                      'Stock Actual *',
+                      Icons.inventory,
+                    ),
                   ),
-                  const SizedBox(height: 16),
-                  _buildInventoryField(
-                    _stockMinController,
-                    'Stock Mínimo *',
-                    Icons.warning,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildInventoryField(
+                      _stockMinController,
+                      'Stock Mínimo *',
+                      Icons.warning,
+                    ),
                   ),
-                  const SizedBox(height: 16),
-                  _buildInventoryField(
-                    _stockMaxController,
-                    'Stock Máximo *',
-                    Icons.check_circle,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildInventoryField(
+                      _stockMaxController,
+                      'Stock Máximo *',
+                      Icons.check_circle,
+                    ),
                   ),
                 ],
               );
             }
-            return Row(
+            return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: children,
+              children: [
+                _buildInventoryField(
+                  _stockCurrentController,
+                  'Stock Actual *',
+                  Icons.inventory,
+                ),
+                const SizedBox(height: 16),
+                _buildInventoryField(
+                  _stockMinController,
+                  'Stock Mínimo *',
+                  Icons.warning,
+                ),
+                const SizedBox(height: 16),
+                _buildInventoryField(
+                  _stockMaxController,
+                  'Stock Máximo *',
+                  Icons.check_circle,
+                ),
+              ],
             );
           },
         ),
@@ -668,16 +698,14 @@ class _ProductFormViewState extends ConsumerState<ProductFormView> {
     String label,
     IconData icon,
   ) {
-    return Expanded(
-      child: TextFormField(
-        controller: controller,
-        decoration: InputDecoration(
-          labelText: label,
-          prefixIcon: Icon(icon),
-        ),
-        keyboardType: TextInputType.number,
-        validator: (value) => value?.isEmpty == true ? 'Requerido' : null,
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon),
       ),
+      keyboardType: TextInputType.number,
+      validator: (value) => value?.isEmpty == true ? 'Requerido' : null,
     );
   }
 
@@ -777,9 +805,17 @@ class _ProductFormViewState extends ConsumerState<ProductFormView> {
   }
 
   Future<void> _scanBarcode() async {
-    final result = await context.push<String>('/products/scan');
-    if (result != null && mounted) {
-      _barcodeController.text = result;
-    }
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => ProductBarcodeScannerModal(
+        onBarcode: (barcode) {
+          if (mounted) {
+            _barcodeController.text = barcode;
+          }
+        },
+      ),
+    );
   }
 }
