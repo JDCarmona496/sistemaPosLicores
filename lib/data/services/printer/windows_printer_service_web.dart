@@ -47,4 +47,10 @@ class WindowsPrinterService implements PrinterService {
 
   @override
   bool get isConnected => false;
+
+  @override
+  Stream<bool> get connectionState => Stream.value(false);
+
+  @override
+  Future<void> dispose() async {}
 }

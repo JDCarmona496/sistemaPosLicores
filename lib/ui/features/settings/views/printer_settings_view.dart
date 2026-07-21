@@ -81,6 +81,14 @@ class _PrinterSettingsViewState extends ConsumerState<PrinterSettingsView> {
           const SizedBox(height: 24),
           _buildTestConnectionButton(),
           const SizedBox(height: 12),
+          if (config != null &&
+              (connectionStatus == PrinterConnectionStatus.connected ||
+                  connectionStatus == PrinterConnectionStatus.connecting))
+            _buildDisconnectButton(),
+          if (config != null &&
+              (connectionStatus == PrinterConnectionStatus.connected ||
+                  connectionStatus == PrinterConnectionStatus.connecting))
+            const SizedBox(height: 12),
           _buildTestButton(),
           const SizedBox(height: 12),
           _buildSaveButton(config),
@@ -556,6 +564,17 @@ class _PrinterSettingsViewState extends ConsumerState<PrinterSettingsView> {
     );
   }
 
+  Widget _buildDisconnectButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: _isTesting ? null : _disconnectPrinter,
+        icon: const Icon(Icons.link_off),
+        label: const Text('Desconectar'),
+      ),
+    );
+  }
+
   Widget _buildSaveButton(PrinterConfig? currentConfig) {
     return SizedBox(
       width: double.infinity,
@@ -608,6 +627,29 @@ class _PrinterSettingsViewState extends ConsumerState<PrinterSettingsView> {
     debugPrint('Permiso location: $location');
 
     return bluetoothScan.isGranted && bluetoothConnect.isGranted;
+  }
+
+  Future<void> _disconnectPrinter() async {
+    debugPrint('[PrinterSettingsView] _disconnectPrinter pressed');
+    setState(() => _isTesting = true);
+    try {
+      final service = ref.read(printerServiceProvider);
+      if (service != null) {
+        await service.disconnect();
+      }
+      ref.read(printerConnectionStatusProvider.notifier).setStatus(
+            PrinterConnectionStatus.disconnected,
+          );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Impresora desconectada')),
+        );
+      }
+    } catch (e) {
+      debugPrint('[PrinterSettingsView] _disconnectPrinter error: $e');
+    } finally {
+      if (mounted) setState(() => _isTesting = false);
+    }
   }
 
   Future<void> _testConnection() async {

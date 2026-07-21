@@ -15,6 +15,23 @@ import 'printer_service.dart';
 /// por USB que se presentan como impresoras Windows (no como puerto COM).
 class WindowsPrinterService implements PrinterService {
   Printer? _selectedPrinter;
+  final _connectionStateController = StreamController<bool>.broadcast();
+  var _lastConnectionState = false;
+
+  WindowsPrinterService() {
+    _connectionStateController.add(false);
+  }
+
+  void _notifyConnectionState(bool connected) {
+    if (_lastConnectionState != connected) {
+      _lastConnectionState = connected;
+      _connectionStateController.add(connected);
+      debugPrint('[WindowsPrinterService] connectionState=$connected');
+    }
+  }
+
+  @override
+  Stream<bool> get connectionState => _connectionStateController.stream;
 
   @override
   Stream<List<PrinterDevice>> discoverDevices() async* {
@@ -46,9 +63,11 @@ class WindowsPrinterService implements PrinterService {
         orElse: () => throw Exception('Impresora no encontrada'),
       );
       _selectedPrinter = printer;
+      _notifyConnectionState(true);
       return const PrinterResult.success('Impresora seleccionada');
     } catch (e) {
       _selectedPrinter = null;
+      _notifyConnectionState(false);
       return PrinterResult.error('Error al seleccionar impresora: $e');
     }
   }
@@ -56,6 +75,7 @@ class WindowsPrinterService implements PrinterService {
   @override
   Future<PrinterResult> disconnect() async {
     _selectedPrinter = null;
+    _notifyConnectionState(false);
     return const PrinterResult.success('Impresora deseleccionada');
   }
 
@@ -71,25 +91,35 @@ class WindowsPrinterService implements PrinterService {
     if (_selectedPrinter == null) {
       return const PrinterResult.error('No hay impresora seleccionada');
     }
-    try {
-      final saved = await document.save();
-      final done = await Printing.directPrintPdf(
-        printer: _selectedPrinter!,
-        onLayout: (format) => saved,
-        format: const PdfPageFormat(
-          58 * PdfPageFormat.mm,
-          double.infinity,
-          marginAll: 4 * PdfPageFormat.mm,
-        ),
-      );
-      if (done) {
-        return const PrinterResult.success();
-      } else {
-        return const PrinterResult.error('La impresora no aceptó el trabajo');
+
+    for (int attempt = 0; attempt < 3; attempt++) {
+      try {
+        debugPrint('[WindowsPrinterService] printPdf attempt ${attempt + 1}');
+        final saved = await document.save();
+        final done = await Printing.directPrintPdf(
+          printer: _selectedPrinter!,
+          onLayout: (format) => saved,
+          format: const PdfPageFormat(
+            58 * PdfPageFormat.mm,
+            200 * PdfPageFormat.mm,
+            marginAll: 4 * PdfPageFormat.mm,
+          ),
+        );
+        if (done) {
+          return const PrinterResult.success();
+        } else {
+          debugPrint('[WindowsPrinterService] Printer rejected job, retrying...');
+        }
+      } catch (e) {
+        debugPrint('[WindowsPrinterService] printPdf attempt ${attempt + 1} error: $e');
+        if (attempt == 2) {
+          return PrinterResult.error('Error al imprimir PDF: $e');
+        }
       }
-    } catch (e) {
-      return PrinterResult.error('Error al imprimir PDF: $e');
+      await Future.delayed(const Duration(seconds: 1));
     }
+
+    return const PrinterResult.error('La impresora no aceptó el trabajo');
   }
 
   @override
@@ -97,4 +127,10 @@ class WindowsPrinterService implements PrinterService {
 
   @override
   bool get isConnected => _selectedPrinter != null;
+
+  @override
+  Future<void> dispose() async {
+    await disconnect();
+    await _connectionStateController.close();
+  }
 }

@@ -52,4 +52,10 @@ abstract class PrinterService {
 
   /// Indica si está conectado.
   bool get isConnected;
+
+  /// Stream que notifica cambios de estado de conexión.
+  Stream<bool> get connectionState;
+
+  /// Libera recursos del servicio.
+  Future<void> dispose();
 }
