@@ -4,9 +4,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/responsive.dart';
 import '../../../../data/providers/order_providers.dart';
+import '../../../../data/providers/printer_provider.dart';
 import '../../../../data/services/auth_service.dart';
 import '../../../../domain/models/customer.dart';
 import '../../../../domain/models/order.dart';
+import '../../../../domain/models/order_item.dart';
 import 'widgets/customer_selector_dialog.dart';
 import 'widgets/order_cart_panel.dart';
 import 'widgets/order_catalog_panel.dart';
@@ -333,6 +335,52 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
     );
   }
 
+  Future<void> _offerPrintReceipt(
+    Order order,
+    List<OrderItem> items,
+  ) async {
+    final config = ref.read(printerConfigProvider);
+    if (config == null) return;
+
+    final shouldPrint = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Pedido creado'),
+        content: Text('¿Querés imprimir el recibo del pedido #${order.orderNumber}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('NO'),
+          ),
+          FilledButton.icon(
+            onPressed: () => Navigator.pop(context, true),
+            icon: const Icon(Icons.print),
+            label: const Text('IMPRIMIR'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldPrint != true || !mounted) return;
+
+    setState(() => _isLoading = true);
+    try {
+      final result = await ref.read(printOrderReceiptProvider)(order, items);
+      if (mounted) {
+        _showSnack(
+          result.success
+              ? 'Recibo impreso'
+              : 'Error al imprimir: ${result.message}',
+          isError: !result.success,
+        );
+      }
+    } catch (e) {
+      if (mounted) _showSnack('Error al imprimir: $e', isError: true);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   Future<void> _selectCustomer() async {
     final result = await showDialog<CustomerSelectionResult>(
       context: context,
@@ -428,8 +476,17 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
             deliveryFee: cartState.deliveryFee,
           );
 
+      // Guardar items antes de limpiar el carrito para la impresión del recibo
+      final createdItems = List<OrderItem>.from(cartState.items);
+
       ref.read(currentOrderCartProvider.notifier).clearCart();
       _showSnack('Pedido #${created.orderNumber} creado');
+
+      // Ofrecer impresión del recibo si hay impresora configurada
+      if (mounted) {
+        await _offerPrintReceipt(created, createdItems);
+      }
+
       if (mounted) {
         context.pop();
         context.push('/orders/${created.id}');
