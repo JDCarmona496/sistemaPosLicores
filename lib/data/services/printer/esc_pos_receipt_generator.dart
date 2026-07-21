@@ -26,6 +26,8 @@ class EscPosReceiptGenerator extends ReceiptGenerator {
     String? businessAddress,
     String? businessPhone,
     String? sellerName,
+    String? invoiceFooter,
+    String? legalText,
   }) async {
     final profile = await CapabilityProfile.load();
     final generator = Generator(
@@ -210,8 +212,18 @@ class EscPosReceiptGenerator extends ReceiptGenerator {
     // Pie
     bytes += generator.feed(2);
     bytes += generator.setStyles(const PosStyles(align: PosAlign.center));
-    bytes += generator.text('Gracias por su compra');
-    bytes += generator.text('Vuelva pronto');
+
+    final footer = invoiceFooter ?? 'Gracias por su compra';
+    bytes += generator.text(footer);
+
+    if (legalText != null && legalText.isNotEmpty) {
+      bytes += generator.feed(1);
+      bytes += generator.setStyles(
+        const PosStyles(align: PosAlign.center, bold: true),
+      );
+      bytes += generator.text(legalText);
+    }
+
     bytes += generator.feed(2);
     bytes += generator.cut();
 

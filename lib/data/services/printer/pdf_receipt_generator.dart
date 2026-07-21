@@ -34,6 +34,8 @@ class PdfReceiptGenerator extends ReceiptGenerator {
     String? businessAddress,
     String? businessPhone,
     String? sellerName,
+    String? invoiceFooter,
+    String? legalText,
   }) async {
     final font = await _loadFont();
     final boldFont = await _loadBoldFont();
@@ -230,18 +232,24 @@ class PdfReceiptGenerator extends ReceiptGenerator {
               pw.SizedBox(height: 16),
               pw.Center(
                 child: pw.Text(
-                  'Gracias por su compra',
+                  invoiceFooter ?? 'Gracias por su compra',
                   style: const pw.TextStyle(fontSize: 9),
                   textAlign: pw.TextAlign.center,
                 ),
               ),
-              pw.Center(
-                child: pw.Text(
-                  'Vuelva pronto',
-                  style: const pw.TextStyle(fontSize: 9),
-                  textAlign: pw.TextAlign.center,
+              if (legalText != null && legalText.isNotEmpty) ...[
+                pw.SizedBox(height: 4),
+                pw.Center(
+                  child: pw.Text(
+                    legalText,
+                    style: pw.TextStyle(
+                      fontSize: 8,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                    textAlign: pw.TextAlign.center,
+                  ),
                 ),
-              ),
+              ],
             ],
           );
         },

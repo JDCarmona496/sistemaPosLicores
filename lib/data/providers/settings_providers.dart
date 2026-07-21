@@ -1,6 +1,10 @@
+import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../domain/models/invoice_config.dart';
 import '../services/geocoding_service.dart';
 import '../services/location_service.dart';
 
@@ -46,4 +50,47 @@ class GeocodingContextNotifier extends StateNotifier<String> {
   }
 
   Future<void> resetToDefault() => setContext(defaultContext);
+}
+
+/// Configuración de factura / datos del negocio para imprimir en recibos.
+/// Persistida localmente en SharedPreferences.
+final invoiceConfigProvider =
+    StateNotifierProvider<InvoiceConfigNotifier, InvoiceConfig>((ref) {
+  return InvoiceConfigNotifier();
+});
+
+class InvoiceConfigNotifier extends StateNotifier<InvoiceConfig> {
+  static const _prefsKey = 'invoice_config';
+
+  InvoiceConfigNotifier() : super(const InvoiceConfig()) {
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final json = prefs.getString(_prefsKey);
+      if (json != null && json.isNotEmpty) {
+        state = InvoiceConfig.fromJson(
+          Map<String, dynamic>.from(jsonDecode(json)),
+        );
+      }
+    } catch (e) {
+      debugPrint('[InvoiceConfigNotifier] Error cargando config: $e');
+    }
+  }
+
+  Future<void> save(InvoiceConfig config) async {
+    state = config;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_prefsKey, jsonEncode(config.toJson()));
+    } catch (e) {
+      debugPrint('[InvoiceConfigNotifier] Error guardando config: $e');
+    }
+  }
+
+  Future<void> resetToDefault() async {
+    await save(const InvoiceConfig());
+  }
 }

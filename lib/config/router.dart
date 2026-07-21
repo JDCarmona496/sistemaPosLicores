@@ -20,6 +20,7 @@ import '../ui/features/settings/views/settings_view.dart';
 import '../ui/features/settings/views/printer_settings_view.dart';
 import '../ui/features/settings/views/brand_settings_view.dart';
 import '../ui/features/settings/views/category_settings_view.dart';
+import '../ui/features/settings/views/invoice_settings_view.dart';
 import '../ui/features/settings/views/supabase_health_check_view.dart';
 
 final GoRouter router = GoRouter(
@@ -186,6 +187,11 @@ final GoRouter router = GoRouter(
           path: 'categories',
           name: 'category-settings',
           builder: (context, state) => const CategorySettingsView(),
+        ),
+        GoRoute(
+          path: 'invoice',
+          name: 'invoice-settings',
+          builder: (context, state) => const InvoiceSettingsView(),
         ),
       ],
     ),

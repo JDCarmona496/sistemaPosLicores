@@ -26,6 +26,14 @@ class SettingsView extends ConsumerWidget {
           ),
           const Divider(),
           ListTile(
+            leading: const Icon(Icons.receipt_long),
+            title: const Text('Configuración de factura'),
+            subtitle: const Text('Datos del negocio para recibos'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/settings/invoice'),
+          ),
+          const Divider(),
+          ListTile(
             leading: const Icon(Icons.location_city),
             title: const Text('Zona de operación'),
             subtitle: Text(geocodingContext),

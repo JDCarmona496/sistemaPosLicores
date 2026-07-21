@@ -14,6 +14,7 @@ import '../services/printer/pdf_receipt_generator.dart';
 import '../services/printer/printer_service.dart';
 import '../services/printer/serial_printer_service.dart';
 import '../services/printer/windows_printer_service.dart';
+import 'settings_providers.dart';
 
 final printerConfigProvider = StateNotifierProvider<PrinterConfigNotifier, PrinterConfig?>((ref) {
   return PrinterConfigNotifier();
@@ -314,7 +315,16 @@ final printOrderReceiptProvider =
 
     statusNotifier.setStatus(PrinterConnectionStatus.connected);
 
-    final businessName = 'Licorería';
+    final invoiceConfig = ref.read(invoiceConfigProvider);
+    final receiptParams = (
+      businessName: invoiceConfig.businessName,
+      businessNit: invoiceConfig.businessNit,
+      businessAddress: invoiceConfig.businessAddress,
+      businessPhone: invoiceConfig.businessPhone,
+      sellerName: invoiceConfig.sellerName,
+      invoiceFooter: invoiceConfig.invoiceFooter,
+      legalText: invoiceConfig.legalText,
+    );
 
     if (service.supportsPdf) {
       debugPrint('[printOrderReceiptProvider] Generating PDF...');
@@ -324,7 +334,13 @@ final printOrderReceiptProvider =
       final document = await generator.generateOrderReceipt(
         order: order,
         items: items,
-        businessName: businessName,
+        businessName: receiptParams.businessName,
+        businessNit: receiptParams.businessNit,
+        businessAddress: receiptParams.businessAddress,
+        businessPhone: receiptParams.businessPhone,
+        sellerName: receiptParams.sellerName,
+        invoiceFooter: receiptParams.invoiceFooter,
+        legalText: receiptParams.legalText,
       );
       debugPrint('[printOrderReceiptProvider] Printing PDF...');
       final result = await service.printPdf(document);
@@ -339,7 +355,13 @@ final printOrderReceiptProvider =
       final bytes = await generator.generateOrderReceipt(
         order: order,
         items: items,
-        businessName: businessName,
+        businessName: receiptParams.businessName,
+        businessNit: receiptParams.businessNit,
+        businessAddress: receiptParams.businessAddress,
+        businessPhone: receiptParams.businessPhone,
+        sellerName: receiptParams.sellerName,
+        invoiceFooter: receiptParams.invoiceFooter,
+        legalText: receiptParams.legalText,
       );
       debugPrint('[printOrderReceiptProvider] Printing ${bytes.length} bytes...');
       final result = await service.printBytes(bytes);
