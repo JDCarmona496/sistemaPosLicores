@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
@@ -36,6 +38,7 @@ class PdfReceiptGenerator extends ReceiptGenerator {
     String? sellerName,
     String? invoiceFooter,
     String? legalText,
+    String? logoBase64,
   }) async {
     final font = await _loadFont();
     final boldFont = await _loadBoldFont();
@@ -50,6 +53,18 @@ class PdfReceiptGenerator extends ReceiptGenerator {
           return pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.stretch,
             children: [
+              // Logo
+              if (logoBase64 != null && logoBase64.isNotEmpty)
+                pw.Center(
+                  child: pw.Image(
+                    pw.MemoryImage(base64Decode(logoBase64)),
+                    height: 60,
+                    fit: pw.BoxFit.contain,
+                  ),
+                ),
+              if (logoBase64 != null && logoBase64.isNotEmpty)
+                pw.SizedBox(height: 8),
+
               // Encabezado
               pw.Center(
                 child: pw.Text(

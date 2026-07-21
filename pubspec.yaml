@@ -62,8 +62,9 @@ dependencies:
   geolocator: ^13.0.2
   url_launcher: ^6.3.1
 
-  # Captura de evidencia de entrega (foto)
+  # Captura de evidencia de entrega (foto) y logo del negocio
   image_picker: ^1.1.2
+  image: ^4.5.2
 
   # Notificaciones
   flutter_local_notifications: ^18.0.1

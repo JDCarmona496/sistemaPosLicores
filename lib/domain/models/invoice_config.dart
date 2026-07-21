@@ -12,6 +12,7 @@ class InvoiceConfig {
   final String sellerName;
   final String invoiceFooter;
   final String legalText;
+  final String logoBase64;
 
   const InvoiceConfig({
     this.businessName = 'Licorería',
@@ -21,6 +22,7 @@ class InvoiceConfig {
     this.sellerName = '',
     this.invoiceFooter = 'Gracias por su compra',
     this.legalText = '',
+    this.logoBase64 = '',
   });
 
   factory InvoiceConfig.fromJson(Map<String, dynamic> json) {
@@ -32,6 +34,7 @@ class InvoiceConfig {
       sellerName: json['sellerName'] as String? ?? '',
       invoiceFooter: json['invoiceFooter'] as String? ?? 'Gracias por su compra',
       legalText: json['legalText'] as String? ?? '',
+      logoBase64: json['logoBase64'] as String? ?? '',
     );
   }
 
@@ -43,6 +46,7 @@ class InvoiceConfig {
         'sellerName': sellerName,
         'invoiceFooter': invoiceFooter,
         'legalText': legalText,
+        'logoBase64': logoBase64,
       };
 
   InvoiceConfig copyWith({
@@ -53,6 +57,7 @@ class InvoiceConfig {
     String? sellerName,
     String? invoiceFooter,
     String? legalText,
+    String? logoBase64,
   }) {
     return InvoiceConfig(
       businessName: businessName ?? this.businessName,
@@ -62,6 +67,7 @@ class InvoiceConfig {
       sellerName: sellerName ?? this.sellerName,
       invoiceFooter: invoiceFooter ?? this.invoiceFooter,
       legalText: legalText ?? this.legalText,
+      logoBase64: logoBase64 ?? this.logoBase64,
     );
   }
 

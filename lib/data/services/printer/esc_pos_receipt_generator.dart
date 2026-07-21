@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart';
 import 'package:flutter/foundation.dart';
+import 'package:image/image.dart' as img;
 import 'package:intl/intl.dart';
 
 import '../../../domain/models/order.dart';
@@ -28,6 +31,7 @@ class EscPosReceiptGenerator extends ReceiptGenerator {
     String? sellerName,
     String? invoiceFooter,
     String? legalText,
+    String? logoBase64,
   }) async {
     final profile = await CapabilityProfile.load();
     final generator = Generator(
@@ -36,6 +40,23 @@ class EscPosReceiptGenerator extends ReceiptGenerator {
     );
 
     var bytes = <int>[];
+
+    // Logo
+    if (logoBase64 != null && logoBase64.isNotEmpty) {
+      try {
+        final decoded = base64Decode(logoBase64);
+        final image = img.decodeImage(decoded);
+        if (image != null) {
+          bytes += generator.imageRaster(
+            image,
+            align: PosAlign.center,
+          );
+          bytes += generator.feed(1);
+        }
+      } catch (e) {
+        debugPrint('[EscPosReceiptGenerator] Error imprimiendo logo: $e');
+      }
+    }
 
     // Encabezado
     bytes += generator.setStyles(

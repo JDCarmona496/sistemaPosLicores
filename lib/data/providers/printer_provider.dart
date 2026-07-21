@@ -324,6 +324,7 @@ final printOrderReceiptProvider =
       sellerName: invoiceConfig.sellerName,
       invoiceFooter: invoiceConfig.invoiceFooter,
       legalText: invoiceConfig.legalText,
+      logoBase64: invoiceConfig.logoBase64,
     );
 
     if (service.supportsPdf) {
@@ -341,6 +342,7 @@ final printOrderReceiptProvider =
         sellerName: receiptParams.sellerName,
         invoiceFooter: receiptParams.invoiceFooter,
         legalText: receiptParams.legalText,
+        logoBase64: receiptParams.logoBase64,
       );
       debugPrint('[printOrderReceiptProvider] Printing PDF...');
       final result = await service.printPdf(document);
@@ -362,6 +364,7 @@ final printOrderReceiptProvider =
         sellerName: receiptParams.sellerName,
         invoiceFooter: receiptParams.invoiceFooter,
         legalText: receiptParams.legalText,
+        logoBase64: receiptParams.logoBase64,
       );
       debugPrint('[printOrderReceiptProvider] Printing ${bytes.length} bytes...');
       final result = await service.printBytes(bytes);

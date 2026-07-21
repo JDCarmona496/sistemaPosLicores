@@ -1,6 +1,11 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image/image.dart' as img;
+import 'package:image_picker/image_picker.dart';
 
 import '../../../../data/providers/settings_providers.dart';
 import '../../../../domain/models/invoice_config.dart';
@@ -21,6 +26,9 @@ class _InvoiceSettingsViewState extends ConsumerState<InvoiceSettingsView> {
   final _invoiceFooterController = TextEditingController();
   final _legalTextController = TextEditingController();
 
+  String _logoBase64 = '';
+  bool _isPickingLogo = false;
+
   @override
   void initState() {
     super.initState();
@@ -32,6 +40,7 @@ class _InvoiceSettingsViewState extends ConsumerState<InvoiceSettingsView> {
     _sellerNameController.text = config.sellerName;
     _invoiceFooterController.text = config.invoiceFooter;
     _legalTextController.text = config.legalText;
+    _logoBase64 = config.logoBase64;
   }
 
   @override
@@ -57,6 +66,8 @@ class _InvoiceSettingsViewState extends ConsumerState<InvoiceSettingsView> {
         children: [
           _buildInfoCard(),
           const SizedBox(height: 16),
+          _buildLogoSection(),
+          const SizedBox(height: 24),
           _buildSectionTitle('Datos del negocio'),
           _buildTextField(
             controller: _businessNameController,
@@ -147,6 +158,130 @@ class _InvoiceSettingsViewState extends ConsumerState<InvoiceSettingsView> {
     );
   }
 
+  Widget _buildLogoSection() {
+    final hasLogo = _logoBase64.isNotEmpty;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Logo del negocio',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Se imprime en la parte superior del recibo. Recomendado: fondo blanco, alto contraste.',
+              style: TextStyle(color: Colors.grey.shade700, fontSize: 13),
+            ),
+            const SizedBox(height: 16),
+            if (hasLogo)
+              Center(
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding: const EdgeInsets.all(8),
+                  child: Image.memory(
+                    base64Decode(_logoBase64),
+                    height: 100,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+            if (hasLogo) const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _isPickingLogo ? null : _pickLogo,
+                    icon: _isPickingLogo
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.image),
+                    label: Text(hasLogo ? 'Cambiar logo' : 'Seleccionar logo'),
+                  ),
+                ),
+                if (hasLogo) ...[
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _removeLogo,
+                      icon: const Icon(Icons.delete_outline, color: Colors.red),
+                      label: const Text(
+                        'Quitar logo',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickLogo() async {
+    setState(() => _isPickingLogo = true);
+    try {
+      final picker = ImagePicker();
+      final picked = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 400,
+        maxHeight: 400,
+        imageQuality: 80,
+      );
+      if (picked == null) return;
+
+      final bytes = await picked.readAsBytes();
+      if (bytes.isEmpty) return;
+
+      final resized = await _resizeLogo(bytes);
+      final base64 = base64Encode(resized);
+
+      if (mounted) {
+        setState(() => _logoBase64 = base64);
+      }
+    } catch (e) {
+      debugPrint('Error picking logo: $e');
+      if (mounted) {
+        _showSnack('Error al seleccionar logo: $e', isError: true);
+      }
+    } finally {
+      if (mounted) setState(() => _isPickingLogo = false);
+    }
+  }
+
+  Future<Uint8List> _resizeLogo(Uint8List bytes) async {
+    final decoded = img.decodeImage(bytes);
+    if (decoded == null) {
+      throw Exception('No se pudo decodificar la imagen');
+    }
+
+    // Para impresoras 58mm, 384 puntos de ancho es el máximo usable.
+    const maxWidth = 384;
+    img.Image resized = decoded;
+    if (decoded.width > maxWidth) {
+      resized = img.copyResize(decoded, width: maxWidth);
+    }
+
+    // Convertir a escala de grises para mejorar contraste en impresoras térmicas.
+    final grayscale = img.grayscale(resized);
+
+    return Uint8List.fromList(img.encodePng(grayscale));
+  }
+
+  void _removeLogo() {
+    setState(() => _logoBase64 = '');
+  }
+
   Widget _buildSectionTitle(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -194,6 +329,7 @@ class _InvoiceSettingsViewState extends ConsumerState<InvoiceSettingsView> {
       sellerName: _sellerNameController.text.trim(),
       invoiceFooter: _invoiceFooterController.text.trim(),
       legalText: _legalTextController.text.trim(),
+      logoBase64: _logoBase64,
     );
 
     await ref.read(invoiceConfigProvider.notifier).save(config);
@@ -236,6 +372,7 @@ class _InvoiceSettingsViewState extends ConsumerState<InvoiceSettingsView> {
     _sellerNameController.text = config.sellerName;
     _invoiceFooterController.text = config.invoiceFooter;
     _legalTextController.text = config.legalText;
+    setState(() => _logoBase64 = config.logoBase64);
 
     if (mounted) _showSnack('Valores restablecidos');
   }
