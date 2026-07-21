@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -54,6 +55,9 @@ class BluetoothPrinterService implements PrinterService {
         _notifyConnectionState(false);
       },
     );
+    // Cancelar automáticamente la suscripción cuando el dispositivo se desconecte
+    // para evitar fugas y duplicados.
+    device.cancelWhenDisconnected(_bleConnectionSubscription!, delayed: true);
   }
 
   @override
@@ -103,15 +107,13 @@ class BluetoothPrinterService implements PrinterService {
     }
 
     // BLE discovery via FlutterBluePlus
+    // onScanResults entrega resultados nuevos en tiempo real.
     try {
       final adapterState = await FlutterBluePlus.adapterState.first;
       if (adapterState == BluetoothAdapterState.on) {
-        await FlutterBluePlus.startScan(
-          timeout: const Duration(seconds: 12),
-          androidUsesFineLocation: false,
-        );
-        bleSubscription = FlutterBluePlus.scanResults.listen(
+        bleSubscription = FlutterBluePlus.onScanResults.listen(
           (results) {
+            if (results.isEmpty) return;
             for (final r in results) {
               final d = r.device;
               final id = d.remoteId.str.toUpperCase();
@@ -129,6 +131,11 @@ class BluetoothPrinterService implements PrinterService {
           onError: (e) {
             debugPrint('[BluetoothPrinterService] BLE scan error: $e');
           },
+        );
+        FlutterBluePlus.cancelWhenScanComplete(bleSubscription);
+        await FlutterBluePlus.startScan(
+          timeout: const Duration(seconds: 15),
+          androidUsesFineLocation: false,
         );
       } else {
         debugPrint('[BluetoothPrinterService] Bluetooth adapter is off');
@@ -283,6 +290,7 @@ class BluetoothPrinterService implements PrinterService {
           _connectedBleDevice = device;
           _listenToBleConnection(device);
           _notifyConnectionState(true);
+          await _requestMtuIfNeeded(device);
           await _logBleServices(device);
           return const PrinterResult.success('Conectado por Bluetooth');
         }
@@ -315,6 +323,17 @@ class BluetoothPrinterService implements PrinterService {
       _connectedBleDevice = null;
     }
     _notifyConnectionState(false);
+  }
+
+  Future<void> _requestMtuIfNeeded(BluetoothDevice device) async {
+    if (Platform.isAndroid) {
+      try {
+        debugPrint('[BluetoothPrinterService] Requesting MTU 512 (Android)...');
+        await device.requestMtu(512);
+      } catch (e) {
+        debugPrint('[BluetoothPrinterService] MTU request failed: $e');
+      }
+    }
   }
 
   Future<bool> _waitForConnection(
@@ -397,6 +416,7 @@ class BluetoothPrinterService implements PrinterService {
           return const PrinterResult.error('No se pudo reconectar la impresora');
         }
         _notifyConnectionState(true);
+        await _requestMtuIfNeeded(device);
       } catch (e) {
         _notifyConnectionState(false);
         return PrinterResult.error('Error reconectando: $e');
@@ -412,17 +432,11 @@ class BluetoothPrinterService implements PrinterService {
   ) async {
     debugPrint('[BluetoothPrinterService] PRINT START: ${bytes.length} bytes');
 
-    int? mtu;
-    try {
-      mtu = await device.mtu.first.timeout(
-        const Duration(seconds: 3),
-        onTimeout: () => 0,
-      );
-      debugPrint('[BluetoothPrinterService] Current MTU: $mtu');
-    } catch (e) {
-      debugPrint('[BluetoothPrinterService] Could not read MTU: $e');
-    }
+    // mtuNow refleja el valor negociado actual sin depender del stream.
+    final mtu = device.mtuNow;
+    debugPrint('[BluetoothPrinterService] Current MTU: $mtu');
 
+    // Siempre redescubrir servicios tras una reconexión BLE.
     final services = await device.discoverServices();
     debugPrint('[BluetoothPrinterService] Services discovered: ${services.length}');
 
@@ -452,7 +466,7 @@ class BluetoothPrinterService implements PrinterService {
       return 0;
     });
 
-    final effectiveMtu = (mtu != null && mtu > 3) ? mtu - 3 : 512;
+    final effectiveMtu = mtu > 3 ? mtu - 3 : 20;
     final data = bytes.toList();
     debugPrint(
       '[BluetoothPrinterService] Will send ${data.length} bytes in chunks of $effectiveMtu',
@@ -464,6 +478,8 @@ class BluetoothPrinterService implements PrinterService {
         '[BluetoothPrinterService] Trying characteristic ${i + 1}/${writeCandidates.length}: ${candidate.uuid.str}',
       );
 
+      // Preferir writeWithoutResponse cuando esté disponible: la mayoría de
+      // impresoras térmicas BLE lo soportan y es más rápido.
       final firstModes = candidate.properties.writeWithoutResponse
           ? [true, false]
           : [false, true];
@@ -480,7 +496,7 @@ class BluetoothPrinterService implements PrinterService {
             '[BluetoothPrinterService] WRITE OK on ${candidate.uuid.str}',
           );
           return PrinterResult.success(
-            'Datos enviados por BLE (${candidate.uuid.str}, MTU=${mtu ?? '?'}, bytes=${data.length})',
+            'Datos enviados por BLE (${candidate.uuid.str}, MTU=$mtu, bytes=${data.length})',
           );
         } catch (e) {
           debugPrint(

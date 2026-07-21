@@ -11,8 +11,14 @@ import 'printer_service.dart';
 /// Implementación de [PrinterService] para puertos seriales COM en Windows.
 ///
 /// Usa serial_port_win32 para enviar bytes ESC/POS directamente por COM.
+/// El paquete maneja SerialPort como singleton por nombre de puerto, así que
+/// esta implementación reutiliza instancias para no crear puertos duplicados.
 class SerialPrinterService implements PrinterService {
-  SerialPort? _port;
+  // serial_port_win32 trata a SerialPort como singleton por nombre de puerto,
+  // por lo que mantenemos un caché local para evitar crear instancias nuevas.
+  final Map<String, SerialPort> _portCache = {};
+  SerialPort? _activePort;
+
   final _connectionStateController = StreamController<bool>.broadcast();
   var _lastConnectionState = false;
 
@@ -28,6 +34,11 @@ class SerialPrinterService implements PrinterService {
     }
   }
 
+  SerialPort _getOrCreatePort(String portName) {
+    final name = portName.toUpperCase();
+    return _portCache.putIfAbsent(name, () => SerialPort(name));
+  }
+
   @override
   Stream<bool> get connectionState => _connectionStateController.stream;
 
@@ -35,13 +46,16 @@ class SerialPrinterService implements PrinterService {
   Stream<List<PrinterDevice>> discoverDevices() async* {
     try {
       debugPrint('[SerialPrinterService] Solicitando lista de puertos COM...');
-      final ports = SerialPort.getAvailablePorts();
-      debugPrint('[SerialPrinterService] Puertos encontrados: $ports');
+      final ports = SerialPort.getPortsWithFullMessages();
+      final names = ports.map((p) => p.portName).toList();
+      debugPrint('[SerialPrinterService] Puertos encontrados: $names');
       yield ports
           .map(
-            (name) => PrinterDevice(
-              address: name,
-              name: 'Puerto $name',
+            (p) => PrinterDevice(
+              address: p.portName,
+              name: p.friendlyName.isNotEmpty
+                  ? p.friendlyName
+                  : 'Puerto ${p.portName}',
               connectionType: PrinterConnectionType.serial,
             ),
           )
@@ -84,25 +98,34 @@ class SerialPrinterService implements PrinterService {
         );
       }
 
+      // serial_port_win32 usa singleton por nombre de puerto.
+      final port = _getOrCreatePort(targetPort);
+      _activePort = port;
+
+      // Cerrar primero por si había una instancia previa abierta
+      if (port.isOpened) {
+        try {
+          port.close();
+        } catch (e) {
+          debugPrint('[SerialPrinterService] Error cerrando puerto previo: $e');
+        }
+      }
+
       // Intentar abrir el puerto con reintentos
-      SerialPort? port;
       for (int attempt = 0; attempt < 3; attempt++) {
         try {
           debugPrint(
             '[SerialPrinterService] Abriendo $targetPort a ${config.baudRate} baudios (intento ${attempt + 1})...',
           );
-          port = SerialPort(
-            targetPort,
-            openNow: true,
-            BaudRate: config.baudRate,
-            ByteSize: 8,
-          );
+          port.BaudRate = config.baudRate;
+          port.ByteSize = 8;
+          port.open();
+
           if (port.isOpened) break;
-          port.close();
-          port = null;
         } catch (e) {
           debugPrint('[SerialPrinterService] Intento ${attempt + 1} fallido: $e');
           if (attempt == 2) {
+            _notifyConnectionState(false);
             return PrinterResult.error(
               'No se pudo abrir $targetPort después de 3 intentos: $e',
             );
@@ -111,13 +134,18 @@ class SerialPrinterService implements PrinterService {
         }
       }
 
-      if (port == null || !port.isOpened) {
-        _port = null;
+      if (!port.isOpened) {
         _notifyConnectionState(false);
         return PrinterResult.error('No se pudo abrir el puerto $targetPort');
       }
 
-      _port = port;
+      // Activar señal DTR para impresoras térmicas que la requieren
+      try {
+        port.setFlowControlSignal(SerialPort.SETDTR);
+      } catch (e) {
+        debugPrint('[SerialPrinterService] No se pudo set DTR: $e');
+      }
+
       _notifyConnectionState(true);
 
       // Enviar bytes de reset ESC/POS para verificar que el puerto responde
@@ -131,7 +159,7 @@ class SerialPrinterService implements PrinterService {
       debugPrint('[SerialPrinterService] Puerto $targetPort abierto correctamente');
       return const PrinterResult.success('Conectado al puerto COM');
     } catch (e) {
-      _port = null;
+      _activePort = null;
       _notifyConnectionState(false);
       return PrinterResult.error('Error al abrir ${config.comPort}: $e');
     }
@@ -139,14 +167,14 @@ class SerialPrinterService implements PrinterService {
 
   @override
   Future<PrinterResult> disconnect() async {
-    if (_port == null) return const PrinterResult.success();
+    if (_activePort == null) return const PrinterResult.success();
     try {
-      _port!.close();
-      _port = null;
+      _activePort!.close();
+      _activePort = null;
       _notifyConnectionState(false);
       return const PrinterResult.success('Puerto cerrado');
     } catch (e) {
-      _port = null;
+      _activePort = null;
       _notifyConnectionState(false);
       return PrinterResult.error('Error al cerrar puerto: $e');
     }
@@ -154,16 +182,30 @@ class SerialPrinterService implements PrinterService {
 
   @override
   Future<PrinterResult> printBytes(Uint8List bytes) async {
-    if (_port == null || !_port!.isOpened) {
+    final port = _activePort;
+    if (port == null || !port.isOpened) {
       return const PrinterResult.error('Puerto COM no abierto');
     }
-    try {
-      await _port!.writeBytesFromUint8List(bytes);
-      return const PrinterResult.success();
-    } catch (e) {
-      _notifyConnectionState(false);
-      return PrinterResult.error('Error al enviar datos: $e');
+
+    for (int attempt = 0; attempt < 3; attempt++) {
+      try {
+        debugPrint(
+          '[SerialPrinterService] Enviando ${bytes.length} bytes (intento ${attempt + 1})...',
+        );
+        await port.writeBytesFromUint8List(bytes);
+        debugPrint('[SerialPrinterService] Envío exitoso');
+        return const PrinterResult.success();
+      } catch (e) {
+        debugPrint('[SerialPrinterService] Error al enviar (intento ${attempt + 1}): $e');
+        if (attempt == 2) {
+          _notifyConnectionState(false);
+          return PrinterResult.error('Error al enviar datos: $e');
+        }
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
     }
+
+    return const PrinterResult.error('No se pudieron enviar los datos');
   }
 
   @override
@@ -177,11 +219,17 @@ class SerialPrinterService implements PrinterService {
   bool get supportsPdf => false;
 
   @override
-  bool get isConnected => _port != null && _port!.isOpened;
+  bool get isConnected => _activePort != null && _activePort!.isOpened;
 
   @override
   Future<void> dispose() async {
     await disconnect();
+    for (final port in _portCache.values) {
+      try {
+        if (port.isOpened) port.close();
+      } catch (_) {}
+    }
+    _portCache.clear();
     await _connectionStateController.close();
   }
 }
