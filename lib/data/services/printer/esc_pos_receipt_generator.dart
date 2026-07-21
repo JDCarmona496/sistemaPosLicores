@@ -99,10 +99,10 @@ class EscPosReceiptGenerator extends ReceiptGenerator {
     // Encabezados de ítems
     bytes += generator.row([
       PosColumn(text: 'CANT', width: 2, styles: const PosStyles(bold: true)),
-      PosColumn(text: 'DESCRIPCION', width: 5, styles: const PosStyles(bold: true)),
+      PosColumn(text: 'DESCRIPCION', width: 6, styles: const PosStyles(bold: true)),
       PosColumn(
         text: 'TOTAL',
-        width: 3,
+        width: 4,
         styles: const PosStyles(bold: true, align: PosAlign.right),
       ),
     ]);
@@ -119,8 +119,8 @@ class EscPosReceiptGenerator extends ReceiptGenerator {
       bytes += generator.row([
         PosColumn(text: qty, width: 2),
         PosColumn(
-          text: _truncate(name, 14),
-          width: 4,
+          text: _truncate(name, 16),
+          width: 6,
         ),
         PosColumn(
           text: total,
@@ -135,7 +135,7 @@ class EscPosReceiptGenerator extends ReceiptGenerator {
           PosColumn(text: '', width: 2),
           PosColumn(
             text: 'x \$${_formatMoney(item.unitPrice)}',
-            width: 6,
+            width: 8,
             styles: const PosStyles(align: PosAlign.left),
           ),
           PosColumn(text: '', width: 2),
@@ -150,7 +150,7 @@ class EscPosReceiptGenerator extends ReceiptGenerator {
       PosColumn(text: 'Subtotal:', width: 6),
       PosColumn(
         text: '\$${_formatMoney(order.subtotal)}',
-        width: 4,
+        width: 6,
         styles: const PosStyles(align: PosAlign.right),
       ),
     ]);
@@ -160,7 +160,7 @@ class EscPosReceiptGenerator extends ReceiptGenerator {
         PosColumn(text: 'Descuento:', width: 6),
         PosColumn(
           text: '-\$${_formatMoney(order.discountAmount)}',
-          width: 4,
+          width: 6,
           styles: const PosStyles(align: PosAlign.right),
         ),
       ]);
@@ -171,7 +171,7 @@ class EscPosReceiptGenerator extends ReceiptGenerator {
         PosColumn(text: 'Domicilio:', width: 6),
         PosColumn(
           text: '\$${_formatMoney(order.deliveryFee)}',
-          width: 4,
+          width: 6,
           styles: const PosStyles(align: PosAlign.right),
         ),
       ]);
@@ -185,7 +185,7 @@ class EscPosReceiptGenerator extends ReceiptGenerator {
       ),
       PosColumn(
         text: '\$${_formatMoney(order.total)}',
-        width: 4,
+        width: 8,
         styles: const PosStyles(
           align: PosAlign.right,
           bold: true,
