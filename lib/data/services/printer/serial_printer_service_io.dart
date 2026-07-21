@@ -11,12 +11,9 @@ import 'printer_service.dart';
 /// Implementación de [PrinterService] para puertos seriales COM en Windows.
 ///
 /// Usa serial_port_win32 para enviar bytes ESC/POS directamente por COM.
-/// El paquete maneja SerialPort como singleton por nombre de puerto, así que
-/// esta implementación reutiliza instancias para no crear puertos duplicados.
+/// Incluye diagnósticos detallados y manejo defensivo para puertos virtuales
+/// (p. ej. Nuvoton Virtual COM Port) que pueden necesitar inicialización especial.
 class SerialPrinterService implements PrinterService {
-  // serial_port_win32 trata a SerialPort como singleton por nombre de puerto,
-  // por lo que mantenemos un caché local para evitar crear instancias nuevas.
-  final Map<String, SerialPort> _portCache = {};
   SerialPort? _activePort;
 
   final _connectionStateController = StreamController<bool>.broadcast();
@@ -32,11 +29,6 @@ class SerialPrinterService implements PrinterService {
       _connectionStateController.add(connected);
       debugPrint('[SerialPrinterService] connectionState=$connected');
     }
-  }
-
-  SerialPort _getOrCreatePort(String portName) {
-    final name = portName.toUpperCase();
-    return _portCache.putIfAbsent(name, () => SerialPort(name));
   }
 
   @override
@@ -69,6 +61,10 @@ class SerialPrinterService implements PrinterService {
 
   @override
   Future<PrinterResult> connect(PrinterConfig config) async {
+    debugPrint(
+      '[SerialPrinterService] CONNECT START comPort=${config.comPort} baudRate=${config.baudRate}',
+    );
+
     try {
       await disconnect();
 
@@ -77,19 +73,18 @@ class SerialPrinterService implements PrinterService {
         return const PrinterResult.error('Puerto COM no configurado');
       }
 
-      // Verificar si el puerto existe
+      // Verificar si el puerto existe en el sistema
       List<String> availablePorts = [];
       for (int attempt = 0; attempt < 3; attempt++) {
         try {
           availablePorts = SerialPort.getAvailablePorts();
+          debugPrint('[SerialPrinterService] Intento ${attempt + 1}: puertos=$availablePorts');
           if (availablePorts.contains(targetPort)) break;
-          await Future.delayed(const Duration(milliseconds: 200));
+          await Future.delayed(const Duration(milliseconds: 300));
         } catch (e) {
           debugPrint('[SerialPrinterService] Error listando puertos (intento ${attempt + 1}): $e');
         }
       }
-
-      debugPrint('[SerialPrinterService] Puertos disponibles: $availablePorts');
 
       if (!availablePorts.contains(targetPort)) {
         return PrinterResult.error(
@@ -98,70 +93,108 @@ class SerialPrinterService implements PrinterService {
         );
       }
 
-      // serial_port_win32 usa singleton por nombre de puerto.
-      final port = _getOrCreatePort(targetPort);
+      // Intentar abrir de varias formas porque los puertos virtuales (Nuvoton, etc.)
+      // a veces fallan con una combinación de parámetros pero aceptan otra.
+      final strategies = <String, Future<SerialPort> Function()>{
+        'openNow con baudRate': () async => _tryOpenWithConstructor(targetPort, config.baudRate),
+        'open() luego de setear baudRate': () async => _tryOpenWithSetters(targetPort, config.baudRate),
+        'openWithSettings': () async => _tryOpenWithSettings(targetPort, config.baudRate),
+      };
+
+      SerialPort? port;
+      String? lastError;
+      for (final entry in strategies.entries) {
+        try {
+          debugPrint('[SerialPrinterService] Probando estrategia: ${entry.key}');
+          port = await entry.value();
+          if (port.isOpened) {
+            debugPrint('[SerialPrinterService] Estrategia exitosa: ${entry.key}');
+            break;
+          }
+        } catch (e) {
+          lastError = 'Estrategia ${entry.key} falló: $e';
+          debugPrint('[SerialPrinterService] $lastError');
+          port = null;
+        }
+      }
+
+      if (port == null || !port.isOpened) {
+        _notifyConnectionState(false);
+        return PrinterResult.error(
+          'No se pudo abrir $targetPort. '
+          '${lastError ?? "Verifica que ninguna otra aplicación esté usando el puerto."}',
+        );
+      }
+
       _activePort = port;
 
-      // Cerrar primero por si había una instancia previa abierta
-      if (port.isOpened) {
-        try {
-          port.close();
-        } catch (e) {
-          debugPrint('[SerialPrinterService] Error cerrando puerto previo: $e');
-        }
-      }
+      // Pausa para que el puerto virtual (USB-UART) termine de inicializarse.
+      await Future.delayed(const Duration(milliseconds: 200));
 
-      // Intentar abrir el puerto con reintentos
-      for (int attempt = 0; attempt < 3; attempt++) {
-        try {
-          debugPrint(
-            '[SerialPrinterService] Abriendo $targetPort a ${config.baudRate} baudios (intento ${attempt + 1})...',
-          );
-          port.BaudRate = config.baudRate;
-          port.ByteSize = 8;
-          port.open();
-
-          if (port.isOpened) break;
-        } catch (e) {
-          debugPrint('[SerialPrinterService] Intento ${attempt + 1} fallido: $e');
-          if (attempt == 2) {
-            _notifyConnectionState(false);
-            return PrinterResult.error(
-              'No se pudo abrir $targetPort después de 3 intentos: $e',
-            );
-          }
-          await Future.delayed(const Duration(seconds: 1));
-        }
-      }
-
-      if (!port.isOpened) {
-        _notifyConnectionState(false);
-        return PrinterResult.error('No se pudo abrir el puerto $targetPort');
-      }
-
-      // Activar señal DTR para impresoras térmicas que la requieren
-      try {
-        port.setFlowControlSignal(SerialPort.SETDTR);
-      } catch (e) {
-        debugPrint('[SerialPrinterService] No se pudo set DTR: $e');
-      }
+      // Activar líneas de control. Algunos adaptadores virtuales requieren DTR o RTS.
+      await _setControlLines(port);
 
       _notifyConnectionState(true);
 
-      // Enviar bytes de reset ESC/POS para verificar que el puerto responde
+      // Enviar reset ESC/POS y heartbeat para verificar que el puerto responde
       try {
         await port.writeBytesFromUint8List(Uint8List.fromList([0x1B, 0x40]));
-        await Future.delayed(const Duration(milliseconds: 100));
+        await Future.delayed(const Duration(milliseconds: 150));
       } catch (e) {
-        debugPrint('[SerialPrinterService] Advertencia: no se pudo enviar reset inicial: $e');
+        debugPrint('[SerialPrinterService] Advertencia: reset inicial falló: $e');
       }
 
       debugPrint('[SerialPrinterService] Puerto $targetPort abierto correctamente');
       return const PrinterResult.success('Conectado al puerto COM');
-    } catch (e) {
+    } catch (e, stack) {
+      debugPrint('[SerialPrinterService] Error al conectar: $e');
+      debugPrint('[SerialPrinterService] Stack: $stack');
       _activePort = null;
       _notifyConnectionState(false);
       return PrinterResult.error('Error al abrir ${config.comPort}: $e');
+    }
+  }
+
+  Future<SerialPort> _tryOpenWithConstructor(String portName, int baudRate) async {
+    final port = SerialPort(
+      portName,
+      openNow: true,
+      BaudRate: baudRate,
+      ByteSize: 8,
+    );
+    // Algunos drivers virtuales reportan isOpened con delay.
+    await Future.delayed(const Duration(milliseconds: 100));
+    return port;
+  }
+
+  Future<SerialPort> _tryOpenWithSetters(String portName, int baudRate) async {
+    final port = SerialPort(portName, openNow: false);
+    port.BaudRate = baudRate;
+    port.ByteSize = 8;
+    port.open();
+    await Future.delayed(const Duration(milliseconds: 100));
+    return port;
+  }
+
+  Future<SerialPort> _tryOpenWithSettings(String portName, int baudRate) async {
+    final port = SerialPort(portName, openNow: false);
+    port.openWithSettings(BaudRate: baudRate);
+    await Future.delayed(const Duration(milliseconds: 100));
+    return port;
+  }
+
+  Future<void> _setControlLines(SerialPort port) async {
+    final signals = [
+      (SerialPort.SETDTR, 'DTR'),
+      (SerialPort.SETRTS, 'RTS'),
+    ];
+    for (final (signal, name) in signals) {
+      try {
+        port.setFlowControlSignal(signal);
+        debugPrint('[SerialPrinterService] Señal $name activada');
+      } catch (e) {
+        debugPrint('[SerialPrinterService] No se pudo activar $name: $e');
+      }
     }
   }
 
@@ -169,9 +202,11 @@ class SerialPrinterService implements PrinterService {
   Future<PrinterResult> disconnect() async {
     if (_activePort == null) return const PrinterResult.success();
     try {
+      final name = _activePort.toString();
       _activePort!.close();
       _activePort = null;
       _notifyConnectionState(false);
+      debugPrint('[SerialPrinterService] Puerto $name cerrado');
       return const PrinterResult.success('Puerto cerrado');
     } catch (e) {
       _activePort = null;
@@ -192,7 +227,10 @@ class SerialPrinterService implements PrinterService {
         debugPrint(
           '[SerialPrinterService] Enviando ${bytes.length} bytes (intento ${attempt + 1})...',
         );
-        await port.writeBytesFromUint8List(bytes);
+        await port.writeBytesFromUint8List(bytes).timeout(
+          const Duration(seconds: 5),
+          onTimeout: () => throw TimeoutException('Timeout escribiendo en puerto COM'),
+        );
         debugPrint('[SerialPrinterService] Envío exitoso');
         return const PrinterResult.success();
       } catch (e) {
@@ -201,7 +239,7 @@ class SerialPrinterService implements PrinterService {
           _notifyConnectionState(false);
           return PrinterResult.error('Error al enviar datos: $e');
         }
-        await Future.delayed(const Duration(milliseconds: 100));
+        await Future.delayed(const Duration(milliseconds: 200));
       }
     }
 
@@ -224,12 +262,6 @@ class SerialPrinterService implements PrinterService {
   @override
   Future<void> dispose() async {
     await disconnect();
-    for (final port in _portCache.values) {
-      try {
-        if (port.isOpened) port.close();
-      } catch (_) {}
-    }
-    _portCache.clear();
     await _connectionStateController.close();
   }
 }
