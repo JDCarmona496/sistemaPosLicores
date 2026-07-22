@@ -271,24 +271,21 @@ class PdfReceiptGenerator extends ReceiptGenerator {
               pw.Center(
                 child: pw.Text(
                   'Desarrollado por Juan Carmona',
-                  style: pw.TextStyle(
-                    fontSize: 8,
-                    fontWeight: pw.FontWeight.bold,
-                  ),
+                  style: const pw.TextStyle(fontSize: 6),
                   textAlign: pw.TextAlign.center,
                 ),
               ),
               pw.Center(
                 child: pw.Text(
                   'juan.carmona.valdes@gmail.com',
-                  style: const pw.TextStyle(fontSize: 8),
+                  style: const pw.TextStyle(fontSize: 6),
                   textAlign: pw.TextAlign.center,
                 ),
               ),
               pw.Center(
                 child: pw.Text(
                   '3194643984',
-                  style: const pw.TextStyle(fontSize: 8),
+                  style: const pw.TextStyle(fontSize: 6),
                   textAlign: pw.TextAlign.center,
                 ),
               ),
