@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../domain/models/invoice_config.dart';
 import '../services/geocoding_service.dart';
+import '../services/local_storage_service.dart';
 import '../services/location_service.dart';
 
 final geocodingServiceProvider = Provider<GeocodingService>((ref) {
@@ -61,6 +62,7 @@ final invoiceConfigProvider =
 
 class InvoiceConfigNotifier extends StateNotifier<InvoiceConfig> {
   static const _prefsKey = 'invoice_config';
+  final _storage = LocalStorageService(_prefsKey);
 
   InvoiceConfigNotifier() : super(const InvoiceConfig()) {
     _load();
@@ -68,25 +70,35 @@ class InvoiceConfigNotifier extends StateNotifier<InvoiceConfig> {
 
   Future<void> _load() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final json = prefs.getString(_prefsKey);
+      debugPrint('[InvoiceConfigNotifier] Cargando config...');
+      final json = await _storage.read();
+      debugPrint('[InvoiceConfigNotifier] JSON guardado: $json');
       if (json != null && json.isNotEmpty) {
         state = InvoiceConfig.fromJson(
           Map<String, dynamic>.from(jsonDecode(json)),
         );
+        debugPrint('[InvoiceConfigNotifier] Config cargada: $state');
+      } else {
+        debugPrint('[InvoiceConfigNotifier] No hay config guardada');
       }
-    } catch (e) {
+    } catch (e, stack) {
       debugPrint('[InvoiceConfigNotifier] Error cargando config: $e');
+      debugPrint(stack.toString());
     }
   }
 
-  Future<void> save(InvoiceConfig config) async {
+  Future<bool> save(InvoiceConfig config) async {
     state = config;
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_prefsKey, jsonEncode(config.toJson()));
-    } catch (e) {
+      debugPrint('[InvoiceConfigNotifier] Guardando config: $config');
+      final json = jsonEncode(config.toJson());
+      final ok = await _storage.write(json);
+      debugPrint('[InvoiceConfigNotifier] Guardado exitoso=$ok');
+      return ok;
+    } catch (e, stack) {
       debugPrint('[InvoiceConfigNotifier] Error guardando config: $e');
+      debugPrint(stack.toString());
+      return false;
     }
   }
 

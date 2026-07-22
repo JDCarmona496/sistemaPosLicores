@@ -265,6 +265,33 @@ class PdfReceiptGenerator extends ReceiptGenerator {
                   ),
                 ),
               ],
+
+              // Pie de página fijo con créditos del desarrollador.
+              pw.SizedBox(height: 12),
+              pw.Center(
+                child: pw.Text(
+                  'Desarrollado por Juan Carmona',
+                  style: pw.TextStyle(
+                    fontSize: 8,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                  textAlign: pw.TextAlign.center,
+                ),
+              ),
+              pw.Center(
+                child: pw.Text(
+                  'juan.carmona.valdes@gmail.com',
+                  style: const pw.TextStyle(fontSize: 8),
+                  textAlign: pw.TextAlign.center,
+                ),
+              ),
+              pw.Center(
+                child: pw.Text(
+                  '3194643984',
+                  style: const pw.TextStyle(fontSize: 8),
+                  textAlign: pw.TextAlign.center,
+                ),
+              ),
             ],
           );
         },

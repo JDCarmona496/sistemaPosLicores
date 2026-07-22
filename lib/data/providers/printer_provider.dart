@@ -3,11 +3,11 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../domain/models/order.dart';
 import '../../domain/models/order_item.dart';
 import '../../domain/models/printer_config.dart';
+import '../services/local_storage_service.dart';
 import '../services/printer/bluetooth_printer_service.dart';
 import '../services/printer/esc_pos_receipt_generator.dart';
 import '../services/printer/pdf_receipt_generator.dart';
@@ -21,41 +21,51 @@ final printerConfigProvider = StateNotifierProvider<PrinterConfigNotifier, Print
 });
 
 class PrinterConfigNotifier extends StateNotifier<PrinterConfig?> {
+  static const _key = 'printer_config';
+  final _storage = LocalStorageService(_key);
+
   PrinterConfigNotifier() : super(null) {
     _load();
   }
 
-  static const _key = 'printer_config';
-
   Future<void> _load() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final json = prefs.getString(_key);
-      if (json != null) {
+      debugPrint('[PrinterConfigNotifier] Cargando config...');
+      final json = await _storage.read();
+      debugPrint('[PrinterConfigNotifier] JSON guardado: $json');
+      if (json != null && json.isNotEmpty) {
         state = PrinterConfig.fromJson(
           Map<String, dynamic>.from(jsonDecode(json)),
         );
+        debugPrint('[PrinterConfigNotifier] Config cargada: $state');
+      } else {
+        debugPrint('[PrinterConfigNotifier] No hay config guardada');
       }
-    } catch (e) {
+    } catch (e, stack) {
       debugPrint('[PrinterConfigNotifier] Error cargando config: $e');
+      debugPrint(stack.toString());
     }
   }
 
-  Future<void> save(PrinterConfig config) async {
+  Future<bool> save(PrinterConfig config) async {
     state = config;
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_key, jsonEncode(config.toJson()));
-    } catch (e) {
+      debugPrint('[PrinterConfigNotifier] Guardando config: $config');
+      final json = jsonEncode(config.toJson());
+      final ok = await _storage.write(json);
+      debugPrint('[PrinterConfigNotifier] Guardado exitoso=$ok');
+      return ok;
+    } catch (e, stack) {
       debugPrint('[PrinterConfigNotifier] Error guardando config: $e');
+      debugPrint(stack.toString());
+      return false;
     }
   }
 
   Future<void> clear() async {
     state = null;
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove(_key);
+      await _storage.delete();
     } catch (e) {
       debugPrint('[PrinterConfigNotifier] Error limpiando config: $e');
     }

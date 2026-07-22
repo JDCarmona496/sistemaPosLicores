@@ -245,6 +245,16 @@ class EscPosReceiptGenerator extends ReceiptGenerator {
       bytes += generator.text(legalText);
     }
 
+    // Pie de página fijo con créditos del desarrollador.
+    bytes += generator.feed(2);
+    bytes += generator.setStyles(
+      const PosStyles(align: PosAlign.center, bold: true),
+    );
+    bytes += generator.text('Desarrollado por Juan Carmona');
+    bytes += generator.setStyles(const PosStyles(align: PosAlign.center));
+    bytes += generator.text('juan.carmona.valdes@gmail.com');
+    bytes += generator.text('3194643984');
+
     bytes += generator.feed(2);
     bytes += generator.cut();
 
