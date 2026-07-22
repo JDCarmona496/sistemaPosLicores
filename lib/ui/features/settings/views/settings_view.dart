@@ -34,6 +34,14 @@ class SettingsView extends ConsumerWidget {
           ),
           const Divider(),
           ListTile(
+            leading: const Icon(Icons.delivery_dining),
+            title: const Text('Configuración de domicilios'),
+            subtitle: const Text('Asignación automática o manual'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/settings/delivery'),
+          ),
+          const Divider(),
+          ListTile(
             leading: const Icon(Icons.location_city),
             title: const Text('Zona de operación'),
             subtitle: Text(geocodingContext),

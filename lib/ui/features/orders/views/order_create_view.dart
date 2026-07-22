@@ -3,10 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/responsive.dart';
+import '../../../../data/providers/delivery_providers.dart';
 import '../../../../data/providers/order_providers.dart';
 import '../../../../data/providers/printer_provider.dart';
+import '../../../../data/providers/settings_providers.dart';
 import '../../../../data/services/auth_service.dart';
 import '../../../../domain/models/customer.dart';
+import '../../../../domain/models/delivery_config.dart';
 import '../../../../domain/models/order.dart';
 import '../../../../domain/models/order_item.dart';
 import 'widgets/customer_selector_dialog.dart';
@@ -463,6 +466,22 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
     setState(() => _isLoading = true);
 
     try {
+      String? autoDeliveryPersonId;
+      final deliveryConfig = ref.read(deliveryConfigProvider);
+      if (cartState.deliveryType == DeliveryType.delivery &&
+          deliveryConfig.assignmentMode == DeliveryAssignmentMode.automatic) {
+        final user = await ref.read(leastBusyDeliveryUserProvider.future);
+        autoDeliveryPersonId = user?.id;
+        if (user != null) {
+          _showSnack('Domiciliario asignado: ${user.fullName}');
+        } else {
+          _showSnack(
+            'No hay domiciliarios disponibles para asignación automática',
+            isError: true,
+          );
+        }
+      }
+
       final created = await ref.read(ordersProvider.notifier).createOrder(
             sellerId: _currentUserId!,
             customerId: cartState.customerId,
@@ -474,6 +493,7 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
             deliveryLatitude: cartState.deliveryLatitude,
             deliveryLongitude: cartState.deliveryLongitude,
             deliveryFee: cartState.deliveryFee,
+            deliveryPersonId: autoDeliveryPersonId,
           );
 
       // Guardar items antes de limpiar el carrito para la impresión del recibo

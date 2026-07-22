@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../domain/models/delivery_config.dart';
 import '../../domain/models/invoice_config.dart';
 import '../services/geocoding_service.dart';
 import '../services/local_storage_service.dart';
@@ -104,5 +105,59 @@ class InvoiceConfigNotifier extends StateNotifier<InvoiceConfig> {
 
   Future<void> resetToDefault() async {
     await save(const InvoiceConfig());
+  }
+}
+
+/// Configuración de domicilios: modo de asignación automática o manual.
+/// Persistida localmente con respaldo en archivo.
+final deliveryConfigProvider =
+    StateNotifierProvider<DeliveryConfigNotifier, DeliveryConfig>((ref) {
+  return DeliveryConfigNotifier();
+});
+
+class DeliveryConfigNotifier extends StateNotifier<DeliveryConfig> {
+  static const _prefsKey = 'delivery_config';
+  final _storage = LocalStorageService(_prefsKey);
+
+  DeliveryConfigNotifier() : super(const DeliveryConfig()) {
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      debugPrint('[DeliveryConfigNotifier] Cargando config...');
+      final json = await _storage.read();
+      debugPrint('[DeliveryConfigNotifier] JSON guardado: $json');
+      if (json != null && json.isNotEmpty) {
+        state = DeliveryConfig.fromJson(
+          Map<String, dynamic>.from(jsonDecode(json)),
+        );
+        debugPrint('[DeliveryConfigNotifier] Config cargada: $state');
+      } else {
+        debugPrint('[DeliveryConfigNotifier] No hay config guardada');
+      }
+    } catch (e, stack) {
+      debugPrint('[DeliveryConfigNotifier] Error cargando config: $e');
+      debugPrint(stack.toString());
+    }
+  }
+
+  Future<bool> save(DeliveryConfig config) async {
+    state = config;
+    try {
+      debugPrint('[DeliveryConfigNotifier] Guardando config: $config');
+      final json = jsonEncode(config.toJson());
+      final ok = await _storage.write(json);
+      debugPrint('[DeliveryConfigNotifier] Guardado exitoso=$ok');
+      return ok;
+    } catch (e, stack) {
+      debugPrint('[DeliveryConfigNotifier] Error guardando config: $e');
+      debugPrint(stack.toString());
+      return false;
+    }
+  }
+
+  Future<void> resetToDefault() async {
+    await save(const DeliveryConfig());
   }
 }

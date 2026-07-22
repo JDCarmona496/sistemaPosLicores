@@ -1,12 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 
+import '../../domain/models/delivery_config.dart';
 import '../../domain/models/order.dart';
 import '../../domain/models/user.dart';
 import '../../domain/services/order_zone_grouper.dart';
 import '../repositories/order_repository.dart';
 import '../services/location_service.dart';
 import 'order_providers.dart';
+import 'settings_providers.dart';
 import 'user_providers.dart';
 
 final locationServiceProvider = Provider<LocationService>((ref) {
@@ -183,3 +185,35 @@ class DeliveryOrdersNotifier extends StateNotifier<DeliveryOrdersState> {
 
   User? get currentUser => _ref.read(currentUserProvider).valueOrNull;
 }
+
+/// Estados que indican que un domiciliario está ocupado con un pedido.
+const _busyStatuses = {
+  OrderStatus.ready,
+  OrderStatus.inTransit,
+  OrderStatus.partiallyDelivered,
+};
+
+/// Retorna el domiciliario con menos pedidos activos.
+/// Si no hay domiciliarios, retorna null.
+final leastBusyDeliveryUserProvider = FutureProvider<User?>((ref) async {
+  final users = await ref.watch(deliveryUsersProvider.future);
+  final orders = ref.watch(ordersProvider).orders;
+
+  if (users.isEmpty) return null;
+
+  int activeCount(User user) => orders
+      .where((o) =>
+          o.deliveryPersonId == user.id && _busyStatuses.contains(o.status))
+      .length;
+
+  final sorted = List<User>.from(users)
+    ..sort((a, b) => activeCount(a).compareTo(activeCount(b)));
+
+  return sorted.first;
+});
+
+/// Indica si la asignación automática de domiciliarios está activa.
+final isAutoDeliveryAssignmentProvider = Provider<bool>((ref) {
+  final config = ref.watch(deliveryConfigProvider);
+  return config.assignmentMode == DeliveryAssignmentMode.automatic;
+});

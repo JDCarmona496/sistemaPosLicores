@@ -354,9 +354,22 @@ class OrderRepository {
           })
           .eq('id', orderId);
     } on PostgrestException catch (e) {
-      throw _handlePostgrestError(e, 'asignar domiciliario');
+      _handlePostgrestError(e, 'asignar domiciliario');
     } catch (e) {
       throw Exception('Error inesperado al asignar domiciliario: $e');
+    }
+  }
+
+  Future<void> updateDeliveryPerson(String orderId, String deliveryPersonId) async {
+    try {
+      await _client
+          .from('orders')
+          .update({'delivery_person_id': deliveryPersonId})
+          .eq('id', orderId);
+    } on PostgrestException catch (e) {
+      _handlePostgrestError(e, 'cambiar domiciliario');
+    } catch (e) {
+      throw Exception('Error inesperado al cambiar domiciliario: $e');
     }
   }
 

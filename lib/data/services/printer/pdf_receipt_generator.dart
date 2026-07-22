@@ -213,12 +213,7 @@ class PdfReceiptGenerator extends ReceiptGenerator {
                 _buildTotalRow('Descuento:', -order.discountAmount),
               if (order.deliveryFee > 0)
                 _buildTotalRow('Domicilio:', order.deliveryFee),
-              _buildTotalRow(
-                'TOTAL:',
-                order.total,
-                isBold: true,
-                fontSize: 11,
-              ),
+              _buildTotalRow('TOTAL:', order.total, isBold: true, fontSize: 11),
 
               pw.SizedBox(height: 8),
 
@@ -238,10 +233,7 @@ class PdfReceiptGenerator extends ReceiptGenerator {
                   'Notas:',
                   style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
                 ),
-                pw.Text(
-                  order.notes!,
-                  style: const pw.TextStyle(fontSize: 9),
-                ),
+                pw.Text(order.notes!, style: const pw.TextStyle(fontSize: 9)),
               ],
 
               pw.SizedBox(height: 16),
@@ -270,22 +262,29 @@ class PdfReceiptGenerator extends ReceiptGenerator {
               pw.SizedBox(height: 12),
               pw.Center(
                 child: pw.Text(
-                  'Desarrollado por Juan Carmona',
-                  style: const pw.TextStyle(fontSize: 6),
+                  'Desarrollado por:',
+                  style: const pw.TextStyle(fontSize: 4),
+                  textAlign: pw.TextAlign.center,
+                ),
+              ),
+              pw.Center(
+                child: pw.Text(
+                  'Juan D. Carmona',
+                  style: const pw.TextStyle(fontSize: 4),
                   textAlign: pw.TextAlign.center,
                 ),
               ),
               pw.Center(
                 child: pw.Text(
                   'juan.carmona.valdes@gmail.com',
-                  style: const pw.TextStyle(fontSize: 6),
+                  style: const pw.TextStyle(fontSize: 4),
                   textAlign: pw.TextAlign.center,
                 ),
               ),
               pw.Center(
                 child: pw.Text(
                   '3194643984',
-                  style: const pw.TextStyle(fontSize: 6),
+                  style: const pw.TextStyle(fontSize: 4),
                   textAlign: pw.TextAlign.center,
                 ),
               ),
@@ -334,10 +333,7 @@ class PdfReceiptGenerator extends ReceiptGenerator {
                   style: const pw.TextStyle(fontSize: 9),
                 ),
                 if (config.name?.isNotEmpty == true)
-                  pw.Text(
-                    config.name!,
-                    style: const pw.TextStyle(fontSize: 9),
-                  ),
+                  pw.Text(config.name!, style: const pw.TextStyle(fontSize: 9)),
                 if (config.address?.isNotEmpty == true)
                   pw.Text(
                     config.address!,
@@ -387,11 +383,12 @@ class PdfReceiptGenerator extends ReceiptGenerator {
                     fontWeight: pw.FontWeight.bold,
                   ),
                 ),
-                ...debugInfo.split('\n').where((l) => l.isNotEmpty).map(
-                      (line) => pw.Text(
-                        line,
-                        style: const pw.TextStyle(fontSize: 8),
-                      ),
+                ...debugInfo
+                    .split('\n')
+                    .where((l) => l.isNotEmpty)
+                    .map(
+                      (line) =>
+                          pw.Text(line, style: const pw.TextStyle(fontSize: 8)),
                     ),
                 pw.SizedBox(height: 8),
               ],
@@ -422,9 +419,7 @@ class PdfReceiptGenerator extends ReceiptGenerator {
 
   pw.Widget _buildItemRow(OrderItem item) {
     final name = item.productName ?? 'Producto';
-    final qty = item.quantity.toStringAsFixed(
-      item.quantity % 1 == 0 ? 0 : 1,
-    );
+    final qty = item.quantity.toStringAsFixed(item.quantity % 1 == 0 ? 0 : 1);
 
     return pw.Padding(
       padding: const pw.EdgeInsets.symmetric(vertical: 2),
@@ -435,10 +430,7 @@ class PdfReceiptGenerator extends ReceiptGenerator {
             children: [
               pw.Expanded(
                 flex: 2,
-                child: pw.Text(
-                  qty,
-                  style: const pw.TextStyle(fontSize: 9),
-                ),
+                child: pw.Text(qty, style: const pw.TextStyle(fontSize: 9)),
               ),
               pw.Expanded(
                 flex: 5,
@@ -510,10 +502,9 @@ class PdfReceiptGenerator extends ReceiptGenerator {
   }
 
   String _formatMoney(double value) {
-    return value.toStringAsFixed(0).replaceAllMapped(
-          RegExp(r'\B(?=(\d{3})+(?!\d))'),
-          (match) => '.',
-        );
+    return value
+        .toStringAsFixed(0)
+        .replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (match) => '.');
   }
 
   String _truncate(String text, int maxLength) {

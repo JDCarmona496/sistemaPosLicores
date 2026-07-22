@@ -142,6 +142,7 @@ class OrdersNotifier extends StateNotifier<OrdersState> {
     double? deliveryLatitude,
     double? deliveryLongitude,
     double deliveryFee = 0,
+    String? deliveryPersonId,
   }) async {
     try {
       final created = await _repository.create(
@@ -156,8 +157,19 @@ class OrdersNotifier extends StateNotifier<OrdersState> {
         deliveryLongitude: deliveryLongitude,
         deliveryFee: deliveryFee,
       );
-      state = state.copyWith(orders: [created, ...state.orders]);
-      return created;
+
+      var finalOrder = created;
+      if (deliveryPersonId != null && deliveryPersonId.isNotEmpty) {
+        await _repository.assignDeliveryPerson(created.id, deliveryPersonId);
+        finalOrder = created.copyWith(
+          deliveryPersonId: deliveryPersonId,
+          status: OrderStatus.inTransit,
+          updatedAt: DateTime.now(),
+        );
+      }
+
+      state = state.copyWith(orders: [finalOrder, ...state.orders]);
+      return finalOrder;
     } catch (e) {
       throw Exception('Error al crear pedido: ${e.toString()}');
     }
@@ -197,6 +209,27 @@ class OrdersNotifier extends StateNotifier<OrdersState> {
       );
     } catch (e) {
       throw Exception('Error al asignar domiciliario: ${e.toString()}');
+    }
+  }
+
+  Future<void> changeDeliveryPerson({
+    required String orderId,
+    required String deliveryPersonId,
+  }) async {
+    try {
+      await _repository.updateDeliveryPerson(orderId, deliveryPersonId);
+      state = state.copyWith(
+        orders: state.orders
+            .map((o) => o.id == orderId
+                ? o.copyWith(
+                    deliveryPersonId: deliveryPersonId,
+                    updatedAt: DateTime.now(),
+                  )
+                : o)
+            .toList(),
+      );
+    } catch (e) {
+      throw Exception('Error al cambiar domiciliario: ${e.toString()}');
     }
   }
 

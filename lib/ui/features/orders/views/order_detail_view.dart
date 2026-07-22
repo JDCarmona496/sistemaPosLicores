@@ -139,14 +139,17 @@ class _OrderDetailViewState extends ConsumerState<OrderDetailView> {
     final items = <PopupMenuItem<String>>[];
 
     if (_canAssignDelivery(order)) {
+      final isReassignment = order.deliveryPersonId != null;
       items.add(
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 'assign_delivery',
           child: Row(
             children: [
-              Icon(Icons.delivery_dining, color: Colors.indigo),
-              SizedBox(width: 8),
-              Text('Asignar domiciliario'),
+              const Icon(Icons.delivery_dining, color: Colors.indigo),
+              const SizedBox(width: 8),
+              Text(isReassignment
+                  ? 'Cambiar domiciliario'
+                  : 'Asignar domiciliario'),
             ],
           ),
         ),
@@ -220,11 +223,12 @@ class _OrderDetailViewState extends ConsumerState<OrderDetailView> {
   }
 
   bool _canAssignDelivery(Order order) {
-    return order.deliveryType == DeliveryType.delivery &&
-        order.deliveryPersonId == null &&
-        (order.status == OrderStatus.pending ||
-            order.status == OrderStatus.preparing ||
-            order.status == OrderStatus.ready);
+    if (order.deliveryType != DeliveryType.delivery) return false;
+    if (order.status == OrderStatus.delivered ||
+        order.status == OrderStatus.cancelled) {
+      return false;
+    }
+    return true;
   }
 
   bool _canMarkDelivery(Order order) {
@@ -267,13 +271,23 @@ class _OrderDetailViewState extends ConsumerState<OrderDetailView> {
     if (selected == null || !mounted) return;
 
     try {
-      await ref.read(ordersProvider.notifier).assignDeliveryPerson(
-            orderId: order.id,
-            deliveryPersonId: selected.id,
-          );
+      final isReassignment = order.deliveryPersonId != null;
+      if (isReassignment) {
+        await ref.read(ordersProvider.notifier).changeDeliveryPerson(
+              orderId: order.id,
+              deliveryPersonId: selected.id,
+            );
+      } else {
+        await ref.read(ordersProvider.notifier).assignDeliveryPerson(
+              orderId: order.id,
+              deliveryPersonId: selected.id,
+            );
+      }
       ref.invalidate(orderByIdProvider(order.id));
       ref.invalidate(ordersProvider);
-      _showSnack('Domiciliario asignado');
+      _showSnack(isReassignment
+          ? 'Domiciliario actualizado'
+          : 'Domiciliario asignado');
     } catch (e) {
       _showSnack('Error al asignar: $e', isError: true);
     }
@@ -433,6 +447,26 @@ class _OrderDetailViewState extends ConsumerState<OrderDetailView> {
             ],
           ),
           const SizedBox(height: 12),
+          if (order.deliveryType == DeliveryType.delivery &&
+              order.deliveryPersonId != null)
+            Row(
+              children: [
+                Icon(Icons.delivery_dining,
+                    size: 16, color: Colors.grey.shade600),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Domiciliario asignado',
+                    style: TextStyle(color: Colors.grey.shade700),
+                  ),
+                ),
+              ],
+            ),
+          if (order.deliveryType == DeliveryType.delivery &&
+              order.deliveryPersonId != null &&
+              order.notes != null &&
+              order.notes!.isNotEmpty)
+            const SizedBox(height: 12),
           if (order.notes != null && order.notes!.isNotEmpty)
             Container(
               padding: const EdgeInsets.all(12),
