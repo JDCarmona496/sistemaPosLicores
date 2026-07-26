@@ -103,17 +103,39 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
   bool get _canContinue {
     final cartState = ref.read(currentOrderCartProvider);
     if (_currentStep == 0) {
-      return !(cartState.saleType == SaleType.credit &&
-          cartState.isOccasionalCustomer);
+      // Paso Detalles: si es crédito + ocasional no permitir
+      if (cartState.saleType == SaleType.credit &&
+          cartState.isOccasionalCustomer) {
+        return false;
+      }
+      // Si es domicilio, requerir dirección
+      if (cartState.deliveryType == DeliveryType.delivery) {
+        final addr = cartState.deliveryAddress?.trim();
+        if (addr == null || addr.isEmpty) {
+          return false;
+        }
+      }
+      return true;
     }
     if (_currentStep == 1) {
-      return cartState.items.isNotEmpty;
+      // Paso Ítems: requerir productos
+      if (cartState.items.isEmpty) return false;
+      // Si es domicilio, validar que la dirección siga presente
+      if (cartState.deliveryType == DeliveryType.delivery) {
+        final addr = cartState.deliveryAddress?.trim();
+        if (addr == null || addr.isEmpty) {
+          return false;
+        }
+      }
+      return true;
     }
     return true;
   }
 
   @override
   Widget build(BuildContext context) {
+    // Watch the cart to ensure parent rebuilds and _canContinue updates
+    ref.watch(currentOrderCartProvider);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Nuevo Pedido'),
