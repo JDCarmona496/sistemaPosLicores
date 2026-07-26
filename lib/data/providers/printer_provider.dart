@@ -22,15 +22,47 @@ final printerConfigProvider = StateNotifierProvider<PrinterConfigNotifier, Print
 
 class PrinterConfigNotifier extends StateNotifier<PrinterConfig?> {
   static const _key = 'printer_config';
-  final _storage = LocalStorageService(_key);
+  final LocalStorageService _storage;
 
-  PrinterConfigNotifier() : super(null) {
+  /// Constructor normal: carga síncrona desde el directorio raíz de la app
+  /// (escritorio) y luego inicia la carga asíncrona para móvil/respaldo.
+  PrinterConfigNotifier() : _storage = LocalStorageService(_key), super(null) {
+    _loadSync();
     _load();
+  }
+
+  /// Constructor para pre-cargar la configuración antes de arrancar la app.
+  /// Útil en [main.dart] para garantizar que la config esté disponible en el
+  /// primer frame.
+  PrinterConfigNotifier.preloaded(PrinterConfig? config)
+      : _storage = LocalStorageService(_key),
+        super(config) {
+    if (config == null) {
+      _loadSync();
+      _load();
+    }
+  }
+
+  void _loadSync() {
+    try {
+      debugPrint('[PrinterConfigNotifier] Cargando config síncrona...');
+      final json = _storage.readSync();
+      debugPrint('[PrinterConfigNotifier] JSON síncrono: $json');
+      if (json != null && json.isNotEmpty && state == null) {
+        state = PrinterConfig.fromJson(
+          Map<String, dynamic>.from(jsonDecode(json)),
+        );
+        debugPrint('[PrinterConfigNotifier] Config cargada síncronamente: $state');
+      }
+    } catch (e, stack) {
+      debugPrint('[PrinterConfigNotifier] Error carga síncrona: $e');
+      debugPrint(stack.toString());
+    }
   }
 
   Future<void> _load() async {
     try {
-      debugPrint('[PrinterConfigNotifier] Cargando config...');
+      debugPrint('[PrinterConfigNotifier] Cargando config asíncrona...');
       final json = await _storage.read();
       debugPrint('[PrinterConfigNotifier] JSON guardado: $json');
       if (json != null && json.isNotEmpty) {

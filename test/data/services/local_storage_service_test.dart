@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -11,6 +12,7 @@ void main() {
 
   late Directory supportDir;
   late Directory documentsDir;
+  final rootFiles = <File>[];
 
   setUp(() async {
     final baseDir = await Directory.systemTemp.createTemp('local_storage_test_');
@@ -18,6 +20,7 @@ void main() {
     documentsDir = Directory('${baseDir.path}/documents');
     await supportDir.create();
     await documentsDir.create();
+    rootFiles.clear();
 
     // Mockear path_provider para que cada método apunte a su propia carpeta.
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -49,12 +52,54 @@ void main() {
     if (await baseDir.exists()) {
       await baseDir.delete(recursive: true);
     }
+    // En escritorio, writeSync escribe junto al ejecutable del test.
+    // Limpiamos esos archivos para no contaminar el directorio de Flutter.
+    for (final file in rootFiles) {
+      try {
+        if (file.existsSync()) {
+          file.deleteSync();
+        }
+      } catch (_) {
+        // Ignorar errores de limpieza.
+      }
+    }
+    rootFiles.clear();
   });
 
+  File? _rootFileFor(String key) {
+    if (kIsWeb) return null;
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+      return File('${File(Platform.resolvedExecutable).parent.path}/$key.json');
+    }
+    return null;
+  }
+
   group('LocalStorageService', () {
+    test('writeSync y readSync guardan y leen en escritorio', () {
+      if (kIsWeb ||
+          !(Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+        return;
+      }
+
+      const value = '{"sync":"true"}';
+      const key = 'sync_test_key';
+      final service = LocalStorageService(key);
+      final rootFile = _rootFileFor(key);
+      if (rootFile != null) rootFiles.add(rootFile);
+
+      final saved = service.writeSync(value);
+      expect(saved, isTrue);
+
+      final read = service.readSync();
+      expect(read, equals(value));
+    });
+
     test('write guarda y read recupera el valor', () async {
       const value = '{"key":"value"}';
-      final service = LocalStorageService('test_key');
+      const key = 'test_key';
+      final service = LocalStorageService(key);
+      final rootFile = _rootFileFor(key);
+      if (rootFile != null) rootFiles.add(rootFile);
 
       final saved = await service.write(value);
       expect(saved, isTrue);
@@ -65,7 +110,10 @@ void main() {
 
     test('read recupera desde archivo cuando SharedPreferences está vacío', () async {
       const value = '{"only":"file"}';
-      final service = LocalStorageService('file_only_key');
+      const key = 'file_only_key';
+      final service = LocalStorageService(key);
+      final rootFile = _rootFileFor(key);
+      if (rootFile != null) rootFiles.add(rootFile);
 
       // Escribir sin SharedPreferences (usando write, que llena ambos).
       await service.write(value);
@@ -79,12 +127,15 @@ void main() {
 
     test('read recupera desde archivo legado cuando no existe el primario', () async {
       const value = '{"legacy":"true"}';
-      final service = LocalStorageService('legacy_key');
+      const key = 'legacy_key';
+      final service = LocalStorageService(key);
+      final rootFile = _rootFileFor(key);
+      if (rootFile != null) rootFiles.add(rootFile);
 
       // Guardar usando el nuevo servicio (llena primario y legado).
       await service.write(value);
       // Borrar el primario para simular que solo queda el legado.
-      final primaryFile = File('${supportDir.path}/applicoresestacion/legacy_key.json');
+      final primaryFile = File('${supportDir.path}/applicoresestacion/$key.json');
       if (await primaryFile.exists()) {
         await primaryFile.delete();
       }
@@ -98,7 +149,10 @@ void main() {
 
     test('delete elimina el valor de todos los almacenamientos', () async {
       const value = '{"delete":"me"}';
-      final service = LocalStorageService('delete_key');
+      const key = 'delete_key';
+      final service = LocalStorageService(key);
+      final rootFile = _rootFileFor(key);
+      if (rootFile != null) rootFiles.add(rootFile);
 
       await service.write(value);
       final deleted = await service.delete();

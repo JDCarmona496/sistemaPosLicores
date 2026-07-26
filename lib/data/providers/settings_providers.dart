@@ -63,15 +63,40 @@ final invoiceConfigProvider =
 
 class InvoiceConfigNotifier extends StateNotifier<InvoiceConfig> {
   static const _prefsKey = 'invoice_config';
-  final _storage = LocalStorageService(_prefsKey);
+  final LocalStorageService _storage;
 
-  InvoiceConfigNotifier() : super(const InvoiceConfig()) {
+  InvoiceConfigNotifier()
+      : _storage = LocalStorageService(_prefsKey),
+        super(const InvoiceConfig()) {
+    _loadSync();
     _load();
+  }
+
+  InvoiceConfigNotifier.preloaded(super.state)
+      : _storage = LocalStorageService(_prefsKey) {
+    // Si se pre-cargó, no hace falta volver a leer; ya se leyó antes de runApp.
+  }
+
+  void _loadSync() {
+    try {
+      debugPrint('[InvoiceConfigNotifier] Cargando config síncrona...');
+      final json = _storage.readSync();
+      debugPrint('[InvoiceConfigNotifier] JSON síncrono: $json');
+      if (json != null && json.isNotEmpty) {
+        state = InvoiceConfig.fromJson(
+          Map<String, dynamic>.from(jsonDecode(json)),
+        );
+        debugPrint('[InvoiceConfigNotifier] Config cargada síncronamente: $state');
+      }
+    } catch (e, stack) {
+      debugPrint('[InvoiceConfigNotifier] Error carga síncrona: $e');
+      debugPrint(stack.toString());
+    }
   }
 
   Future<void> _load() async {
     try {
-      debugPrint('[InvoiceConfigNotifier] Cargando config...');
+      debugPrint('[InvoiceConfigNotifier] Cargando config asíncrona...');
       final json = await _storage.read();
       debugPrint('[InvoiceConfigNotifier] JSON guardado: $json');
       if (json != null && json.isNotEmpty) {
@@ -117,15 +142,38 @@ final deliveryConfigProvider =
 
 class DeliveryConfigNotifier extends StateNotifier<DeliveryConfig> {
   static const _prefsKey = 'delivery_config';
-  final _storage = LocalStorageService(_prefsKey);
+  final LocalStorageService _storage;
 
-  DeliveryConfigNotifier() : super(const DeliveryConfig()) {
+  DeliveryConfigNotifier()
+      : _storage = LocalStorageService(_prefsKey),
+        super(const DeliveryConfig()) {
+    _loadSync();
     _load();
+  }
+
+  DeliveryConfigNotifier.preloaded(super.state)
+      : _storage = LocalStorageService(_prefsKey);
+
+  void _loadSync() {
+    try {
+      debugPrint('[DeliveryConfigNotifier] Cargando config síncrona...');
+      final json = _storage.readSync();
+      debugPrint('[DeliveryConfigNotifier] JSON síncrono: $json');
+      if (json != null && json.isNotEmpty) {
+        state = DeliveryConfig.fromJson(
+          Map<String, dynamic>.from(jsonDecode(json)),
+        );
+        debugPrint('[DeliveryConfigNotifier] Config cargada síncronamente: $state');
+      }
+    } catch (e, stack) {
+      debugPrint('[DeliveryConfigNotifier] Error carga síncrona: $e');
+      debugPrint(stack.toString());
+    }
   }
 
   Future<void> _load() async {
     try {
-      debugPrint('[DeliveryConfigNotifier] Cargando config...');
+      debugPrint('[DeliveryConfigNotifier] Cargando config asíncrona...');
       final json = await _storage.read();
       debugPrint('[DeliveryConfigNotifier] JSON guardado: $json');
       if (json != null && json.isNotEmpty) {
