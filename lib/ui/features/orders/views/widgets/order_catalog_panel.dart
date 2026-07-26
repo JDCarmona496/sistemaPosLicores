@@ -7,8 +7,10 @@ import '../../../../../data/providers/order_providers.dart';
 import '../../../../../data/providers/product_providers.dart';
 import '../../../../../domain/models/order_item.dart';
 import '../../../../../domain/models/product.dart';
-import 'add_remove_button.dart';
-import 'price_type_style.dart';
+import 'catalog_product_card.dart';
+import 'catalog_search_bar.dart';
+import 'category_chips.dart';
+import 'price_type_selector.dart';
 
 /// Panel de catálogo de productos con búsqueda, filtros por categoría,
 /// selector de tipo de precio por defecto y grilla de productos.
@@ -49,9 +51,18 @@ class _OrderCatalogPanelState extends ConsumerState<OrderCatalogPanel> {
     });
   }
 
+  void _onSearchClear() {
+    _productSearchController.clear();
+    ref.read(productsProvider.notifier).setSearch(null);
+  }
+
   void _onCategorySelected(String? categoryId) {
     setState(() => _selectedCategoryId = categoryId);
     ref.read(productsProvider.notifier).setCategory(categoryId);
+  }
+
+  void _onPriceTypeChanged(OrderItemPriceType type) {
+    setState(() => _defaultPriceType = type);
   }
 
   void _onProductIncrement(Product product) {
@@ -101,7 +112,10 @@ class _OrderCatalogPanelState extends ConsumerState<OrderCatalogPanel> {
   }
 
   int _quantityInCart(
-    CurrentOrderCartState cart, Product product, OrderItemPriceType priceType) {
+    CurrentOrderCartState cart,
+    Product product,
+    OrderItemPriceType priceType,
+  ) {
     final item = cart.items.firstWhere(
       (i) => i.productId == product.id && i.priceType == priceType,
       orElse: () => const OrderItem(
@@ -123,127 +137,104 @@ class _OrderCatalogPanelState extends ConsumerState<OrderCatalogPanel> {
   Widget build(BuildContext context) {
     final productsState = ref.watch(productsProvider);
     final categoriesAsync = ref.watch(categoriesProvider);
-    // Suscribirse al carrito: sin esto las cantidades de las tarjetas
-    // no se actualizan (el padre usa const OrderCatalogPanel()).
     final cart = ref.watch(currentOrderCartProvider);
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Card(
-      margin: const EdgeInsets.all(16),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+      elevation: 0,
+      margin: const EdgeInsets.all(0),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: colorScheme.outlineVariant),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
         child: CustomScrollView(
           slivers: [
             SliverToBoxAdapter(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Catálogo',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    '${productsState.products.length} productos',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 12)),
-            SliverToBoxAdapter(
-              child: TextField(
-                controller: _productSearchController,
-                decoration: InputDecoration(
-                  hintText: 'Buscar producto...',
-                  prefixIcon: const Icon(Icons.search),
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.clear),
-                    onPressed: () {
-                      _productSearchController.clear();
-                      ref.read(productsProvider.notifier).setSearch(null);
-                    },
-                  ),
-                  border: const OutlineInputBorder(),
-                ),
-                onChanged: _onSearchChanged,
-              ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 12)),
-            SliverToBoxAdapter(
-              child: categoriesAsync.when(
-                data: (categories) => SizedBox(
-                  height: 40,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    children: [
-                      FilterChip(
-                        label: const Text('Todas'),
-                        selected: _selectedCategoryId == null,
-                        onSelected: (_) => _onCategorySelected(null),
-                      ),
-                      const SizedBox(width: 8),
-                      ...categories.map((category) {
-                        final selected = _selectedCategoryId == category.id;
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: FilterChip(
-                            label: Text(category.name),
-                            selected: selected,
-                            onSelected: (_) => _onCategorySelected(category.id),
+              child: Container(
+                color: colorScheme.surfaceContainerLowest,
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Catálogo',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
                           ),
-                        );
-                      }),
-                    ],
-                  ),
+                          decoration: BoxDecoration(
+                            color: colorScheme.primaryContainer,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '${productsState.products.length} productos',
+                            style: TextStyle(
+                              color: colorScheme.onPrimaryContainer,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    CatalogSearchBar(
+                      controller: _productSearchController,
+                      onChanged: _onSearchChanged,
+                      onClear: _onSearchClear,
+                    ),
+                    const SizedBox(height: 12),
+                    categoriesAsync.when(
+                      data: (categories) => CategoryChips(
+                        categories: categories,
+                        selectedId: _selectedCategoryId,
+                        onSelected: _onCategorySelected,
+                      ),
+                      loading: () => const SizedBox(
+                        height: 44,
+                        child: Center(
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        ),
+                      ),
+                      error: (error, stackTrace) => const SizedBox.shrink(),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Text(
+                          'Precio:',
+                          style: TextStyle(
+                            color: colorScheme.onSurfaceVariant,
+                            fontSize: 13,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: PriceTypeSelector(
+                            value: _defaultPriceType,
+                            onChanged: _onPriceTypeChanged,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                loading: () => const SizedBox(
-                  height: 40,
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-                error: (error, stackTrace) => const SizedBox.shrink(),
               ),
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: 12)),
-            SliverToBoxAdapter(
-              child: Wrap(
-                spacing: 8,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  const Text('Precio por defecto:'),
-                  SegmentedButton<OrderItemPriceType>(
-                    segments: [
-                      ButtonSegment(
-                        value: OrderItemPriceType.retail,
-                        icon: Icon(OrderItemPriceType.retail.icon, size: 16),
-                        label: Text(OrderItemPriceType.retail.label),
-                      ),
-                      ButtonSegment(
-                        value: OrderItemPriceType.wholesale,
-                        icon: Icon(OrderItemPriceType.wholesale.icon, size: 16),
-                        label: Text(OrderItemPriceType.wholesale.label),
-                      ),
-                      ButtonSegment(
-                        value: OrderItemPriceType.cold,
-                        icon: Icon(OrderItemPriceType.cold.icon, size: 16),
-                        label: Text(OrderItemPriceType.cold.label),
-                      ),
-                    ],
-                    selected: {_defaultPriceType},
-                    onSelectionChanged: (selected) {
-                      if (selected.isNotEmpty) {
-                        setState(() => _defaultPriceType = selected.first);
-                      }
-                    },
-                  ),
-                ],
-              ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 12)),
             if (productsState.isLoading && productsState.products.isEmpty)
               const SliverFillRemaining(
                 child: Center(child: CircularProgressIndicator()),
@@ -254,202 +245,68 @@ class _OrderCatalogPanelState extends ConsumerState<OrderCatalogPanel> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.search_off,
-                          size: 48, color: Colors.grey.shade700),
-                      const SizedBox(height: 8),
+                      Icon(
+                        Icons.search_off,
+                        size: 56,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(height: 12),
                       Text(
                         'No se encontraron productos',
-                        style: TextStyle(color: Colors.grey.shade700),
+                        style: TextStyle(
+                          color: colorScheme.onSurfaceVariant,
+                          fontSize: 16,
+                        ),
                       ),
                     ],
                   ),
                 ),
               )
             else
-              SliverGrid(
-                gridDelegate:
-                    const SliverGridDelegateWithMaxCrossAxisExtent(
-                  maxCrossAxisExtent: 220,
-                  childAspectRatio: 0.85,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                ),
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) =>
-                      _buildProductCard(cart, productsState.products[index]),
-                  childCount: productsState.products.length,
+              SliverPadding(
+                padding: const EdgeInsets.all(16),
+                sliver: SliverGrid(
+                  gridDelegate:
+                      const SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 220,
+                    childAspectRatio: 0.75,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                  ),
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final product = productsState.products[index];
+                      final quantity = _quantityInCart(
+                        cart,
+                        product,
+                        _defaultPriceType,
+                      );
+                      final total = _totalQuantityInCart(cart, product);
+                      final price = _resolvePrice(product, _defaultPriceType);
+                      final atLimit = total >= product.stockCurrent;
+
+                      return CatalogProductCard(
+                        product: product,
+                        priceType: _defaultPriceType,
+                        price: price,
+                        quantity: quantity,
+                        totalQuantity: total,
+                        atStockLimit: atLimit,
+                        onIncrement:
+                            price > 0 && !atLimit
+                                ? () => _onProductIncrement(product)
+                                : null,
+                        onDecrement: quantity > 0
+                            ? () => _onProductDecrement(product)
+                            : null,
+                      );
+                    },
+                    childCount: productsState.products.length,
+                  ),
                 ),
               ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildProductCard(CurrentOrderCartState cart, Product product) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final defaultPrice = _resolvePrice(product, _defaultPriceType);
-    final quantityForDefault = _quantityInCart(cart, product, _defaultPriceType);
-    final totalQuantity = _totalQuantityInCart(cart, product);
-    final hasPrice = defaultPrice > 0;
-    final atStockLimit = totalQuantity >= product.stockCurrent;
-    final stockColor = product.stockCurrent == 0
-        ? Colors.red
-        : product.stockCurrent <= product.stockMin
-            ? Colors.orange
-            : Colors.green;
-
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      elevation: 1,
-      child: Stack(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Icono del producto (el lado derecho queda libre para
-                // la cinta de cantidad en carrito).
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    Icons.liquor,
-                    size: 20,
-                    color: colorScheme.onPrimaryContainer,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                // Nombre y presentación.
-                Text(
-                  product.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  product.presentation,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const Spacer(),
-                // Precio + stock.
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '\$${defaultPrice.toStringAsFixed(0)}',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 17,
-                        color: hasPrice
-                            ? colorScheme.primary
-                            : colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: stockColor.shade50,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: stockColor.shade200),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.inventory_2_outlined,
-                              size: 11, color: stockColor.shade700),
-                          const SizedBox(width: 3),
-                          Text(
-                            atStockLimit && product.stockCurrent > 0
-                                ? 'Máx ${product.stockCurrent}'
-                                : '${product.stockCurrent}',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: atStockLimit
-                                  ? Colors.red.shade700
-                                  : stockColor.shade700,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                // Controles de cantidad.
-                Row(
-                  children: [
-                    AddRemoveButton(
-                      icon: Icons.remove,
-                      onPressed: quantityForDefault > 0
-                          ? () => _onProductDecrement(product)
-                          : null,
-                    ),
-                    Expanded(
-                      child: Text(
-                        '$quantityForDefault',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          color: quantityForDefault > 0
-                              ? colorScheme.primary
-                              : null,
-                        ),
-                      ),
-                    ),
-                    AddRemoveButton(
-                      icon: Icons.add,
-                      onPressed: hasPrice && !atStockLimit
-                          ? () => _onProductIncrement(product)
-                          : null,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          // Cinta con el total en carrito (todos los tipos de precio).
-          if (totalQuantity > 0)
-            Positioned(
-              top: 0,
-              right: 0,
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: colorScheme.error,
-                  borderRadius: const BorderRadius.only(
-                    topRight: Radius.circular(12),
-                    bottomLeft: Radius.circular(12),
-                  ),
-                ),
-                child: Text(
-                  '$totalQuantity',
-                  style: TextStyle(
-                    color: colorScheme.onError,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-        ],
       ),
     );
   }
