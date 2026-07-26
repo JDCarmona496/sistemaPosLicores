@@ -173,6 +173,8 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               OrderHeaderCard(
+                addressController: _addressController,
+                deliveryFeeController: _deliveryFeeController,
                 onCustomerTap: _selectCustomer,
                 onClearCustomer: _clearCustomer,
                 onSaleTypeChanged: _onSaleTypeChanged,
@@ -201,8 +203,6 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
           Expanded(
             flex: 2,
             child: OrderCartPanel(
-              addressController: _addressController,
-              deliveryFeeController: _deliveryFeeController,
               notesController: _notesController,
             ),
           ),
@@ -246,8 +246,6 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: OrderCartPanel(
-                    addressController: _addressController,
-                    deliveryFeeController: _deliveryFeeController,
                     notesController: _notesController,
                   ),
                 ),

@@ -154,7 +154,7 @@ class CatalogProductCard extends StatelessWidget {
     final isCold = product.isCold || priceType == OrderItemPriceType.cold;
 
     return Container(
-      height: 80,
+      height: 56,
       width: double.infinity,
       decoration: BoxDecoration(
         color: colorScheme.primaryContainer.withValues(alpha: 0.4),
@@ -198,7 +198,7 @@ class _FallbackIcon extends StatelessWidget {
     return Center(
       child: Icon(
         isCold ? Icons.ac_unit : Icons.liquor,
-        size: 40,
+        size: 28,
         color: colorScheme.onPrimaryContainer.withValues(alpha: 0.7),
       ),
     );

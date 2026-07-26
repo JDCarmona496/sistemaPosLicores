@@ -3,10 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../data/providers/order_providers.dart';
 import '../../../../../domain/models/order.dart';
+import 'geocode_address_button.dart';
 
-/// Tarjeta única de información del pedido: cliente, tipo de venta y tipo de
-/// entrega. Diseño compacto premium para flujo de nuevo pedido.
+/// Tarjeta única de información del pedido: cliente, tipo de venta, tipo de
+/// entrega, dirección y costo de domicilio. Diseño compacto premium para el
+/// paso 1 del flujo de nuevo pedido.
 class OrderHeaderCard extends ConsumerWidget {
+  final TextEditingController addressController;
+  final TextEditingController deliveryFeeController;
   final VoidCallback onCustomerTap;
   final VoidCallback onClearCustomer;
   final ValueChanged<SaleType> onSaleTypeChanged;
@@ -14,6 +18,8 @@ class OrderHeaderCard extends ConsumerWidget {
 
   const OrderHeaderCard({
     super.key,
+    required this.addressController,
+    required this.deliveryFeeController,
     required this.onCustomerTap,
     required this.onClearCustomer,
     required this.onSaleTypeChanged,
@@ -25,6 +31,7 @@ class OrderHeaderCard extends ConsumerWidget {
     final cartState = ref.watch(currentOrderCartProvider);
     final colorScheme = Theme.of(context).colorScheme;
     final isOccasional = cartState.isOccasionalCustomer;
+    final isDelivery = cartState.deliveryType == DeliveryType.delivery;
 
     return Card(
       elevation: 0,
@@ -76,6 +83,57 @@ class OrderHeaderCard extends ConsumerWidget {
                 ),
               ],
             ),
+            if (isDelivery) ...[
+              const SizedBox(height: 14),
+              TextField(
+                controller: addressController,
+                decoration: InputDecoration(
+                  labelText: 'Dirección de entrega',
+                  prefixIcon: Icon(Icons.location_on_outlined,
+                      color: colorScheme.onSurfaceVariant),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: colorScheme.outlineVariant),
+                  ),
+                ),
+                maxLines: 2,
+                onChanged: (value) => ref
+                    .read(currentOrderCartProvider.notifier)
+                    .setDeliveryAddress(value),
+              ),
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: GeocodeAddressButton(addressController: addressController),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: deliveryFeeController,
+                decoration: InputDecoration(
+                  labelText: 'Costo de domicilio',
+                  prefixIcon: Icon(Icons.delivery_dining_outlined,
+                      color: colorScheme.onSurfaceVariant),
+                  prefixText: '\$ ',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: colorScheme.outlineVariant),
+                  ),
+                ),
+                keyboardType: TextInputType.number,
+                onChanged: (value) {
+                  final fee = double.tryParse(value) ?? 0;
+                  ref
+                      .read(currentOrderCartProvider.notifier)
+                      .setDeliveryFee(fee);
+                },
+              ),
+            ],
           ],
         ),
       ),

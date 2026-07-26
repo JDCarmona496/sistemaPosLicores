@@ -3,21 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../data/providers/order_providers.dart';
 import 'cart_item_card.dart';
-import 'delivery_section.dart';
 import 'notes_section.dart';
 import 'order_summary_section.dart';
 import 'section_header.dart';
 
-/// Panel del carrito: lista de ítems, sección de entrega, notas y resumen.
+/// Panel del carrito: lista de ítems, notas y resumen.
 class OrderCartPanel extends ConsumerWidget {
-  final TextEditingController addressController;
-  final TextEditingController deliveryFeeController;
   final TextEditingController notesController;
 
   const OrderCartPanel({
     super.key,
-    required this.addressController,
-    required this.deliveryFeeController,
     required this.notesController,
   });
 
@@ -95,10 +90,6 @@ class OrderCartPanel extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          DeliverySection(
-                            addressController: addressController,
-                            deliveryFeeController: deliveryFeeController,
-                          ),
                           NotesSection(notesController: notesController),
                           const OrderSummarySection(),
                         ],

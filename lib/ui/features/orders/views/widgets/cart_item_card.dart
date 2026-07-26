@@ -17,8 +17,11 @@ class CartItemCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
     final cartState = ref.watch(currentOrderCartProvider);
-    final stock =
-        ref.watch(productByIdProvider(item.productId)).valueOrNull?.stockCurrent;
+    final product = ref.watch(productByIdProvider(item.productId)).valueOrNull;
+    final stock = product?.stockCurrent;
+    final productName = item.productName?.isNotEmpty == true
+        ? item.productName!
+        : (product?.name ?? 'Producto');
     final othersQty = cartState.items
         .where((i) => i.productId == item.productId && i.id != item.id)
         .fold(0, (sum, i) => sum + i.quantity);
@@ -40,7 +43,7 @@ class CartItemCard extends ConsumerWidget {
               children: [
                 Expanded(
                   child: Text(
-                    item.productName ?? 'Producto',
+                    productName,
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
