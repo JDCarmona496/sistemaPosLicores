@@ -134,8 +134,82 @@ class OrderHeaderCard extends ConsumerWidget {
                 },
               ),
             ],
+            const SizedBox(height: 14),
+            const Divider(height: 1),
+            const SizedBox(height: 12),
+            _OrderValueSummary(),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _OrderValueSummary extends ConsumerWidget {
+  const _OrderValueSummary();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final cartState = ref.watch(currentOrderCartProvider);
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDelivery = cartState.deliveryType == DeliveryType.delivery;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colorScheme.primaryContainer.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                isDelivery ? Icons.local_shipping_outlined : Icons.storefront_outlined,
+                size: 16,
+                color: colorScheme.onPrimaryContainer,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  isDelivery
+                      ? (cartState.deliveryAddress?.isNotEmpty == true
+                          ? cartState.deliveryAddress!
+                          : 'Sin dirección de entrega')
+                      : 'Retiro en tienda',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: colorScheme.onPrimaryContainer,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '${cartState.itemCount} ${cartState.itemCount == 1 ? 'ítem' : 'ítems'}',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: colorScheme.onPrimaryContainer.withValues(alpha: 0.8),
+                ),
+              ),
+              Text(
+                'Total: \$${cartState.total.toStringAsFixed(0)}',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.onPrimaryContainer,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
