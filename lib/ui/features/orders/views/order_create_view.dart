@@ -16,6 +16,9 @@ import 'widgets/customer_selector_dialog.dart';
 import 'widgets/order_cart_panel.dart';
 import 'widgets/order_catalog_panel.dart';
 import 'widgets/order_header_card.dart';
+import 'widgets/order_mini_summary.dart';
+import 'widgets/order_review_panel.dart';
+import 'widgets/order_step_indicator.dart';
 import 'widgets/order_summary_card.dart';
 
 class OrderCreateView extends ConsumerStatefulWidget {
@@ -31,6 +34,9 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
   final _deliveryFeeController = TextEditingController(text: '0');
   bool _isLoading = false;
   String? _currentUserId;
+  int _currentStep = 0;
+
+  static const _steps = ['Detalles', 'Ítems', 'Revisar'];
 
   @override
   void initState() {
@@ -41,6 +47,7 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
       _notesController.clear();
       _addressController.clear();
       _deliveryFeeController.text = '0';
+      setState(() => _currentStep = 0);
     });
   }
 
@@ -65,10 +72,48 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
     }
   }
 
+  void _nextStep() {
+    final cartState = ref.read(currentOrderCartProvider);
+
+    if (_currentStep == 0) {
+      if (cartState.saleType == SaleType.credit &&
+          cartState.isOccasionalCustomer) {
+        _showSnack(
+          'No se puede vender a crédito a un cliente ocasional',
+          isError: true,
+        );
+        return;
+      }
+    }
+
+    if (_currentStep == 1) {
+      if (cartState.items.isEmpty) {
+        _showSnack('Agrega al menos un producto', isError: true);
+        return;
+      }
+    }
+
+    setState(() => _currentStep = (_currentStep + 1).clamp(0, 2));
+  }
+
+  void _previousStep() {
+    setState(() => _currentStep = (_currentStep - 1).clamp(0, 2));
+  }
+
+  bool get _canContinue {
+    final cartState = ref.read(currentOrderCartProvider);
+    if (_currentStep == 0) {
+      return !(cartState.saleType == SaleType.credit &&
+          cartState.isOccasionalCustomer);
+    }
+    if (_currentStep == 1) {
+      return cartState.items.isNotEmpty;
+    }
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final cartState = ref.watch(currentOrderCartProvider);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Nuevo Pedido'),
@@ -76,108 +121,117 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
       body: LayoutBuilder(
         builder: (context, constraints) {
           final isWide = constraints.maxWidth >= 900;
-          return isWide
-              ? Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            flex: 2,
-                            child: OrderHeaderCard(
-                              onCustomerTap: _selectCustomer,
-                              onClearCustomer: _clearCustomer,
-                              onSaleTypeChanged: _onSaleTypeChanged,
-                              onDeliveryTypeChanged: _onDeliveryTypeChanged,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          const Expanded(child: OrderSummaryCard()),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Expanded(
-                            flex: 3,
-                            child: Padding(
-                              padding: EdgeInsets.fromLTRB(16, 0, 8, 16),
-                              child: OrderCatalogPanel(),
-                            ),
-                          ),
-                          Expanded(
-                            flex: 2,
-                            child: Padding(
-                              padding: const EdgeInsets.fromLTRB(8, 0, 16, 16),
-                              child: OrderCartPanel(
-                                addressController: _addressController,
-                                deliveryFeeController: _deliveryFeeController,
-                                notesController: _notesController,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    BottomCheckoutBar(
-                      isLoading: _isLoading,
-                      canSave: _currentUserId != null,
-                      onSave: _saveOrder,
-                    ),
-                  ],
-                )
-              : Column(
-                  children: [
-                    Expanded(
-                      child: _buildMobileBody(cartState),
-                    ),
-                    BottomCheckoutBar(
-                      isLoading: _isLoading,
-                      canSave: _currentUserId != null,
-                      onSave: _saveOrder,
-                    ),
-                  ],
-                );
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                child: OrderStepIndicator(
+                  currentStep: _currentStep,
+                  steps: _steps,
+                ),
+              ),
+              Expanded(
+                child: _buildStepContent(isWide),
+              ),
+              BottomCheckoutBar(
+                currentStep: _currentStep,
+                isLoading: _isLoading,
+                canSave: _currentUserId != null,
+                canContinue: _canContinue,
+                onBack: _previousStep,
+                onNext: _nextStep,
+                onConfirm: _saveOrder,
+              ),
+            ],
+          );
         },
       ),
     );
   }
 
-  Widget _buildMobileBody(CurrentOrderCartState cartState) {
+  Widget _buildStepContent(bool isWide) {
+    switch (_currentStep) {
+      case 0:
+        return _buildDetailsStep();
+      case 1:
+        return isWide ? _buildDesktopItemsStep() : _buildMobileItemsStep();
+      case 2:
+        return _buildReviewStep();
+      default:
+        return _buildDetailsStep();
+    }
+  }
+
+  Widget _buildDetailsStep() {
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              OrderHeaderCard(
+                onCustomerTap: _selectCustomer,
+                onClearCustomer: _clearCustomer,
+                onSaleTypeChanged: _onSaleTypeChanged,
+                onDeliveryTypeChanged: _onDeliveryTypeChanged,
+              ),
+              const SizedBox(height: 16),
+              const OrderSummaryCard(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDesktopItemsStep() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Expanded(
+            flex: 3,
+            child: OrderCatalogPanel(),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            flex: 2,
+            child: OrderCartPanel(
+              addressController: _addressController,
+              deliveryFeeController: _deliveryFeeController,
+              notesController: _notesController,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileItemsStep() {
     return DefaultTabController(
       length: 2,
       child: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-            child: OrderHeaderCard(
-              onCustomerTap: _selectCustomer,
-              onClearCustomer: _clearCustomer,
-              onSaleTypeChanged: _onSaleTypeChanged,
-              onDeliveryTypeChanged: _onDeliveryTypeChanged,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-            child: const OrderSummaryCard(),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 12),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const TabBar(
-              indicatorSize: TabBarIndicatorSize.tab,
-              dividerHeight: 0,
-              tabs: [
-                Tab(icon: Icon(Icons.search), text: 'Catálogo'),
-                Tab(icon: Icon(Icons.shopping_cart), text: 'Carrito'),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: Row(
+              children: [
+                const Expanded(
+                  child: TabBar(
+                    indicatorSize: TabBarIndicatorSize.tab,
+                    dividerHeight: 0,
+                    tabs: [
+                      Tab(icon: Icon(Icons.search), text: 'Catálogo'),
+                      Tab(icon: Icon(Icons.shopping_cart), text: 'Carrito'),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const OrderMiniSummary(),
               ],
             ),
           ),
@@ -186,11 +240,11 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
             child: TabBarView(
               children: [
                 const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  padding: EdgeInsets.symmetric(horizontal: 16),
                   child: OrderCatalogPanel(),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: OrderCartPanel(
                     addressController: _addressController,
                     deliveryFeeController: _deliveryFeeController,
@@ -201,6 +255,17 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildReviewStep() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: OrderReviewPanel(
+        addressController: _addressController,
+        deliveryFeeController: _deliveryFeeController,
+        notesController: _notesController,
       ),
     );
   }
