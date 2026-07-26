@@ -125,7 +125,8 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
       length: 2,
       child: Column(
         children: [
-          _buildHeader(cartState),
+          _buildMobileHeader(cartState),
+          _buildMobileSummary(cartState),
           const TabBar(
             tabs: [
               Tab(icon: Icon(Icons.search), text: 'Catálogo'),
@@ -143,6 +144,245 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
                 ),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileHeader(CurrentOrderCartState cartState) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Pedido',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: _buildMobileCustomerChip(cartState),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildMobileSaleTypeDropdown(cartState),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildMobileDeliveryTypeDropdown(cartState),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileCustomerChip(CurrentOrderCartState cartState) {
+    final isOccasional = cartState.isOccasionalCustomer;
+    return InkWell(
+      onTap: _selectCustomer,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.grey.shade300),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              isOccasional ? Icons.person_outline : Icons.person,
+              size: 18,
+              color: Colors.grey.shade700,
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Cliente',
+                    style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+                  ),
+                  Text(
+                    isOccasional ? 'Ocasional' : (cartState.customerName ?? 'Cliente'),
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            if (!isOccasional)
+              GestureDetector(
+                onTap: () {
+                  ref.read(currentOrderCartProvider.notifier).setCustomer(
+                        id: null,
+                        name: null,
+                        type: null,
+                        address: null,
+                      );
+                  _addressController.clear();
+                  if (cartState.saleType == SaleType.credit) {
+                    ref.read(currentOrderCartProvider.notifier).setSaleType(SaleType.cash);
+                  }
+                },
+                child: Icon(Icons.close, size: 16, color: Colors.grey.shade600),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileSaleTypeDropdown(CurrentOrderCartState cartState) {
+    return DropdownButtonFormField<SaleType>(
+      initialValue: cartState.saleType,
+      isDense: true,
+      decoration: InputDecoration(
+        labelText: 'Venta',
+        labelStyle: const TextStyle(fontSize: 11),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      items: SaleType.values
+          .map(
+            (type) => DropdownMenuItem(
+              value: type,
+              enabled: !cartState.isOccasionalCustomer || type == SaleType.cash,
+              child: Text(
+                type.label,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: cartState.isOccasionalCustomer && type == SaleType.credit
+                      ? Colors.grey
+                      : null,
+                ),
+              ),
+            ),
+          )
+          .toList(),
+      onChanged: (value) {
+        if (value == null) return;
+        if (value == SaleType.credit && cartState.isOccasionalCustomer) {
+          _showSnack(
+            'No se puede vender a crédito a un cliente ocasional',
+            isError: true,
+          );
+          return;
+        }
+        ref.read(currentOrderCartProvider.notifier).setSaleType(value);
+      },
+    );
+  }
+
+  Widget _buildMobileDeliveryTypeDropdown(CurrentOrderCartState cartState) {
+    return DropdownButtonFormField<DeliveryType>(
+      initialValue: cartState.deliveryType,
+      isDense: true,
+      decoration: InputDecoration(
+        labelText: 'Entrega',
+        labelStyle: const TextStyle(fontSize: 11),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      items: DeliveryType.values
+          .map(
+            (type) => DropdownMenuItem(
+              value: type,
+              child: Text(type.label, style: const TextStyle(fontSize: 12)),
+            ),
+          )
+          .toList(),
+      onChanged: (value) {
+        if (value != null) {
+          ref.read(currentOrderCartProvider.notifier).setDeliveryType(value);
+        }
+      },
+    );
+  }
+
+  Widget _buildMobileSummary(CurrentOrderCartState cartState) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildSummaryChip(
+              icon: Icons.shopping_bag_outlined,
+              label: 'Items',
+              value: '${cartState.itemCount}',
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: _buildSummaryChip(
+              icon: Icons.attach_money,
+              label: 'Subtotal',
+              value: '\$${cartState.subtotal.toStringAsFixed(0)}',
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: _buildSummaryChip(
+              icon: Icons.account_balance_wallet,
+              label: 'Total',
+              value: '\$${cartState.total.toStringAsFixed(0)}',
+              isHighlighted: true,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryChip({
+    required IconData icon,
+    required String label,
+    required String value,
+    bool isHighlighted = false,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: isHighlighted ? Colors.blue.shade50 : Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isHighlighted ? Colors.blue.shade200 : Colors.grey.shade300,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 14, color: isHighlighted ? Colors.blue.shade700 : Colors.grey.shade700),
+          const SizedBox(width: 6),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(fontSize: 9, color: Colors.grey.shade600),
+              ),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: isHighlighted ? Colors.blue.shade800 : null,
+                ),
+              ),
+            ],
           ),
         ],
       ),

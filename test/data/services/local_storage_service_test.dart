@@ -66,7 +66,7 @@ void main() {
     rootFiles.clear();
   });
 
-  File? _rootFileFor(String key) {
+  File? rootFileFor(String key) {
     if (kIsWeb) return null;
     if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
       return File('${File(Platform.resolvedExecutable).parent.path}/$key.json');
@@ -84,7 +84,7 @@ void main() {
       const value = '{"sync":"true"}';
       const key = 'sync_test_key';
       final service = LocalStorageService(key);
-      final rootFile = _rootFileFor(key);
+      final rootFile = rootFileFor(key);
       if (rootFile != null) rootFiles.add(rootFile);
 
       final saved = service.writeSync(value);
@@ -98,7 +98,7 @@ void main() {
       const value = '{"key":"value"}';
       const key = 'test_key';
       final service = LocalStorageService(key);
-      final rootFile = _rootFileFor(key);
+      final rootFile = rootFileFor(key);
       if (rootFile != null) rootFiles.add(rootFile);
 
       final saved = await service.write(value);
@@ -112,7 +112,7 @@ void main() {
       const value = '{"only":"file"}';
       const key = 'file_only_key';
       final service = LocalStorageService(key);
-      final rootFile = _rootFileFor(key);
+      final rootFile = rootFileFor(key);
       if (rootFile != null) rootFiles.add(rootFile);
 
       // Escribir sin SharedPreferences (usando write, que llena ambos).
@@ -129,7 +129,7 @@ void main() {
       const value = '{"legacy":"true"}';
       const key = 'legacy_key';
       final service = LocalStorageService(key);
-      final rootFile = _rootFileFor(key);
+      final rootFile = rootFileFor(key);
       if (rootFile != null) rootFiles.add(rootFile);
 
       // Guardar usando el nuevo servicio (llena primario y legado).
@@ -151,7 +151,7 @@ void main() {
       const value = '{"delete":"me"}';
       const key = 'delete_key';
       final service = LocalStorageService(key);
-      final rootFile = _rootFileFor(key);
+      final rootFile = rootFileFor(key);
       if (rootFile != null) rootFiles.add(rootFile);
 
       await service.write(value);
