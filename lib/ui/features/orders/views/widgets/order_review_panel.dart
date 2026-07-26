@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../data/providers/order_providers.dart';
 import 'cart_item_card.dart';
-import 'delivery_section.dart';
 import 'notes_section.dart';
 import 'order_summary_section.dart';
 import 'section_header.dart';
@@ -11,14 +10,10 @@ import 'section_header.dart';
 
 /// Vista de revisión/validación del pedido antes de confirmar.
 class OrderReviewPanel extends ConsumerWidget {
-  final TextEditingController addressController;
-  final TextEditingController deliveryFeeController;
   final TextEditingController notesController;
 
   const OrderReviewPanel({
     super.key,
-    required this.addressController,
-    required this.deliveryFeeController,
     required this.notesController,
   });
 
@@ -49,7 +44,7 @@ class OrderReviewPanel extends ConsumerWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Verificá los productos, dirección y totales antes de crear el pedido.',
+                      'Verificá los productos, notas y totales antes de crear el pedido.',
                       style: TextStyle(
                         fontSize: 13,
                         color: colorScheme.onSurfaceVariant,
@@ -65,10 +60,6 @@ class OrderReviewPanel extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    DeliverySection(
-                      addressController: addressController,
-                      deliveryFeeController: deliveryFeeController,
-                    ),
                     NotesSection(notesController: notesController),
                     const OrderSummarySection(),
                   ],

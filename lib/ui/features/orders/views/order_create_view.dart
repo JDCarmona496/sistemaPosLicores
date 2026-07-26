@@ -261,8 +261,6 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       child: OrderReviewPanel(
-        addressController: _addressController,
-        deliveryFeeController: _deliveryFeeController,
         notesController: _notesController,
       ),
     );
