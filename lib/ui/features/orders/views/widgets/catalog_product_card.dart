@@ -84,36 +84,38 @@ class CatalogProductCard extends StatelessWidget {
                   ),
                   const Spacer(),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '\$${price.toStringAsFixed(0)}',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                              color: hasPrice
-                                  ? colorScheme.primary
-                                  : colorScheme.onSurfaceVariant,
-                            ),
+                      Expanded(
+                        child: Text(
+                          '\$${price.toStringAsFixed(0)}',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                            color: hasPrice
+                                ? colorScheme.primary
+                                : colorScheme.onSurfaceVariant,
                           ),
-                          const SizedBox(height: 2),
-                          _StockBadge(
-                            stock: product.stockCurrent,
-                            stockColor: stockColor,
-                            atStockLimit: atStockLimit,
-                          ),
-                        ],
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                      _QuantityControls(
-                        quantity: quantity,
-                        onDecrement: onDecrement,
-                        onIncrement: onIncrement,
+                      const SizedBox(width: 6),
+                      _StockBadge(
+                        stock: product.stockCurrent,
+                        stockColor: stockColor,
+                        atStockLimit: atStockLimit,
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: _QuantityControls(
+                      quantity: quantity,
+                      onDecrement: onDecrement,
+                      onIncrement: onIncrement,
+                    ),
                   ),
                 ],
               ),
@@ -261,16 +263,17 @@ class _QuantityControls extends StatelessWidget {
           AddRemoveButton(
             icon: Icons.remove,
             onPressed: quantity > 0 ? onDecrement : null,
+            compact: true,
           ),
           AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            width: 36,
+            width: 28,
             alignment: Alignment.center,
             child: Text(
               '$quantity',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                fontSize: 16,
+                fontSize: 14,
                 color: quantity > 0 ? colorScheme.primary : null,
               ),
             ),
@@ -278,6 +281,7 @@ class _QuantityControls extends StatelessWidget {
           AddRemoveButton(
             icon: Icons.add,
             onPressed: onIncrement,
+            compact: true,
           ),
         ],
       ),
