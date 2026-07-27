@@ -57,17 +57,17 @@ class CatalogProductCard extends StatelessWidget {
         child: Stack(
           children: [
             Padding(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildImageHeader(context),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   Text(
                     product.name,
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                           fontWeight: FontWeight.w700,
-                          fontSize: 15,
+                          fontSize: 14,
                         ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -76,7 +76,7 @@ class CatalogProductCard extends StatelessWidget {
                   Text(
                     product.presentation,
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 11,
                       color: colorScheme.onSurfaceVariant,
                     ),
                     maxLines: 1,
@@ -91,7 +91,7 @@ class CatalogProductCard extends StatelessWidget {
                           '\$${price.toStringAsFixed(0)}',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            fontSize: 18,
+                            fontSize: 17,
                             color: hasPrice
                                 ? colorScheme.primary
                                 : colorScheme.onSurfaceVariant,
@@ -100,7 +100,7 @@ class CatalogProductCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 4),
                       _StockBadge(
                         stock: product.stockCurrent,
                         stockColor: stockColor,
@@ -108,7 +108,7 @@ class CatalogProductCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   Align(
                     alignment: Alignment.centerRight,
                     child: _QuantityControls(
@@ -154,7 +154,7 @@ class CatalogProductCard extends StatelessWidget {
     final isCold = product.isCold || priceType == OrderItemPriceType.cold;
 
     return Container(
-      height: 56,
+      height: 52,
       width: double.infinity,
       decoration: BoxDecoration(
         color: colorScheme.primaryContainer.withValues(alpha: 0.4),
