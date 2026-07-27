@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 
@@ -140,14 +141,32 @@ class DeliveryOrdersNotifier extends StateNotifier<DeliveryOrdersState> {
   }
 
   Future<void> loadOrders() async {
+    debugPrint('[DeliveryOrdersNotifier] loadOrders iniciado');
     state = state.copyWith(isLoading: true, clearError: true);
 
     try {
-      final currentUser = await _ref.read(currentUserProvider.future);
+      final currentUserAsync = _ref.read(currentUserProvider);
+      final currentUser = currentUserAsync.valueOrNull ??
+          await _ref.read(currentUserProvider.future);
+
+      if (currentUser == null) {
+        throw Exception('No se pudo obtener el usuario actual');
+      }
+
+      debugPrint(
+          '[DeliveryOrdersNotifier] Usuario actual: ${currentUser.id} (${currentUser.fullName})');
+
       final orders = await _repository.getAssignedOrders(
         deliveryPersonId: currentUser.id,
         statuses: null,
       );
+
+      debugPrint(
+          '[DeliveryOrdersNotifier] Pedidos asignados encontrados: ${orders.length}');
+      for (final order in orders) {
+        debugPrint(
+            '[DeliveryOrdersNotifier]   - #${order.orderNumber} status=${order.status.label} deliveryType=${order.deliveryType.label}');
+      }
 
       // Orden de llegada: primero los pedidos más antiguos (FIFO).
       orders.sort((a, b) {
@@ -160,7 +179,10 @@ class DeliveryOrdersNotifier extends StateNotifier<DeliveryOrdersState> {
         orders: orders,
         isLoading: false,
       );
-    } catch (e) {
+      debugPrint('[DeliveryOrdersNotifier] loadOrders completado');
+    } catch (e, st) {
+      debugPrint('[DeliveryOrdersNotifier] Error cargando domicilios: $e');
+      debugPrint(st.toString());
       state = state.copyWith(
         isLoading: false,
         error: 'Error al cargar domicilios: ${e.toString()}',

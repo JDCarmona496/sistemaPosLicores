@@ -15,6 +15,15 @@ class DeliveryView extends ConsumerStatefulWidget {
 
 class _DeliveryViewState extends ConsumerState<DeliveryView> {
   @override
+  void initState() {
+    super.initState();
+    // Forzar recarga cada vez que se entra al módulo.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(deliveryOrdersProvider.notifier).refresh();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final deliveryState = ref.watch(deliveryOrdersProvider);
     final colorScheme = Theme.of(context).colorScheme;
@@ -262,6 +271,23 @@ class _DeliveryViewState extends ConsumerState<DeliveryView> {
                     : 'Cuando te asignen un domicilio, aparecerá aquí',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.grey.shade600),
+              ),
+              const SizedBox(height: 16),
+              if (state.filter == DeliveryFilter.active)
+                Text(
+                  'Estados visibles: Listo, En camino, Entrega parcial',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade500,
+                  ),
+                ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: () =>
+                    ref.read(deliveryOrdersProvider.notifier).refresh(),
+                icon: const Icon(Icons.refresh),
+                label: const Text('Reintentar'),
               ),
             ],
           ),
