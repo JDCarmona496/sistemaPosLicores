@@ -15,6 +15,7 @@ import '../ui/features/customers/views/customer_detail_view.dart';
 import '../ui/features/customers/views/customer_form_view.dart';
 import '../ui/features/delivery/views/delivery_view.dart';
 import '../ui/features/delivery/views/delivery_order_detail_view.dart';
+import '../ui/features/credits/views/credits_view.dart';
 import '../ui/features/reports/views/reports_view.dart';
 import '../ui/features/settings/views/settings_view.dart';
 import '../ui/features/settings/views/printer_settings_view.dart';
@@ -163,6 +164,11 @@ final GoRouter router = GoRouter(
           },
         ),
       ],
+    ),
+    GoRoute(
+      path: '/credits',
+      name: 'credits',
+      builder: (context, state) => const CreditsView(),
     ),
     GoRoute(
       path: '/reports',

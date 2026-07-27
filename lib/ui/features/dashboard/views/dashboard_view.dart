@@ -219,6 +219,13 @@ class _DashboardViewState extends State<DashboardView> {
               ),
               _buildModuleCard(
                 context,
+                icon: Icons.credit_card,
+                title: 'Créditos',
+                route: '/credits',
+                color: Colors.indigo,
+              ),
+              _buildModuleCard(
+                context,
                 icon: Icons.bar_chart,
                 title: 'Reportes',
                 route: '/reports',

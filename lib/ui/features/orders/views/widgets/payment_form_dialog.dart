@@ -6,8 +6,14 @@ import '../../../../../domain/models/payment.dart';
 class PaymentFormDialog extends StatefulWidget {
   final Order order;
   final String? receivedBy;
+  final double? initialAmount;
 
-  const PaymentFormDialog({super.key, required this.order, this.receivedBy});
+  const PaymentFormDialog({
+    super.key,
+    required this.order,
+    this.receivedBy,
+    this.initialAmount,
+  });
 
   @override
   State<PaymentFormDialog> createState() => _PaymentFormDialogState();
@@ -15,9 +21,19 @@ class PaymentFormDialog extends StatefulWidget {
 
 class _PaymentFormDialogState extends State<PaymentFormDialog> {
   PaymentMethod _method = PaymentMethod.cash;
-  final _amountController = TextEditingController();
+  late final TextEditingController _amountController;
   final _referenceController = TextEditingController();
   final _notesController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _amountController = TextEditingController(
+      text: widget.initialAmount != null
+          ? widget.initialAmount!.toStringAsFixed(0)
+          : '',
+    );
+  }
 
   @override
   void dispose() {
