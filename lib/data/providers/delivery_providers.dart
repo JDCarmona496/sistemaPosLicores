@@ -136,11 +136,15 @@ class DeliveryOrdersNotifier extends StateNotifier<DeliveryOrdersState> {
   DeliveryOrdersNotifier({
     required this._ref,
     required this._repository,
-  }) : super(const DeliveryOrdersState()) {
-    loadOrders();
-  }
+  }) : super(const DeliveryOrdersState());
 
   Future<void> loadOrders() async {
+    // Evitar cargas simultáneas.
+    if (state.isLoading) {
+      debugPrint('[DeliveryOrdersNotifier] loadOrders omitido: ya cargando');
+      return;
+    }
+
     debugPrint('[DeliveryOrdersNotifier] loadOrders iniciado');
     state = state.copyWith(isLoading: true, clearError: true);
 

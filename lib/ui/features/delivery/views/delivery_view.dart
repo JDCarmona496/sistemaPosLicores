@@ -17,9 +17,12 @@ class _DeliveryViewState extends ConsumerState<DeliveryView> {
   @override
   void initState() {
     super.initState();
-    // Forzar recarga cada vez que se entra al módulo.
+    // Cargar domicilios solo si aún no hay datos (evita recargas duplicadas).
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(deliveryOrdersProvider.notifier).refresh();
+      final deliveryState = ref.read(deliveryOrdersProvider);
+      if (deliveryState.orders.isEmpty && !deliveryState.isLoading) {
+        ref.read(deliveryOrdersProvider.notifier).loadOrders();
+      }
     });
   }
 
