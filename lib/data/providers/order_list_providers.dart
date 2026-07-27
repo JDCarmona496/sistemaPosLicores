@@ -159,7 +159,15 @@ class OrdersNotifier extends StateNotifier<OrdersState> {
       );
 
       var finalOrder = created;
-      if (deliveryPersonId != null && deliveryPersonId.isNotEmpty) {
+      if (deliveryType == DeliveryType.inStore) {
+        // Pedidos en tienda se completan inmediatamente; no requieren fases de entrega.
+        await _repository.updateStatus(created.id, OrderStatus.delivered);
+        finalOrder = created.copyWith(
+          status: OrderStatus.delivered,
+          deliveredAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+      } else if (deliveryPersonId != null && deliveryPersonId.isNotEmpty) {
         await _repository.assignDeliveryPerson(created.id, deliveryPersonId);
         finalOrder = created.copyWith(
           deliveryPersonId: deliveryPersonId,
