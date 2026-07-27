@@ -54,96 +54,115 @@ class CatalogProductCard extends StatelessWidget {
             width: quantity > 0 ? 1.5 : 1,
           ),
         ),
-        child: Stack(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isCompact = constraints.maxHeight < 210;
+            final textScaler = isCompact
+                ? TextScaler.linear(0.9)
+                : TextScaler.linear(1.0);
+            return MediaQuery(
+              data: MediaQuery.of(context).copyWith(textScaler: textScaler),
+              child: Stack(
                 children: [
-                  _buildImageHeader(context),
-                  const SizedBox(height: 8),
-                  Text(
-                    product.name,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14,
-                        ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    product.presentation,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const Spacer(),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          '\$${price.toStringAsFixed(0)}',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 17,
-                            color: hasPrice
-                                ? colorScheme.primary
-                                : colorScheme.onSurfaceVariant,
+                  Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          constraints: BoxConstraints(
+                            maxHeight: isCompact ? 40 : 52,
                           ),
-                          maxLines: 1,
+                          child: _buildImageHeader(context),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          product.name,
+                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 14,
+                              ),
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                      const SizedBox(width: 4),
-                      _StockBadge(
-                        stock: product.stockCurrent,
-                        stockColor: stockColor,
-                        atStockLimit: atStockLimit,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: _QuantityControls(
-                      quantity: quantity,
-                      onDecrement: onDecrement,
-                      onIncrement: onIncrement,
+                        if (!isCompact) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            product.presentation,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                        const Spacer(),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                '\$${price.toStringAsFixed(0)}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 17,
+                                  color: hasPrice
+                                      ? colorScheme.primary
+                                      : colorScheme.onSurfaceVariant,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            _StockBadge(
+                              stock: product.stockCurrent,
+                              stockColor: stockColor,
+                              atStockLimit: atStockLimit,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: _QuantityControls(
+                            quantity: quantity,
+                            onDecrement: onDecrement,
+                            onIncrement: onIncrement,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
+                  if (totalQuantity > 0)
+                    Positioned(
+                      top: 0,
+                      right: 0,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: colorScheme.error,
+                          borderRadius: const BorderRadius.only(
+                            topRight: Radius.circular(16),
+                            bottomLeft: Radius.circular(16),
+                          ),
+                        ),
+                        child: Text(
+                          '$totalQuantity',
+                          style: TextStyle(
+                            color: colorScheme.onError,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
               ),
-            ),
-            if (totalQuantity > 0)
-              Positioned(
-                top: 0,
-                right: 0,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: colorScheme.error,
-                    borderRadius: const BorderRadius.only(
-                      topRight: Radius.circular(16),
-                      bottomLeft: Radius.circular(16),
-                    ),
-                  ),
-                  child: Text(
-                    '$totalQuantity',
-                    style: TextStyle(
-                      color: colorScheme.onError,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-          ],
+            );
+          },
         ),
       ),
     );
@@ -154,8 +173,8 @@ class CatalogProductCard extends StatelessWidget {
     final isCold = product.isCold || priceType == OrderItemPriceType.cold;
 
     return Container(
-      height: 52,
       width: double.infinity,
+      height: double.infinity,
       decoration: BoxDecoration(
         color: colorScheme.primaryContainer.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(12),
