@@ -134,8 +134,10 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
 
   @override
   Widget build(BuildContext context) {
-    // Watch the cart to ensure parent rebuilds and _canContinue updates
+    // Watch the cart to ensure parent rebuilds and _canContinue updates.
     ref.watch(currentOrderCartProvider);
+    // Watch delivery config so it is guaranteed to be loaded before creating.
+    ref.watch(deliveryConfigProvider);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Nuevo Pedido'),
@@ -451,17 +453,42 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
     try {
       String? autoDeliveryPersonId;
       final deliveryConfig = ref.read(deliveryConfigProvider);
+      debugPrint(
+          '[_saveOrder] deliveryType=${cartState.deliveryType.label} assignmentMode=${deliveryConfig.assignmentMode.label}');
+
       if (cartState.deliveryType == DeliveryType.delivery &&
           deliveryConfig.assignmentMode == DeliveryAssignmentMode.automatic) {
+        // Forzar recálculo fresco para evitar cache vacío/desactualizado.
+        ref.invalidate(leastBusyDeliveryUserProvider);
         final user = await ref.read(leastBusyDeliveryUserProvider.future);
         autoDeliveryPersonId = user?.id;
+
         if (user != null) {
           _showSnack('Domiciliario asignado: ${user.fullName}');
         } else {
-          _showSnack(
-            'No hay domiciliarios disponibles para asignación automática',
-            isError: true,
+          if (!mounted) return;
+          final shouldContinue = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Sin domiciliarios disponibles'),
+              content: const Text(
+                'No se encontró un domiciliario activo para asignar automáticamente. ¿Deseas crear el pedido sin asignación? Después podrás asignarlo manualmente.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('Cancelar'),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text('Crear sin asignar'),
+                ),
+              ],
+            ),
           );
+          if (shouldContinue != true) {
+            return;
+          }
         }
       }
 

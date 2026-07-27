@@ -63,36 +63,45 @@ class _DeliveryViewState extends ConsumerState<DeliveryView> {
       ),
       child: Row(
         children: [
-          _buildFilterChip(
-            label: 'Por entregar',
-            count: state.activeOrders.length,
-            isSelected: state.filter == DeliveryFilter.active,
-            color: Colors.indigo,
-            onTap: () => ref
-                .read(deliveryOrdersProvider.notifier)
-                .setFilter(DeliveryFilter.active),
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildFilterChip(
+                    label: 'Por entregar',
+                    count: state.activeOrders.length,
+                    isSelected: state.filter == DeliveryFilter.active,
+                    color: Colors.indigo,
+                    onTap: () => ref
+                        .read(deliveryOrdersProvider.notifier)
+                        .setFilter(DeliveryFilter.active),
+                  ),
+                  const SizedBox(width: 8),
+                  _buildFilterChip(
+                    label: 'Entregados',
+                    count: state.deliveredOrders.length,
+                    isSelected: state.filter == DeliveryFilter.delivered,
+                    color: Colors.green,
+                    onTap: () => ref
+                        .read(deliveryOrdersProvider.notifier)
+                        .setFilter(DeliveryFilter.delivered),
+                  ),
+                  const SizedBox(width: 8),
+                  _buildFilterChip(
+                    label: 'Todos',
+                    count: state.orders.length,
+                    isSelected: state.filter == DeliveryFilter.all,
+                    color: Colors.blue,
+                    onTap: () => ref
+                        .read(deliveryOrdersProvider.notifier)
+                        .setFilter(DeliveryFilter.all),
+                  ),
+                ],
+              ),
+            ),
           ),
-          const SizedBox(width: 8),
-          _buildFilterChip(
-            label: 'Entregados',
-            count: state.deliveredOrders.length,
-            isSelected: state.filter == DeliveryFilter.delivered,
-            color: Colors.green,
-            onTap: () => ref
-                .read(deliveryOrdersProvider.notifier)
-                .setFilter(DeliveryFilter.delivered),
-          ),
-          const SizedBox(width: 8),
-          _buildFilterChip(
-            label: 'Todos',
-            count: state.orders.length,
-            isSelected: state.filter == DeliveryFilter.all,
-            color: Colors.blue,
-            onTap: () => ref
-                .read(deliveryOrdersProvider.notifier)
-                .setFilter(DeliveryFilter.all),
-          ),
-          const Spacer(),
+          const SizedBox(width: 12),
           Text(
             '${state.filteredOrders.length} pedidos',
             style: TextStyle(
@@ -166,43 +175,50 @@ class _DeliveryViewState extends ConsumerState<DeliveryView> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       color: Colors.grey.shade50,
-      child: Row(
-        children: [
-          Expanded(
-            child: SegmentedButton<DeliveryViewMode>(
-              segments: const [
-                ButtonSegment(
-                  value: DeliveryViewMode.list,
-                  label: Text('Lista'),
-                  icon: Icon(Icons.list),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isWide = constraints.maxWidth > 500;
+          return Row(
+            children: [
+              Expanded(
+                child: SegmentedButton<DeliveryViewMode>(
+                  segments: const [
+                    ButtonSegment(
+                      value: DeliveryViewMode.list,
+                      label: Text('Lista'),
+                      icon: Icon(Icons.list),
+                    ),
+                    ButtonSegment(
+                      value: DeliveryViewMode.zones,
+                      label: Text('Por zona'),
+                      icon: Icon(Icons.map),
+                    ),
+                  ],
+                  selected: {state.viewMode},
+                  onSelectionChanged: (selection) {
+                    if (selection.isNotEmpty) {
+                      ref
+                          .read(deliveryOrdersProvider.notifier)
+                          .setViewMode(selection.first);
+                    }
+                  },
                 ),
-                ButtonSegment(
-                  value: DeliveryViewMode.zones,
-                  label: Text('Por zona'),
-                  icon: Icon(Icons.map),
+              ),
+              if (isWide) ...[
+                const SizedBox(width: 12),
+                Text(
+                  state.viewMode == DeliveryViewMode.zones
+                      ? 'Agrupado por cercanía'
+                      : 'Orden de llegada',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                  ),
                 ),
               ],
-              selected: {state.viewMode},
-              onSelectionChanged: (selection) {
-                if (selection.isNotEmpty) {
-                  ref
-                      .read(deliveryOrdersProvider.notifier)
-                      .setViewMode(selection.first);
-                }
-              },
-            ),
-          ),
-          const SizedBox(width: 12),
-          Text(
-            state.viewMode == DeliveryViewMode.zones
-                ? 'Agrupado por cercanía'
-                : 'Orden de llegada',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade600,
-            ),
-          ),
-        ],
+            ],
+          );
+        },
       ),
     );
   }

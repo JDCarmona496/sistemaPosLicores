@@ -169,6 +169,28 @@ class LicoreriaApp extends StatelessWidget {
       // Forzamos tema claro porque la UI aun no esta adaptada al modo oscuro.
       themeMode: ThemeMode.light,
       routerConfig: router,
+      builder: (context, child) {
+        final mediaQuery = MediaQuery.of(context);
+        final width = mediaQuery.size.width;
+        // Escalado de texto proporcional al ancho de pantalla para mantener
+        // legibilidad sin overflows en dispositivos pequeños.
+        double textScale;
+        if (width < 360) {
+          textScale = 0.85;
+        } else if (width < 600) {
+          textScale = 1.0;
+        } else if (width < 1200) {
+          textScale = 1.05;
+        } else {
+          textScale = 1.1;
+        }
+        return MediaQuery(
+          data: mediaQuery.copyWith(
+            textScaler: TextScaler.linear(textScale),
+          ),
+          child: SafeArea(child: child ?? const SizedBox.shrink()),
+        );
+      },
     );
   }
 }

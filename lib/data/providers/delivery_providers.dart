@@ -223,19 +223,32 @@ const _busyStatuses = {
 /// Si no hay domiciliarios, retorna null.
 final leastBusyDeliveryUserProvider = FutureProvider<User?>((ref) async {
   final users = await ref.watch(deliveryUsersProvider.future);
-  final orders = ref.watch(ordersProvider).orders;
+  if (users.isEmpty) {
+    debugPrint('[leastBusyDeliveryUserProvider] No hay domiciliarios activos');
+    return null;
+  }
 
-  if (users.isEmpty) return null;
+  try {
+    final repository = ref.watch(orderRepositoryProvider);
+    final activeOrders = await repository.getActiveDeliveryOrders();
 
-  int activeCount(User user) => orders
-      .where((o) =>
-          o.deliveryPersonId == user.id && _busyStatuses.contains(o.status))
-      .length;
+    int activeCount(User user) => activeOrders
+        .where((o) =>
+            o.deliveryPersonId == user.id && _busyStatuses.contains(o.status))
+        .length;
 
-  final sorted = List<User>.from(users)
-    ..sort((a, b) => activeCount(a).compareTo(activeCount(b)));
+    final sorted = List<User>.from(users)
+      ..sort((a, b) => activeCount(a).compareTo(activeCount(b)));
 
-  return sorted.first;
+    final selected = sorted.first;
+    debugPrint(
+        '[leastBusyDeliveryUserProvider] Seleccionado: ${selected.fullName} (${selected.id}) con ${activeCount(selected)} pedidos activos');
+    return selected;
+  } catch (e, st) {
+    debugPrint('[leastBusyDeliveryUserProvider] Error: $e');
+    debugPrint(st.toString());
+    return null;
+  }
 });
 
 /// Indica si la asignación automática de domiciliarios está activa.

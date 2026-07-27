@@ -182,13 +182,21 @@ class _DashboardViewState extends State<DashboardView> {
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 16),
-          GridView.count(
-            crossAxisCount: 2,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            mainAxisSpacing: 16,
-            crossAxisSpacing: 16,
-            children: [
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final crossAxisCount = constraints.maxWidth > 900
+                  ? 4
+                  : constraints.maxWidth > 600
+                      ? 3
+                      : 2;
+              return GridView.count(
+                crossAxisCount: crossAxisCount,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                mainAxisSpacing: 16,
+                crossAxisSpacing: 16,
+                childAspectRatio: constraints.maxWidth < 360 ? 0.9 : 1.0,
+                children: [
               _buildModuleCard(
                 context,
                 icon: Icons.shopping_cart,
@@ -238,7 +246,9 @@ class _DashboardViewState extends State<DashboardView> {
                 route: '/settings',
                 color: Colors.grey,
               ),
-            ],
+                ],
+              );
+            },
           ),
         ],
       ),

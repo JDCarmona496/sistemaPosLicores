@@ -224,6 +224,43 @@ class OrderRepository {
     }
   }
 
+  /// Devuelve todos los pedidos activos asignados a domiciliarios.
+  /// Útil para contar carga de trabajo sin depender del cache local.
+  Future<List<Order>> getActiveDeliveryOrders() async {
+    final data = await _client
+        .from('orders')
+        .select('''
+          id,
+          order_number,
+          customer_id,
+          seller_id,
+          delivery_person_id,
+          status,
+          sale_type,
+          delivery_type,
+          subtotal,
+          discount_amount,
+          tax_amount,
+          delivery_fee,
+          total,
+          notes,
+          delivery_address,
+          delivery_latitude,
+          delivery_longitude,
+          created_at,
+          updated_at
+        ''')
+        .inFilter('status', [
+          OrderStatus.ready.dbValue,
+          OrderStatus.inTransit.dbValue,
+          OrderStatus.partiallyDelivered.dbValue,
+        ])
+        .not('delivery_person_id', 'is', null)
+        .order('created_at', ascending: false);
+
+    return data.map((json) => Order.fromJson(json)).toList();
+  }
+
   Future<List<Order>> getAssignedOrders({
     required String deliveryPersonId,
     List<OrderStatus>? statuses,
