@@ -23,6 +23,7 @@ class CashCount with _$CashCount {
     @Default(0) double total,
     @Default(0) double totalBills,
     @Default(0) double totalCoins,
+    @Default(0) double netTotal,
     String? notes,
     DateTime? createdAt,
     @Default(<CashCountDenomination>[]) List<CashCountDenomination> denominations,
@@ -41,6 +42,7 @@ class CashCount with _$CashCount {
       'total': jsonDouble(json['total']),
       'totalBills': jsonDouble(json['total_bills']),
       'totalCoins': jsonDouble(json['total_coins']),
+      'netTotal': jsonDouble(json['net_total']),
       'notes': jsonString(json['notes']),
       'createdAt': jsonDateTime(json['created_at'])?.toIso8601String(),
       'denominations': denominationsJson ?? [],
@@ -87,6 +89,7 @@ extension CashCountSupabaseExtension on CashCount {
       'total': total,
       'total_bills': totalBills,
       'total_coins': totalCoins,
+      'net_total': netTotal,
       if (notes != null && notes!.isNotEmpty) 'notes': notes,
     };
   }

@@ -255,9 +255,9 @@ class PdfReceiptGenerator extends ReceiptGenerator {
               else ...[
                 ...invoice.payments.map((payment) {
                   final date = payment.createdAt != null
-                      ? DateFormat('yyyy-MM-dd').format(
-                          payment.createdAt!.toLocal(),
-                        )
+                      ? DateFormat(
+                          'yyyy-MM-dd',
+                        ).format(payment.createdAt!.toLocal())
                       : 'N/A';
                   return pw.Padding(
                     padding: const pw.EdgeInsets.symmetric(vertical: 1),
@@ -376,10 +376,7 @@ class PdfReceiptGenerator extends ReceiptGenerator {
                   'Notas:',
                   style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
                 ),
-                pw.Text(
-                  invoice.notes!,
-                  style: const pw.TextStyle(fontSize: 9),
-                ),
+                pw.Text(invoice.notes!, style: const pw.TextStyle(fontSize: 9)),
               ],
 
               // Pie: centrado y negrita
@@ -455,7 +452,9 @@ class PdfReceiptGenerator extends ReceiptGenerator {
   }
 
   @override
-  Future<pw.Document> generateCashCountReceipt(CashCountReceiptData data) async {
+  Future<pw.Document> generateCashCountReceipt(
+    CashCountReceiptData data,
+  ) async {
     final font = await _loadFont();
     final boldFont = await _loadBoldFont();
     final theme = pw.ThemeData.withFont(base: font, bold: boldFont);
@@ -481,8 +480,7 @@ class PdfReceiptGenerator extends ReceiptGenerator {
                     fit: pw.BoxFit.contain,
                   ),
                 ),
-              if (config.logoBase64.isNotEmpty)
-                pw.SizedBox(height: 8),
+              if (config.logoBase64.isNotEmpty) pw.SizedBox(height: 8),
 
               // Encabezado del negocio
               pw.Container(
@@ -603,7 +601,7 @@ class PdfReceiptGenerator extends ReceiptGenerator {
               _buildTotalRow('Total billetes:', cashCount.totalBills),
               _buildTotalRow('Total monedas:', cashCount.totalCoins),
               _buildTotalRow(
-                'TOTAL EFECTIVO:',
+                'TOTAL:',
                 cashCount.total,
                 isBold: true,
                 fontSize: 11,
@@ -750,7 +748,9 @@ class PdfReceiptGenerator extends ReceiptGenerator {
                 style: const pw.TextStyle(fontSize: 9),
               ),
               pw.Text(
-                DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now().toLocal()),
+                DateFormat(
+                  'yyyy-MM-dd HH:mm:ss',
+                ).format(DateTime.now().toLocal()),
                 style: const pw.TextStyle(fontSize: 9),
               ),
               pw.SizedBox(height: 8),
@@ -837,10 +837,7 @@ class PdfReceiptGenerator extends ReceiptGenerator {
             flex: 3,
             child: pw.Text(
               '\$${_formatMoney(denom.subtotal)}',
-              style: pw.TextStyle(
-                fontSize: 9,
-                fontWeight: pw.FontWeight.bold,
-              ),
+              style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
               textAlign: pw.TextAlign.right,
             ),
           ),
@@ -926,5 +923,4 @@ class PdfReceiptGenerator extends ReceiptGenerator {
         .toStringAsFixed(0)
         .replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (match) => '.');
   }
-
 }

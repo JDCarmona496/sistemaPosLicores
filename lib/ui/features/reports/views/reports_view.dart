@@ -5,6 +5,7 @@ import '../../../../data/providers/reports_providers.dart';
 import 'dashboard_reports_view.dart';
 import 'products_report_view.dart';
 import 'sales_report_view.dart';
+import 'shift_closings_report_view.dart';
 import 'widgets/date_range_filter.dart';
 
 class ReportsView extends ConsumerStatefulWidget {
@@ -23,7 +24,7 @@ class _ReportsViewState extends ConsumerState<ReportsView>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
   }
 
   @override
@@ -54,6 +55,7 @@ class _ReportsViewState extends ConsumerState<ReportsView>
             Tab(icon: Icon(Icons.dashboard), text: 'Dashboard'),
             Tab(icon: Icon(Icons.trending_up), text: 'Ventas'),
             Tab(icon: Icon(Icons.shopping_bag), text: 'Productos'),
+            Tab(icon: Icon(Icons.point_of_sale), text: 'Cierres'),
           ],
         ),
       ),
@@ -117,6 +119,7 @@ class _ReportsViewState extends ConsumerState<ReportsView>
                 DashboardReportsView(),
                 SalesReportView(),
                 ProductsReportView(),
+                ShiftClosingsReportView(),
               ],
             ),
           ),

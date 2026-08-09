@@ -16,6 +16,7 @@ class _CloseShiftDialogState extends ConsumerState<CloseShiftDialog> {
   final _amountController = TextEditingController();
   final _notesController = TextEditingController();
   double _expectedAmount = 0;
+  double? _lastCountNet;
   bool _isLoadingExpected = true;
   bool _isSaving = false;
   String? _error;
@@ -39,6 +40,7 @@ class _CloseShiftDialogState extends ConsumerState<CloseShiftDialog> {
 
     double expected = 0;
     double? lastCountTotal;
+    double? lastCountNet;
 
     try {
       expected = await ShiftRepository().getExpectedAmount(shift);
@@ -52,6 +54,7 @@ class _CloseShiftDialogState extends ConsumerState<CloseShiftDialog> {
       final counts = await repository.getByShift(shift.id);
       if (counts.isNotEmpty) {
         lastCountTotal = counts.first.total;
+        lastCountNet = counts.first.netTotal;
       }
     } catch (_) {
       // Ignorar: el usuario ingresará el monto manualmente.
@@ -63,6 +66,9 @@ class _CloseShiftDialogState extends ConsumerState<CloseShiftDialog> {
         _isLoadingExpected = false;
         if (lastCountTotal != null) {
           _amountController.text = lastCountTotal.toStringAsFixed(0);
+        }
+        if (lastCountNet != null) {
+          _lastCountNet = lastCountNet;
         }
       });
     }
@@ -133,6 +139,16 @@ class _CloseShiftDialogState extends ConsumerState<CloseShiftDialog> {
                 'Monto esperado: \$${_formatMoney(_expectedAmount)}',
                 style: const TextStyle(fontSize: 16),
               ),
+              if (_lastCountNet != null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  'Último conteo neto: \$${_formatMoney(_lastCountNet!)}',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
               const SizedBox(height: 8),
               TextField(
                 controller: _amountController,

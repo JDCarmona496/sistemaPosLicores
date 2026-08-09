@@ -43,7 +43,10 @@ class _CashCountViewState extends ConsumerState<CashCountView> {
       builder: (context) => AlertDialog(
         title: const Text('Conteo guardado'),
         content: Text(
-          'Total efectivo: \$${_formatMoney(saved.total)}\n\n¿Querés imprimir el recibo?',
+          'Total efectivo: \$${_formatMoney(saved.total)}\n'
+          'Base apertura: \$${_formatMoney(saved.total - saved.netTotal)}\n'
+          'Efectivo neto: \$${_formatMoney(saved.netTotal)}\n\n'
+          '¿Querés imprimir el recibo?',
         ),
         actions: [
           TextButton(
@@ -313,6 +316,40 @@ class _CashCountViewState extends ConsumerState<CashCountView> {
               child: Text(
                 '\$${_formatMoney(state.total)}',
               ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Base apertura: \$${_formatMoney(state.openingAmount)}',
+              style: TextStyle(
+                fontSize: 13,
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Efectivo neto: \$${_formatMoney(state.netTotal)}',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: state.netTotal >= 0 ? Colors.green : colorScheme.error,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Descontar base',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                Switch(
+                  value: state.deductOpening,
+                  onChanged: (value) => notifier.setDeductOpening(value),
+                ),
+              ],
             ),
             const SizedBox(height: 8),
             // Chips billetes / monedas

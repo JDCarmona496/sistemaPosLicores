@@ -87,10 +87,11 @@ class CashCountFormState {
   final bool isLoadingShift;
   final bool isSaving;
   final String? error;
-    final CashCount? savedCashCount;
-    final Shift? shift;
-    final String? responsibleUserId;
-    final String? responsibleUserName;
+  final CashCount? savedCashCount;
+  final Shift? shift;
+  final String? responsibleUserId;
+  final String? responsibleUserName;
+  final bool deductOpening;
 
   const CashCountFormState({
     this.quantities = const {},
@@ -102,6 +103,7 @@ class CashCountFormState {
     this.shift,
     this.responsibleUserId,
     this.responsibleUserName,
+    this.deductOpening = true,
   });
 
   CashCountFormState copyWith({
@@ -114,6 +116,7 @@ class CashCountFormState {
     Shift? shift,
     String? responsibleUserId,
     String? responsibleUserName,
+    bool? deductOpening,
     bool clearError = false,
     bool clearSaved = false,
   }) {
@@ -128,6 +131,7 @@ class CashCountFormState {
       shift: shift ?? this.shift,
       responsibleUserId: responsibleUserId ?? this.responsibleUserId,
       responsibleUserName: responsibleUserName ?? this.responsibleUserName,
+      deductOpening: deductOpening ?? this.deductOpening,
     );
   }
 
@@ -157,6 +161,14 @@ class CashCountFormState {
           (sum, denom) =>
               sum + denom.value * (quantities[denom.value] ?? 0),
         );
+  }
+
+  double get openingAmount => shift?.openingAmount ?? 0;
+
+  double get netTotal {
+    if (!deductOpening) return total;
+    final net = total - openingAmount;
+    return net < 0 ? 0 : net;
   }
 }
 
@@ -204,6 +216,10 @@ class CashCountFormNotifier extends StateNotifier<CashCountFormState> {
     state = state.copyWith(notes: notes);
   }
 
+  void setDeductOpening(bool value) {
+    state = state.copyWith(deductOpening: value);
+  }
+
   Future<CashCount?> save() async {
     final shift = state.shift;
     final userId = state.responsibleUserId;
@@ -234,6 +250,7 @@ class CashCountFormNotifier extends StateNotifier<CashCountFormState> {
         total: calculation.total,
         totalBills: calculation.totalBills,
         totalCoins: calculation.totalCoins,
+        netTotal: state.netTotal,
         notes: state.notes.trim().isEmpty ? null : state.notes.trim(),
         denominations: calculation.denominations,
       );

@@ -38,10 +38,7 @@ class EscPosReceiptGenerator extends ReceiptGenerator {
         final decoded = base64Decode(logoBase64);
         final image = img.decodeImage(decoded);
         if (image != null) {
-          bytes += generator.imageRaster(
-            image,
-            align: PosAlign.center,
-          );
+          bytes += generator.imageRaster(image, align: PosAlign.center);
           bytes += generator.feed(1);
         }
       } catch (e) {
@@ -62,28 +59,19 @@ class EscPosReceiptGenerator extends ReceiptGenerator {
     if (invoice.business.nit?.isNotEmpty == true) {
       bytes += generator.text(
         'NIT: ${invoice.business.nit}',
-        styles: const PosStyles(
-          align: PosAlign.center,
-          bold: true,
-        ),
+        styles: const PosStyles(align: PosAlign.center, bold: true),
       );
     }
     if (invoice.business.address?.isNotEmpty == true) {
       bytes += generator.text(
         invoice.business.address!,
-        styles: const PosStyles(
-          align: PosAlign.center,
-          bold: true,
-        ),
+        styles: const PosStyles(align: PosAlign.center, bold: true),
       );
     }
     if (invoice.business.phone?.isNotEmpty == true) {
       bytes += generator.text(
         'Tel: ${invoice.business.phone}',
-        styles: const PosStyles(
-          align: PosAlign.center,
-          bold: true,
-        ),
+        styles: const PosStyles(align: PosAlign.center, bold: true),
       );
     }
     bytes += generator.feed(1);
@@ -91,10 +79,7 @@ class EscPosReceiptGenerator extends ReceiptGenerator {
     // Titulo y factura electronica
     bytes += generator.text(
       'FACTURA ELECTRONICA',
-      styles: const PosStyles(
-        align: PosAlign.center,
-        bold: true,
-      ),
+      styles: const PosStyles(align: PosAlign.center, bold: true),
     );
     bytes += generator.text(
       invoice.sale.invoiceId,
@@ -150,27 +135,15 @@ class EscPosReceiptGenerator extends ReceiptGenerator {
     bytes += _buildTotalRow(generator, 'Subtotal:', invoice.subtotal);
 
     if (invoice.discountAmount > 0) {
-      bytes += _buildTotalRow(
-        generator,
-        'Descuento:',
-        -invoice.discountAmount,
-      );
+      bytes += _buildTotalRow(generator, 'Descuento:', -invoice.discountAmount);
     }
 
     if (invoice.deliveryFee > 0) {
-      bytes += _buildTotalRow(
-        generator,
-        'Domicilio:',
-        invoice.deliveryFee,
-      );
+      bytes += _buildTotalRow(generator, 'Domicilio:', invoice.deliveryFee);
     }
 
     bytes += generator.row([
-      PosColumn(
-        text: 'TOTAL:',
-        width: 4,
-        styles: const PosStyles(bold: true),
-      ),
+      PosColumn(text: 'TOTAL:', width: 4, styles: const PosStyles(bold: true)),
       PosColumn(
         text: '\$${_formatMoney(invoice.total)}',
         width: 8,
@@ -213,35 +186,19 @@ class EscPosReceiptGenerator extends ReceiptGenerator {
           PosColumn(
             text: '\$${_formatMoney(payment.amount)}',
             width: 3,
-            styles: const PosStyles(
-              align: PosAlign.right,
-              bold: true,
-            ),
+            styles: const PosStyles(align: PosAlign.right, bold: true),
           ),
         ]);
       }
 
       bytes += generator.hr();
 
-      bytes += _buildTotalRow(
-        generator,
-        'Total abonado:',
-        invoice.totalPaid,
-      );
+      bytes += _buildTotalRow(generator, 'Total abonado:', invoice.totalPaid);
 
       if (invoice.balance > 0) {
-        bytes += _buildTotalRow(
-          generator,
-          'Saldo pendiente:',
-          invoice.balance,
-        );
+        bytes += _buildTotalRow(generator, 'Saldo pendiente:', invoice.balance);
       } else {
-        bytes += _buildTotalRow(
-          generator,
-          'Estado:',
-          0,
-          customValue: 'PAGADO',
-        );
+        bytes += _buildTotalRow(generator, 'Estado:', 0, customValue: 'PAGADO');
       }
     }
 
@@ -305,10 +262,7 @@ class EscPosReceiptGenerator extends ReceiptGenerator {
         final decoded = base64Decode(logoBase64);
         final image = img.decodeImage(decoded);
         if (image != null) {
-          bytes += generator.imageRaster(
-            image,
-            align: PosAlign.center,
-          );
+          bytes += generator.imageRaster(image, align: PosAlign.center);
           bytes += generator.feed(1);
         }
       } catch (e) {
@@ -411,11 +365,7 @@ class EscPosReceiptGenerator extends ReceiptGenerator {
     bytes += _buildTotalRow(generator, 'Total billetes:', cashCount.totalBills);
     bytes += _buildTotalRow(generator, 'Total monedas:', cashCount.totalCoins);
     bytes += generator.row([
-      PosColumn(
-        text: 'TOTAL EFECTIVO:',
-        width: 6,
-        styles: const PosStyles(bold: true),
-      ),
+      PosColumn(text: 'TOTAL:', width: 6, styles: const PosStyles(bold: true)),
       PosColumn(
         text: '\$${_formatMoney(cashCount.total)}',
         width: 6,
@@ -497,7 +447,8 @@ class EscPosReceiptGenerator extends ReceiptGenerator {
         bytes += generator.text(line);
       } else {
         final indent = ''.padLeft(_qtyWidth + 1);
-        final line = '$indent${chunk.padRight(_descWidth)} ${''.padLeft(_totalWidth)}';
+        final line =
+            '$indent${chunk.padRight(_descWidth)} ${''.padLeft(_totalWidth)}';
         bytes += generator.text(line);
       }
     }
@@ -512,10 +463,7 @@ class EscPosReceiptGenerator extends ReceiptGenerator {
     String? customValue,
   }) {
     return generator.row([
-      PosColumn(
-        text: label,
-        width: 6,
-      ),
+      PosColumn(text: label, width: 6),
       PosColumn(
         text: customValue ?? '\$${_formatMoney(value)}',
         width: 6,
@@ -599,7 +547,9 @@ class EscPosReceiptGenerator extends ReceiptGenerator {
     } else {
       bytes += generator.text('Sin configurar');
     }
-    bytes += generator.text('${paperWidthMm}mm | ${defaultTargetPlatform.name}');
+    bytes += generator.text(
+      '${paperWidthMm}mm | ${defaultTargetPlatform.name}',
+    );
     bytes += generator.text(
       DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now().toLocal()),
     );
@@ -634,10 +584,8 @@ class EscPosReceiptGenerator extends ReceiptGenerator {
   }
 
   String _formatMoney(double value) {
-    return value.toStringAsFixed(0).replaceAllMapped(
-          RegExp(r'\B(?=(\d{3})+(?!\d))'),
-          (match) => '.',
-        );
+    return value
+        .toStringAsFixed(0)
+        .replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (match) => '.');
   }
-
 }
