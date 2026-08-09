@@ -55,19 +55,34 @@ cd applicoresestacion
    - `20260808_cash_counts.sql`
    - `20260808_reports_rpc.sql`
    - `20260808_server_time_triggers.sql`
-4. Configurar las credenciales en `lib/config/app_config.dart`:
+   - `20260808_fix_user_creation_trigger.sql`
+   - `20260809_shift_closing_report.sql`
+4. Configurar las credenciales usando `--dart-define` (no las guardes en el código fuente):
 
-```dart
-static const String supabaseUrl = 'https://xxxxx.supabase.co';
-static const String supabaseAnonKey = 'tu_anon_key';
+```bash
+flutter run \
+  --dart-define=SUPABASE_URL=https://xxxxx.supabase.co \
+  --dart-define=SUPABASE_ANON_KEY=tu_anon_key
 ```
 
-O crear archivo `.env`:
+Para VS Code, agregá lo siguiente en `.vscode/launch.json`:
 
-```env
-SUPABASE_URL=https://xxxxx.supabase.co
-SUPABASE_ANON_KEY=tu_anon_key
+```json
+{
+  "tool": "flutter",
+  "name": "applicoresestacion",
+  "request": "launch",
+  "type": "dart",
+  "args": [
+    "--dart-define",
+    "SUPABASE_URL=https://xxxxx.supabase.co",
+    "--dart-define",
+    "SUPABASE_ANON_KEY=tu_anon_key"
+  ]
+}
 ```
+
+> **Importante:** la sesión se persiste de forma segura con `flutter_secure_storage`. No uses `EmptyLocalStorage` en producción.
 
 ### 3. Instalar dependencias
 

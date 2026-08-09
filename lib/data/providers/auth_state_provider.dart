@@ -26,20 +26,13 @@ class AuthStateNotifier extends ChangeNotifier {
         Supabase.instance.client.auth.onAuthStateChange.listen(_onAuthStateChange);
   }
 
-  /// Limpia cualquier sesión persistida localmente y fuerza el estado inicial
-  /// a "no autenticado". Esto garantiza que la app siempre pida login al
-  /// abrirse, sin depender de la sesión anterior.
+  /// Inicializa el notifier escuchando los cambios de estado de autenticación.
+  ///
+  /// Supabase se encarga de restaurar la sesión persistida de forma segura
+  /// y emitir el evento correspondiente (signedIn o signedOut).
   Future<void> initialize() async {
-    try {
-      await Supabase.instance.client.auth.signOut(scope: SignOutScope.local);
-    } catch (e) {
-      debugPrint('[AuthStateNotifier] Error limpiando sesión inicial: $e');
-    }
-
-    _isAuthenticated = false;
-    _user = null;
-    _isLoading = false;
-    notifyListeners();
+    // _isLoading permanece true hasta que llegue el primer evento de
+    // onAuthStateChange y _onAuthStateChange actualice el estado.
   }
 
   Future<void> _onAuthStateChange(AuthState state) async {

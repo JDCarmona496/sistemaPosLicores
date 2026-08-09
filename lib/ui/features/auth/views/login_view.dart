@@ -166,64 +166,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
                   label: const Text('Verificar Supabase'),
                 ),
               ),
-              const SizedBox(height: 24),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Usuarios de prueba:',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey.shade700,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    _buildUserChip('admin@licoreria.com'),
-                    _buildUserChip('vendedor@licoreria.com'),
-                    _buildUserChip('domiciliario@licoreria.com'),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Contraseña: Test123456',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildUserChip(String email) {
-    const defaultPassword = 'Test123456';
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: InkWell(
-        onTap: () {
-          _emailController.text = email;
-          _passwordController.text = defaultPassword;
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(4),
-            border: Border.all(color: Colors.grey.shade300),
-          ),
-          child: Text(
-            email,
-            style: const TextStyle(fontSize: 12),
           ),
         ),
       ),

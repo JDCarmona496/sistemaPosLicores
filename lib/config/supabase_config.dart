@@ -1,15 +1,23 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../data/services/secure_local_storage.dart';
 import 'app_config.dart';
 
 class SupabaseConfig {
   static Future<void> initialize() async {
+    if (AppConfig.supabaseUrl.isEmpty || AppConfig.supabaseAnonKey.isEmpty) {
+      throw StateError(
+        'Faltan las variables SUPABASE_URL y/o SUPABASE_ANON_KEY. '
+        'Definilas con --dart-define al compilar.',
+      );
+    }
+
     await Supabase.initialize(
       url: AppConfig.supabaseUrl,
       publishableKey: AppConfig.supabaseAnonKey,
       authOptions: const FlutterAuthClientOptions(
-        // No se persiste la sesión entre cierres de la app.
-        // Esto garantiza que siempre se pida login al abrir la app.
-        localStorage: EmptyLocalStorage(),
+        // Persistencia segura de la sesión con flutter_secure_storage.
+        localStorage: SecureLocalStorage(),
       ),
     );
   }
