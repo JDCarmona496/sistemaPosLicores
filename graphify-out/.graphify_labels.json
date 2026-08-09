@@ -218,5 +218,9 @@
   "216": "package:flutter/foundation.dart",
   "217": "StateNotifier",
   "218": "package:flutter_riverpod/flutter_riverpod.dart",
-  "219": "1. Roles y Permisos"
+  "219": "1. Roles y Permisos",
+  "220": "user.dart",
+  "221": "5. Módulo de Domicilios y Logística",
+  "222": "6. Módulo de Proveedores",
+  "223": "20260808_fix_user_creation_trigger.sql"
 }

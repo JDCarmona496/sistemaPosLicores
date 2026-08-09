@@ -1305,8 +1305,8 @@
     "semantic_hash": ""
   },
   "lib/data/repositories/user_management_repository.dart": {
-    "mtime": 1786249397.998979,
-    "ast_hash": "822fda05938691747627c22c8b2c9f92",
+    "mtime": 1786252218.6261895,
+    "ast_hash": "3b06bad9fc9ee39a3ccc0894d4c07ce2",
     "semantic_hash": ""
   },
   "lib/ui/features/users/views/user_form_view.dart": {
@@ -1322,6 +1322,11 @@
   "lib/ui/features/users/views/widgets/user_role_badge.dart": {
     "mtime": 1786249769.9744217,
     "ast_hash": "ed35141c331e2bd9ea79e32c48b7d739",
+    "semantic_hash": ""
+  },
+  "opencode/migrations/20260808_fix_user_creation_trigger.sql": {
+    "mtime": 1786252169.447414,
+    "ast_hash": "85d4e0b3e78ed788168f76b25a03bfca",
     "semantic_hash": ""
   }
 }

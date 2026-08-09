@@ -46,6 +46,10 @@ class UserManagementRepository {
       final response = await _client.auth.signUp(
         email: email.trim(),
         password: password,
+        data: {
+          'full_name': fullName.trim(),
+          'role': role.name,
+        },
       );
 
       final newUser = response.user;
@@ -54,8 +58,6 @@ class UserManagementRepository {
       }
 
       await _client.from('profiles').update({
-        'full_name': fullName.trim(),
-        'role': role.name,
         'phone': phone?.trim(),
         'is_active': isActive,
       }).eq('id', newUser.id);
