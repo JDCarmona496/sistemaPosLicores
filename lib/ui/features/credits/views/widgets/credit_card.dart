@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:applicoresestacion/data/providers/printer_provider.dart';
 import 'package:applicoresestacion/domain/models/credit_account.dart';
 
-class CreditCard extends StatelessWidget {
+class CreditCard extends ConsumerWidget {
   final CreditAccount credit;
   final VoidCallback onTap;
 
@@ -13,7 +15,7 @@ class CreditCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final balance = credit.balance;
 
     return Card(
@@ -110,9 +112,39 @@ class CreditCard extends StatelessWidget {
                   ],
                 ),
               ],
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => _printReceipt(context, ref),
+                  icon: const Icon(Icons.print, size: 18),
+                  label: const Text('Re-imprimir recibo'),
+                ),
+              ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Future<void> _printReceipt(BuildContext context, WidgetRef ref) async {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+    final result = await ref.read(printOrderReceiptProvider)(
+      credit.order,
+      credit.items,
+      payments: credit.payments,
+    );
+
+    scaffoldMessenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          result.success
+              ? 'Recibo enviado a imprimir'
+              : 'Error al imprimir: ${result.message}',
+        ),
+        backgroundColor: result.success ? Colors.green : Colors.red,
       ),
     );
   }

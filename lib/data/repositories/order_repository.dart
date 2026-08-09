@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../config/supabase_config.dart';
 import '../../domain/models/order.dart';
 import '../../domain/models/order_extensions.dart';
 import '../../domain/models/order_item.dart';
+import '../services/server_time_service.dart';
 
 class OrderRepository {
   SupabaseClient get _client => SupabaseConfig.client;
@@ -312,7 +314,7 @@ class OrderRepository {
     }).toList();
   }
 
-  Future<Order> recordDeliveryEvidence({
+  Future<void> recordDeliveryEvidence({
     required String orderId,
     String? photoUrl,
     String? signatureBase64,
@@ -329,14 +331,10 @@ class OrderRepository {
         throw Exception('No hay evidencia para registrar');
       }
 
-      final result = await _client
+      await _client
           .from('orders')
           .update(updates)
-          .eq('id', orderId)
-          .select()
-          .single();
-
-      return Order.fromJson(result);
+          .eq('id', orderId);
     } on PostgrestException catch (e) {
       throw _handlePostgrestError(e, 'registrar evidencia de entrega');
     } catch (e) {
@@ -377,6 +375,88 @@ class OrderRepository {
     } on PostgrestException catch (e) {
       throw _handlePostgrestError(e, 'registrar entrega');
     } catch (e) {
+      throw Exception('Error inesperado al registrar entrega: $e');
+    }
+  }
+
+  /// Fallback que actualiza directamente las tablas sin usar el RPC
+  /// `mark_items_delivered`. Útil cuando hay triggers rotos que impiden
+  /// la ejecución del RPC.
+  Future<void> markItemsDeliveredDirect({
+    required String orderId,
+    required List<({String orderItemId, int quantityDelivered})> items,
+  }) async {
+    try {
+      debugPrint(
+          '[OrderRepository.markItemsDeliveredDirect] Iniciando fallback para orden $orderId');
+      debugPrint('[OrderRepository.markItemsDeliveredDirect] items: $items');
+
+      // Usar la hora del servidor como fuente de verdad en lugar del reloj local.
+      final serverNow = await ServerTimeService().now();
+
+      final currentItems = await getItems(orderId);
+      debugPrint(
+          '[OrderRepository.markItemsDeliveredDirect] ítems actuales: ${currentItems.map((i) => {'id': i.id, 'qty': i.quantity, 'qtyDel': i.quantityDelivered})}');
+      final itemMap = {for (final i in currentItems) i.id: i};
+
+      int totalOrdered = 0;
+      int totalToDeliver = 0;
+
+      for (final update in items) {
+        final item = itemMap[update.orderItemId];
+        if (item == null) {
+          debugPrint(
+              '[OrderRepository.markItemsDeliveredDirect] ítem ${update.orderItemId} no encontrado, se omite');
+          continue;
+        }
+
+        if (update.quantityDelivered < item.quantityDelivered ||
+            update.quantityDelivered > item.quantity) {
+          throw Exception(
+            'Cantidad inválida para ${item.productName ?? 'producto'}: '
+            'debe estar entre ${item.quantityDelivered} y ${item.quantity}',
+          );
+        }
+
+        totalOrdered += item.quantity;
+        totalToDeliver += update.quantityDelivered;
+
+        debugPrint(
+            '[OrderRepository.markItemsDeliveredDirect] Actualizando ítem ${update.orderItemId} a qtyDelivered=${update.quantityDelivered}');
+        await _client
+            .from('order_items')
+            .update({
+              'quantity_delivered': update.quantityDelivered,
+              if (update.quantityDelivered >= item.quantity)
+                'delivered_at': serverNow.toIso8601String(),
+            })
+            .eq('id', update.orderItemId);
+        debugPrint(
+            '[OrderRepository.markItemsDeliveredDirect] Ítem ${update.orderItemId} actualizado');
+      }
+
+      debugPrint(
+          '[OrderRepository.markItemsDeliveredDirect] totalOrdered=$totalOrdered totalToDeliver=$totalToDeliver');
+
+      final newStatus = totalToDeliver >= totalOrdered
+          ? OrderStatus.delivered
+          : OrderStatus.partiallyDelivered;
+      debugPrint(
+          '[OrderRepository.markItemsDeliveredDirect] Marcando orden como ${newStatus.name} via RPC');
+
+      await _client.rpc('mark_order_status', params: {
+        'p_order_id': orderId,
+        'p_status': newStatus.dbValue,
+      });
+      debugPrint(
+          '[OrderRepository.markItemsDeliveredDirect] Fallback finalizado OK');
+    } on PostgrestException catch (e) {
+      debugPrint(
+          '[OrderRepository.markItemsDeliveredDirect] PostgrestException: ${e.message} | code: ${e.code} | details: ${e.details}');
+      throw _handlePostgrestError(e, 'registrar entrega (directo)');
+    } catch (e) {
+      debugPrint(
+          '[OrderRepository.markItemsDeliveredDirect] Error inesperado: $e');
       throw Exception('Error inesperado al registrar entrega: $e');
     }
   }
@@ -456,6 +536,88 @@ class OrderRepository {
     }
   }
 
+  /// Agrega un nuevo ítem a un pedido existente. El RPC ajusta stock,
+  /// recalcula totales, saldos y auditoría.
+  Future<String> addOrderItem({
+    required String orderId,
+    required OrderItem item,
+    required String editedBy,
+    String? reason,
+  }) async {
+    try {
+      final result = await _client.rpc<String>(
+        'add_order_item',
+        params: {
+          'p_order_id': orderId,
+          'p_product_id': item.productId,
+          'p_quantity': item.quantity,
+          'p_unit_price': item.unitPrice,
+          'p_discount_amount': item.discountAmount,
+          'p_price_type': item.priceType.name,
+          'p_notes': item.notes,
+          'p_edited_by': editedBy,
+          'p_reason': reason,
+        },
+      );
+      return result;
+    } on PostgrestException catch (e) {
+      throw _handlePostgrestError(e, 'agregar el producto al pedido');
+    } catch (e) {
+      throw Exception('Error inesperado al agregar el producto: $e');
+    }
+  }
+
+  /// Edita la cantidad de un ítem existente sin importar el estado del pedido.
+  Future<void> editOrderItem({
+    required String orderId,
+    required String orderItemId,
+    required int newQuantity,
+    required String editedBy,
+    String? reason,
+  }) async {
+    try {
+      await _client.rpc(
+        'edit_order_item_v2',
+        params: {
+          'p_order_id': orderId,
+          'p_order_item_id': orderItemId,
+          'p_new_quantity': newQuantity,
+          'p_edited_by': editedBy,
+          'p_reason': reason,
+        },
+      );
+    } on PostgrestException catch (e) {
+      throw _handlePostgrestError(e, 'editar la cantidad');
+    } catch (e) {
+      throw Exception('Error inesperado al editar la cantidad: $e');
+    }
+  }
+
+  /// Elimina un ítem del pedido. No permite eliminar ítems con cantidad
+  /// entregada.
+  Future<void> removeOrderItem({
+    required String orderId,
+    required String orderItemId,
+    required String editedBy,
+    String? reason,
+  }) async {
+    try {
+      await _client.rpc(
+        'remove_order_item',
+        params: {
+          'p_order_id': orderId,
+          'p_order_item_id': orderItemId,
+          'p_edited_by': editedBy,
+          'p_reason': reason,
+        },
+      );
+    } on PostgrestException catch (e) {
+      throw _handlePostgrestError(e, 'eliminar el producto del pedido');
+    } catch (e) {
+      throw Exception('Error inesperado al eliminar el producto: $e');
+    }
+  }
+
   Future<void> delete(String id) async {
     try {
       await _client.from('orders').delete().eq('id', id);
@@ -477,6 +639,12 @@ class OrderRepository {
     }
     if (message.contains('solo se pueden editar pedidos')) {
       return Exception('Solo se pueden editar pedidos pendientes o en preparación.');
+    }
+    if (message.contains('no se puede eliminar un ítem') ||
+        message.contains('cantidad entregada')) {
+      return Exception(
+        'No se puede modificar un ítem que ya tiene cantidad entregada.',
+      );
     }
     if (message.contains('permission denied') || message.contains('rls')) {
       return Exception(

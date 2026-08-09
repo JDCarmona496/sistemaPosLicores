@@ -7,8 +7,9 @@
 3. [Requerimientos Funcionales](#requerimientos-funcionales)
 4. [Arquitectura del Proyecto](#arquitectura-del-proyecto)
 5. [Base de Datos](#base-de-datos)
-6. [Guía de Desarrollo](#guía-de-desarrollo)
-7. [Próximos Pasos](#próximos-pasos)
+6. [Manejo de Fecha y Hora](#manejo-de-fecha-y-hora)
+7. [Guía de Desarrollo](#guía-de-desarrollo)
+8. [Próximos Pasos](#próximos-pasos)
 
 ---
 
@@ -41,6 +42,7 @@ Sistema multiplataforma (iOS, Android, Web, Windows) para la gestión integral d
 | BD Local | Drift (SQLite) |
 | Impresión | flutter_thermal_printer |
 | Escaneo | mobile_scanner |
+| Gráficos | fl_chart |
 | Modelos | Freezed + JSON Serializable |
 
 **Costo:** $0 (tier gratuito de Supabase)
@@ -440,40 +442,46 @@ Sistema multiplataforma (iOS, Android, Web, Windows) para la gestión integral d
 
 ### 8. Módulo de Reportes y Analytics
 
-#### 8.1 Dashboard en Tiempo Real (Administrador)
-- Ventas del día en curso (total, cantidad de pedidos)
-- Pedidos pendientes / en proceso
-- Alertas activas (stock bajo, vencimientos, deudas vencidas)
-- Top productos vendidos hoy
-- Ventas por vendedor
-- Domicilios activos
+> **Estado:** Implementado con `fl_chart` y funciones RPC en Supabase.
 
-#### 8.2 Reportes de Ventas
-- **Diario:** desglose por hora, vendedor, tipo de pago, categoría de producto
-- **Semanal/Mensual:** tendencias, comparativas con período anterior
-- **Por producto:** más vendidos, menos vendidos, rentabilidad por producto
-- **Por cliente:** mejores clientes, frecuencia de compra, ticket promedio
-- **Por categoría:** distribución de ventas por tipo de producto
-- **Horas pico:** gráfico de ventas por hora del día / día de la semana
+#### 8.1 Arquitectura del Módulo
+- **Backend:** funciones RPC en PostgreSQL (`opencode/migrations/20260808_reports_rpc.sql`):
+  - `get_sales_summary`: totales, órdenes, ticket promedio, descuentos y domicilios.
+  - `get_sales_trend`: evolución diaria de ventas en el rango.
+  - `get_sales_by_payment_method`: desglose por método de pago.
+  - `get_top_products`: productos más vendidos por cantidad.
+  - `get_hourly_sales`: ventas agrupadas por hora del día.
+  - `get_sales_by_seller`: ranking de vendedores.
+  - `get_pending_orders_summary`: órdenes pendientes y su valor.
+- **Flutter:**
+  - `ReportsRepository` (`lib/data/repositories/reports_repository.dart`) expone cada RPC como un método tipado.
+  - `ReportsNotifier` (`lib/data/providers/reports_providers.dart`) carga los datos en paralelo y filtra por vendedor cuando el usuario no es admin.
+  - Vistas con pestañas:
+    - **Dashboard:** KPIs, tendencia de ventas, métodos de pago, ventas por hora y por vendedor.
+    - **Ventas:** resumen financiero, tendencia, desglose por pago/vendedor.
+    - **Productos:** top productos vendidos.
 
-#### 8.3 Reportes Financieros
-- Estado de resultados simplificado (ingresos - costos - gastos)
-- Flujo de caja (entradas y salidas)
-- Cuentas por cobrar (clientes) con aging
-- Cuentas por pagar (proveedores) con vencimientos
-- Rentabilidad bruta por producto y general
+#### 8.2 Filtro de Fechas
+- Selector de rango con presets: Hoy, Últimos 7 días, Últimos 30 días.
+- Date pickers personalizados para rango manual.
+- El rango seleccionado alimenta todas las consultas del módulo.
 
-#### 8.4 Reportes de Inventario
-- Valorización del inventario (a costo y a precio de venta)
-- Rotación de productos
-- Productos vencidos o próximos a vencer
-- Productos sin movimiento (estancados)
-- Historial de mermas y ajustes
+#### 8.3 Gráficos
+- **Tendencia de ventas:** gráfico de líneas suavizado con área bajo la curva.
+- **Métodos de pago:** gráfico de dona con leyenda de montos.
+- **Ventas por hora:** gráfico de barras con barras redondeadas.
+- **Tablas:** top productos y ventas por vendedor.
+- **Estilo:** paleta suave, tarjetas redondeadas, grillas tenues y tipografía minimalista centralizada en `chart_styles.dart`.
 
-#### 8.5 Exportación
-- Exportar reportes a Excel/CSV
-- Exportar a PDF
-- Envío programado de reportes por email (al administrador)
+#### 8.4 Permisos
+- **Admin:** ve reportes de todos los vendedores.
+- **Seller:** solo ve sus propias ventas y métricas.
+
+#### 8.5 Reportes futuros (pendientes)
+- Exportación a Excel/CSV/PDF.
+- Reportes por categoría de producto.
+- Comparativas entre períodos.
+- Envío programado de reportes por email.
 
 ### 9. Sistema de Seguridad y Auditoría
 
@@ -672,14 +680,17 @@ assets/
 - [x] Tema claro/oscuro
 - [x] Estructura de carpetas
 
+#### ✅ Módulos Implementados Recientemente
+- [x] Dashboard con KPIs
+- [x] Reportes y analytics (líneas, barras, dona, tablas)
+- [x] Manejo de fecha/hora con servidor (`ServerTimeService` y triggers)
+
 #### 🚧 En Desarrollo
 - [ ] Autenticación (login/logout)
-- [ ] Dashboard con KPIs
 - [ ] Gestión de pedidos
 - [ ] Catálogo de productos
 - [ ] Gestión de clientes
 - [ ] Módulo de domicilios
-- [ ] Reportes
 - [ ] Configuración
 
 ### Dependencias Principales
@@ -1160,7 +1171,53 @@ end;
 $$;
 ```
 
+#### Funciones de Reportes
+- Migración: `opencode/migrations/20260808_reports_rpc.sql`.
+- Funciones disponibles:
+  - `get_sales_summary(p_date_from, p_date_to, p_seller_id)`
+  - `get_sales_trend(p_date_from, p_date_to, p_seller_id)`
+  - `get_sales_by_payment_method(p_date_from, p_date_to, p_seller_id)`
+  - `get_top_products(p_date_from, p_date_to, p_limit, p_seller_id)`
+  - `get_hourly_sales(p_date, p_seller_id)`
+  - `get_sales_by_seller(p_date_from, p_date_to, p_seller_id)`
+  - `get_pending_orders_summary(p_seller_id)`
+- Todas aceptan `p_seller_id` opcional; si es `null`, el admin ve datos de todos los vendedores.
+
+#### Funciones de Hora del Servidor
+- Migración: `opencode/migrations/20260808_server_time_triggers.sql`.
+- `get_server_time()` devuelve `now()` del servidor; se consume desde `ServerTimeService`.
+- Triggers en `orders`, `order_items` y `payments` mantienen `created_at`, `updated_at`, `delivered_at` y `cancelled_at` con `now()`.
+
 ---
+
+## Manejo de Fecha y Hora
+
+### Fuente de Verdad
+- La hora oficial del sistema es la del servidor de Supabase (`now()`).
+- No se usa el reloj del dispositivo para timestamps que se persisten, ya que puede estar mal configurado.
+- No se depende de servicios web de terceros (NTP públicos); el propio Supabase es la autoridad.
+
+### Sincronización desde Flutter
+- `ServerTimeService` (`lib/data/services/server_time_service.dart`) consulta la función RPC `get_server_time()`.
+- La primera llamada calcula el desfase entre el reloj local y el servidor; las siguientes usan ese desfase sin más llamadas de red.
+- Se usa solo cuando un flujo de Flutter necesita enviar un timestamp explícito (por ejemplo, fallback de entrega directa).
+
+### Triggers de Base de Datos
+- Migración: `opencode/migrations/20260808_server_time_triggers.sql`.
+- Triggers `before insert or update` en `orders`, `order_items` y `payments`:
+  - `created_at`: se asigna con `now()` si no viene un valor.
+  - `updated_at`: se actualiza automáticamente.
+  - `delivered_at`: se asigna con `now()` cuando el pedido/ítem pasa a entregado.
+  - `cancelled_at`: se asigna con `now()` cuando el pedido pasa a cancelado.
+
+### Visualización
+- Todo timestamp proveniente de la base de datos (generalmente UTC) se convierte a hora local con `.toLocal()` antes de mostrarse en la UI o en facturas/receipts.
+- Los generadores de facturas (`esc_pos_receipt_generator.dart`, `pdf_receipt_generator.dart`) formatean las fechas con `.toLocal()`.
+
+### Reglas para Desarrolladores
+1. **No uses `DateTime.now()` para columnas que se guardan en BD.** Usa el trigger o `ServerTimeService.now()` si es estrictamente necesario.
+2. **Siempre muestra `.toLocal()`** los timestamps que vienen de Supabase.
+3. Si agregas una nueva tabla que requiera auditoría de tiempo, incluye un trigger similar.
 
 ## Guía de Desarrollo
 
@@ -1260,6 +1317,7 @@ flutter test test/data/repositories/
 3. **Roles**: La UI debe adaptarse según el rol del usuario (admin, seller, delivery)
 4. **Impresión**: Usar `flutter_thermal_printer` para impresoras Bluetooth ESC/POS
 5. **Códigos de barras**: `mobile_scanner` para escaneo, generar EAN si no existen
+6. **Fecha/hora**: nunca usar `DateTime.now()` del dispositivo para timestamps persistentes; usar la hora del servidor (`ServerTimeService` o triggers). Mostrar siempre `.toLocal()` en UI.
 
 ---
 
@@ -1281,7 +1339,7 @@ flutter test test/data/repositories/
 
 ### Mediano Plazo
 
-9. **Implementar reportes y dashboard** con gráficos
+9. **Exportar reportes** a Excel/CSV/PDF
 10. **Implementar sistema de recordatorios** automáticos
 11. **Implementar entregas parciales** y cancelaciones
 12. **Configurar notificaciones push** locales
@@ -1314,4 +1372,4 @@ Este proyecto es de código privado. Todos los derechos reservados.
 
 ---
 
-**Última actualización:** Junio 2026
+**Última actualización:** Agosto 2026

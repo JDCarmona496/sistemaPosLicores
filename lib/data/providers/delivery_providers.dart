@@ -149,11 +149,10 @@ class DeliveryOrdersNotifier extends StateNotifier<DeliveryOrdersState> {
     state = state.copyWith(isLoading: true, clearError: true);
 
     try {
-      final currentUserAsync = _ref.read(currentUserProvider);
-      final currentUser = currentUserAsync.valueOrNull ??
-          await _ref.read(currentUserProvider.future);
-
-      if (currentUser == null) {
+      final User currentUser;
+      try {
+        currentUser = await _ref.read(currentUserProvider.future);
+      } catch (e) {
         throw Exception('No se pudo obtener el usuario actual');
       }
 
@@ -208,8 +207,6 @@ class DeliveryOrdersNotifier extends StateNotifier<DeliveryOrdersState> {
     final updatedList = state.orders.map((o) => o.id == order.id ? order : o).toList();
     state = state.copyWith(orders: updatedList);
   }
-
-  User? get currentUser => _ref.read(currentUserProvider).valueOrNull;
 }
 
 /// Estados que indican que un domiciliario está ocupado con un pedido.
@@ -220,7 +217,9 @@ const _busyStatuses = {
 };
 
 /// Retorna el domiciliario con menos pedidos activos.
-/// Si no hay domiciliarios, retorna null.
+/// Si no hay domiciliarios activos, retorna null.
+/// Importante: si todos los domiciliarios están ocupados, aun así retorna
+/// el menos ocupado; nunca deja un pedido sin asignar por estar ocupados.
 final leastBusyDeliveryUserProvider = FutureProvider<User?>((ref) async {
   final users = await ref.watch(deliveryUsersProvider.future);
   if (users.isEmpty) {
@@ -247,7 +246,11 @@ final leastBusyDeliveryUserProvider = FutureProvider<User?>((ref) async {
   } catch (e, st) {
     debugPrint('[leastBusyDeliveryUserProvider] Error: $e');
     debugPrint(st.toString());
-    return null;
+    // Fallback: si no podemos contar pedidos activos, asignar el primer
+    // domiciliario activo para no bloquear la creación del pedido.
+    debugPrint(
+        '[leastBusyDeliveryUserProvider] Fallback al primer domiciliario activo');
+    return users.first;
   }
 });
 

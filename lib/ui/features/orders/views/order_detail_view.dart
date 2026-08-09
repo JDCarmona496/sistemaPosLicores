@@ -198,6 +198,21 @@ class _OrderDetailViewState extends ConsumerState<OrderDetailView> {
       );
     }
 
+    if (_canEdit(order)) {
+      items.add(
+        const PopupMenuItem(
+          value: 'edit_order',
+          child: Row(
+            children: [
+              Icon(Icons.edit, color: Colors.blue),
+              SizedBox(width: 8),
+              Text('Editar pedido'),
+            ],
+          ),
+        ),
+      );
+    }
+
     if (_canCancel(order)) {
       items.add(
         const PopupMenuItem(
@@ -216,8 +231,14 @@ class _OrderDetailViewState extends ConsumerState<OrderDetailView> {
     return items;
   }
 
+  bool _canEdit(Order order) {
+    return order.status != OrderStatus.cancelled &&
+        order.status != OrderStatus.returned;
+  }
+
   bool _canCancel(Order order) {
     return order.status != OrderStatus.delivered &&
+        order.status != OrderStatus.completed &&
         order.status != OrderStatus.cancelled &&
         order.status != OrderStatus.partiallyDelivered;
   }
@@ -225,6 +246,7 @@ class _OrderDetailViewState extends ConsumerState<OrderDetailView> {
   bool _canAssignDelivery(Order order) {
     if (order.deliveryType != DeliveryType.delivery) return false;
     if (order.status == OrderStatus.delivered ||
+        order.status == OrderStatus.completed ||
         order.status == OrderStatus.cancelled) {
       return false;
     }
@@ -239,6 +261,7 @@ class _OrderDetailViewState extends ConsumerState<OrderDetailView> {
 
   bool _canRegisterPayment(Order order) {
     return order.saleType == SaleType.credit &&
+        order.status != OrderStatus.completed &&
         order.status != OrderStatus.cancelled;
   }
 
@@ -246,6 +269,11 @@ class _OrderDetailViewState extends ConsumerState<OrderDetailView> {
     switch (action) {
       case 'cancel':
         await _cancelOrder(order);
+        break;
+      case 'edit_order':
+        if (mounted) {
+          context.push('/orders/edit/${order.id}');
+        }
         break;
       case 'assign_delivery':
         await _assignDeliveryPerson(order);
@@ -734,8 +762,14 @@ class _OrderDetailViewState extends ConsumerState<OrderDetailView> {
   Future<void> _printReceipt(Order order) async {
     final itemsAsync = ref.read(orderItemsProvider(order.id));
     final items = itemsAsync.valueOrNull ?? [];
+    final paymentsAsync = ref.read(paymentsByOrderProvider(order.id));
+    final payments = paymentsAsync.valueOrNull ?? [];
 
-    final result = await ref.read(printOrderReceiptProvider)(order, items);
+    final result = await ref.read(printOrderReceiptProvider)(
+      order,
+      items,
+      payments: payments,
+    );
 
     if (!mounted) return;
     _showSnack(
@@ -804,6 +838,7 @@ class _OrderDetailViewState extends ConsumerState<OrderDetailView> {
       case OrderStatus.inTransit:
         return Colors.indigo;
       case OrderStatus.delivered:
+      case OrderStatus.completed:
         return Colors.green;
       case OrderStatus.partiallyDelivered:
         return Colors.teal;

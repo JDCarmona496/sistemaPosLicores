@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../data/providers/settings_providers.dart';
+import '../../../../data/providers/user_providers.dart';
+import '../../../../domain/models/user.dart';
 
 class SettingsView extends ConsumerWidget {
   const SettingsView({super.key});
@@ -10,6 +12,11 @@ class SettingsView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final geocodingContext = ref.watch(geocodingContextProvider);
+    final currentUserAsync = ref.watch(currentUserProvider);
+    final isAdmin = currentUserAsync.maybeWhen(
+      data: (user) => user.role == UserRole.admin,
+      orElse: () => false,
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -25,6 +32,15 @@ class SettingsView extends ConsumerWidget {
             onTap: () => context.push('/settings/printer'),
           ),
           const Divider(),
+          if (isAdmin)
+            ListTile(
+              leading: const Icon(Icons.manage_accounts),
+              title: const Text('Gestión de usuarios'),
+              subtitle: const Text('Crear, editar y desactivar usuarios'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/users'),
+            ),
+          if (isAdmin) const Divider(),
           ListTile(
             leading: const Icon(Icons.receipt_long),
             title: const Text('Configuración de factura'),

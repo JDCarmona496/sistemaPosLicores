@@ -353,7 +353,11 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
 
     setState(() => _isLoading = true);
     try {
-      final result = await ref.read(printOrderReceiptProvider)(order, items);
+      final result = await ref.read(printOrderReceiptProvider)(
+        order,
+        items,
+        payments: const [],
+      );
       if (mounted) {
         _showSnack(
           result.success
@@ -466,29 +470,15 @@ class _OrderCreateViewState extends ConsumerState<OrderCreateView> {
         if (user != null) {
           _showSnack('Domiciliario asignado: ${user.fullName}');
         } else {
-          if (!mounted) return;
-          final shouldContinue = await showDialog<bool>(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('Sin domiciliarios disponibles'),
-              content: const Text(
-                'No se encontró un domiciliario activo para asignar automáticamente. ¿Deseas crear el pedido sin asignación? Después podrás asignarlo manualmente.',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: const Text('Cancelar'),
-                ),
-                FilledButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  child: const Text('Crear sin asignar'),
-                ),
-              ],
-            ),
-          );
-          if (shouldContinue != true) {
-            return;
+          // En modo automático no se permite crear un pedido domicilio sin
+          // domiciliario. Se aborta y se le informa al usuario.
+          if (mounted) {
+            _showSnack(
+              'No hay domiciliarios activos disponibles para asignar automáticamente.',
+              isError: true,
+            );
           }
+          return;
         }
       }
 

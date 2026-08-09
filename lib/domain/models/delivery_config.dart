@@ -31,7 +31,8 @@ extension DeliveryAssignmentModeX on DeliveryAssignmentMode {
 @freezed
 class DeliveryConfig with _$DeliveryConfig {
   const factory DeliveryConfig({
-    @Default(DeliveryAssignmentMode.manual) DeliveryAssignmentMode assignmentMode,
+    @Default(DeliveryAssignmentMode.automatic)
+    DeliveryAssignmentMode assignmentMode,
   }) = _DeliveryConfig;
 
   factory DeliveryConfig.fromJson(Map<String, dynamic> json) =>

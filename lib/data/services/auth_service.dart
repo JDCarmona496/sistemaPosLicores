@@ -76,7 +76,7 @@ class AuthService {
   }
 
   Future<void> signOut() async {
-    await _client.auth.signOut();
+    await _client.auth.signOut(scope: SignOutScope.local);
   }
 
   Stream<AuthState> get authStateChanges => _client.auth.onAuthStateChange;

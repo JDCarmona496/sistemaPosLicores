@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../../data/providers/order_providers.dart';
+import '../../../../../data/providers/payment_providers.dart';
+import '../../../../../data/providers/printer_provider.dart';
 import '../../../../../domain/models/order.dart';
 
 /// Tarjeta de pedido reutilizable: se usa en la lista plana y
 /// dentro de las tarjetas de agrupacion por zona.
-class OrderCard extends StatelessWidget {
+class OrderCard extends ConsumerWidget {
   final Order order;
 
   const OrderCard({super.key, required this.order});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
@@ -115,9 +119,58 @@ class OrderCard extends StatelessWidget {
                   ),
                 ],
               ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _printReceipt(context, ref),
+                      icon: const Icon(Icons.print, size: 18),
+                      label: const Text('Re-imprimir'),
+                    ),
+                  ),
+                  if (order.status != OrderStatus.cancelled &&
+                      order.status != OrderStatus.returned) ...[
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => context.push('/orders/edit/${order.id}'),
+                        icon: const Icon(Icons.edit, size: 18),
+                        label: const Text('Editar'),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Future<void> _printReceipt(BuildContext context, WidgetRef ref) async {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+    final itemsAsync = ref.read(orderItemsProvider(order.id));
+    final items = itemsAsync.valueOrNull ?? [];
+    final paymentsAsync = ref.read(paymentsByOrderProvider(order.id));
+    final payments = paymentsAsync.valueOrNull ?? [];
+
+    final result = await ref.read(printOrderReceiptProvider)(
+      order,
+      items,
+      payments: payments,
+    );
+
+    scaffoldMessenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          result.success
+              ? 'Recibo enviado a imprimir'
+              : 'Error al imprimir: ${result.message}',
+        ),
+        backgroundColor: result.success ? Colors.green : Colors.red,
       ),
     );
   }
@@ -182,6 +235,7 @@ class OrderCard extends StatelessWidget {
       case OrderStatus.inTransit:
         return Colors.indigo;
       case OrderStatus.delivered:
+      case OrderStatus.completed:
         return Colors.green;
       case OrderStatus.partiallyDelivered:
         return Colors.teal;

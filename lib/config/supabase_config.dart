@@ -6,6 +6,11 @@ class SupabaseConfig {
     await Supabase.initialize(
       url: AppConfig.supabaseUrl,
       publishableKey: AppConfig.supabaseAnonKey,
+      authOptions: const FlutterAuthClientOptions(
+        // No se persiste la sesión entre cierres de la app.
+        // Esto garantiza que siempre se pida login al abrir la app.
+        localStorage: EmptyLocalStorage(),
+      ),
     );
   }
 

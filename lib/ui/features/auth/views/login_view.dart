@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../data/providers/shift_providers.dart';
+import '../../../../data/repositories/shift_repository.dart';
 import '../../../../data/services/auth_service.dart';
+import '../../cash_count/views/widgets/start_shift_dialog.dart';
 
-class LoginView extends StatefulWidget {
+class LoginView extends ConsumerStatefulWidget {
   const LoginView({super.key});
 
   @override
-  State<LoginView> createState() => _LoginViewState();
+  ConsumerState<LoginView> createState() => _LoginViewState();
 }
 
-class _LoginViewState extends State<LoginView> {
+class _LoginViewState extends ConsumerState<LoginView> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _authService = AuthService();
@@ -52,6 +56,19 @@ class _LoginViewState extends State<LoginView> {
         ),
       );
 
+      final openShift = await ShiftRepository().getOpenShiftForUser(user.id);
+      if (openShift == null && mounted) {
+        await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const StartShiftDialog(),
+        );
+      }
+
+      // Refrescar el provider de turno para que el dashboard lo detecte.
+      ref.invalidate(currentShiftProvider);
+
+      if (!mounted) return;
       context.go('/dashboard');
     } catch (e) {
       setState(() {

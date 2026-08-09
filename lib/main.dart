@@ -3,10 +3,10 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'config/supabase_config.dart';
 import 'config/router.dart';
 import 'config/theme.dart';
+import 'data/providers/auth_state_provider.dart';
 import 'data/providers/printer_provider.dart';
 import 'data/providers/settings_providers.dart';
 import 'data/services/local_storage_service.dart';
@@ -25,11 +25,13 @@ void main() async {
 
   await SupabaseConfig.initialize();
 
-  // En web, Supabase necesita un momento para restaurar la sesión desde
-  // localStorage. Esperamos el evento inicial antes de construir el router,
-  // de lo contrario currentSession puede ser null en el primer frame.
+  // Limpiamos cualquier sesión persistida para que la app siempre pida login
+  // al abrirse. El notifier también escucha los cambios de autenticación para
+  // mantener el estado actualizado durante la sesión.
+  final authStateNotifier = AuthStateNotifier();
+  await authStateNotifier.initialize();
+
   if (kIsWeb) {
-    await _waitForInitialSession();
     await WindowSizeService.instance.initialize();
   }
 
@@ -46,7 +48,7 @@ void main() async {
           (ref) => DeliveryConfigNotifier.preloaded(preloadedConfigs.delivery),
         ),
       ],
-      child: const LicoreriaApp(),
+      child: LicoreriaApp(authStateNotifier: authStateNotifier),
     ),
   );
 }
@@ -141,23 +143,13 @@ Future<_PreloadedConfigs> _loadConfigs() async {
   );
 }
 
-Future<void> _waitForInitialSession() async {
-  try {
-    await Supabase.instance.client.auth.onAuthStateChange
-        .firstWhere(
-          (event) =>
-              event.event == AuthChangeEvent.initialSession ||
-              event.event == AuthChangeEvent.signedIn,
-        )
-        .timeout(const Duration(seconds: 2));
-  } catch (_) {
-    // Si no hay sesión o se agota el tiempo, continuamos de todos modos.
-    // El redirect del router enviará al login si es necesario.
-  }
-}
-
 class LicoreriaApp extends StatelessWidget {
-  const LicoreriaApp({super.key});
+  final AuthStateNotifier authStateNotifier;
+
+  const LicoreriaApp({
+    super.key,
+    required this.authStateNotifier,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -168,7 +160,7 @@ class LicoreriaApp extends StatelessWidget {
       darkTheme: AppTheme.darkTheme,
       // Forzamos tema claro porque la UI aun no esta adaptada al modo oscuro.
       themeMode: ThemeMode.light,
-      routerConfig: router,
+      routerConfig: createRouter(authStateNotifier),
       builder: (context, child) {
         final mediaQuery = MediaQuery.of(context);
         final width = mediaQuery.size.width;

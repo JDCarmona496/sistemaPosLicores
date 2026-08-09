@@ -26,6 +26,7 @@ class CreditAccount {
   bool get hasPendingDelivery {
     if (order.deliveryType != DeliveryType.delivery) return false;
     if (order.status == OrderStatus.delivered) return false;
+    if (order.status == OrderStatus.completed) return false;
     if (order.status == OrderStatus.cancelled) return false;
     return true;
   }

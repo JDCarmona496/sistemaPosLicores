@@ -7,6 +7,7 @@ import '../../../../../data/providers/delivery_providers.dart';
 import '../../../../../data/providers/order_providers.dart';
 import '../../../../../data/providers/user_providers.dart';
 import '../../../../../domain/models/order.dart';
+import '../../../../../domain/models/user.dart';
 import '../../../../../domain/services/route_optimizer.dart';
 import 'package:geolocator/geolocator.dart';
 
@@ -310,13 +311,23 @@ class DeliveryOrderCard extends ConsumerWidget {
 
     if (reason == null) return;
 
+    final User currentUser;
+    try {
+      currentUser = await ref.read(currentUserProvider.future);
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No se pudo obtener el usuario actual')),
+        );
+      }
+      return;
+    }
+
     try {
       await ref.read(ordersProvider.notifier).cancelOrder(
             id: order.id,
             reason: 'Domicilio no entregado: $reason',
-            cancelledBy: ref.read(currentUserProvider).valueOrNull?.id ??
-                order.deliveryPersonId ??
-                'unknown',
+            cancelledBy: currentUser.id,
           );
       ref.invalidate(deliveryOrdersProvider);
       if (context.mounted) {
@@ -366,6 +377,7 @@ class DeliveryOrderCard extends ConsumerWidget {
       case OrderStatus.partiallyDelivered:
         return Colors.teal;
       case OrderStatus.delivered:
+      case OrderStatus.completed:
         return Colors.green;
       default:
         return Colors.grey;

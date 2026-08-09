@@ -5,12 +5,13 @@ import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
-import '../../../domain/models/order.dart';
-import '../../../domain/models/order_item.dart';
+import '../../../domain/models/cash_count.dart';
+import '../../../domain/models/cash_count_receipt_data.dart';
 import '../../../domain/models/printer_config.dart';
+import '../../../domain/models/validated_invoice.dart';
 import '../../providers/printer_provider.dart';
 
-/// Genera un documento PDF para tickets de impresoras térmicas Windows.
+/// Genera un documento PDF para tickets de impresoras termicas Windows.
 ///
 /// El driver POS-58 de Windows se encarga de convertir el PDF a comandos
 /// ESC/POS. Se usa con [WindowsPrinterService].
@@ -28,18 +29,8 @@ class PdfReceiptGenerator extends ReceiptGenerator {
     return PdfPageFormat.roll80;
   }
 
-  Future<pw.Document> generateOrderReceipt({
-    required Order order,
-    required List<OrderItem> items,
-    required String businessName,
-    String? businessNit,
-    String? businessAddress,
-    String? businessPhone,
-    String? sellerName,
-    String? invoiceFooter,
-    String? legalText,
-    String? logoBase64,
-  }) async {
+  @override
+  Future<pw.Document> generateOrderReceipt(ValidatedInvoice invoice) async {
     final font = await _loadFont();
     final boldFont = await _loadBoldFont();
     final theme = pw.ThemeData.withFont(base: font, bold: boldFont);
@@ -54,58 +45,71 @@ class PdfReceiptGenerator extends ReceiptGenerator {
             crossAxisAlignment: pw.CrossAxisAlignment.stretch,
             children: [
               // Logo
-              if (logoBase64 != null && logoBase64.isNotEmpty)
+              if (invoice.business.logoBase64?.isNotEmpty == true)
                 pw.Center(
                   child: pw.Image(
-                    pw.MemoryImage(base64Decode(logoBase64)),
+                    pw.MemoryImage(base64Decode(invoice.business.logoBase64!)),
                     height: 60,
                     fit: pw.BoxFit.contain,
                   ),
                 ),
-              if (logoBase64 != null && logoBase64.isNotEmpty)
+              if (invoice.business.logoBase64?.isNotEmpty == true)
                 pw.SizedBox(height: 8),
 
-              // Encabezado
-              pw.Center(
+              // Encabezado del negocio: centrado, negrita y ancho completo.
+              pw.Container(
+                width: double.infinity,
                 child: pw.Text(
-                  businessName,
+                  invoice.business.name,
                   style: pw.TextStyle(
-                    fontSize: 12,
+                    fontSize: 14,
                     fontWeight: pw.FontWeight.bold,
                   ),
                   textAlign: pw.TextAlign.center,
                 ),
               ),
-              if (businessNit != null && businessNit.isNotEmpty)
-                pw.Center(
+              if (invoice.business.nit?.isNotEmpty == true)
+                pw.Container(
+                  width: double.infinity,
                   child: pw.Text(
-                    'NIT: $businessNit',
-                    style: const pw.TextStyle(fontSize: 9),
+                    'NIT: ${invoice.business.nit}',
+                    style: pw.TextStyle(
+                      fontSize: 9,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
                     textAlign: pw.TextAlign.center,
                   ),
                 ),
-              if (businessAddress != null && businessAddress.isNotEmpty)
-                pw.Center(
+              if (invoice.business.address?.isNotEmpty == true)
+                pw.Container(
+                  width: double.infinity,
                   child: pw.Text(
-                    businessAddress,
-                    style: const pw.TextStyle(fontSize: 9),
+                    invoice.business.address!,
+                    style: pw.TextStyle(
+                      fontSize: 9,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
                     textAlign: pw.TextAlign.center,
                   ),
                 ),
-              if (businessPhone != null && businessPhone.isNotEmpty)
-                pw.Center(
+              if (invoice.business.phone?.isNotEmpty == true)
+                pw.Container(
+                  width: double.infinity,
                   child: pw.Text(
-                    'Tel: $businessPhone',
-                    style: const pw.TextStyle(fontSize: 9),
+                    'Tel: ${invoice.business.phone}',
+                    style: pw.TextStyle(
+                      fontSize: 9,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
                     textAlign: pw.TextAlign.center,
                   ),
                 ),
               pw.SizedBox(height: 8),
 
-              // Título
+              // Titulo y factura electronica
               pw.Center(
                 child: pw.Text(
-                  'ORDEN DE PEDIDO',
+                  'FACTURA ELECTRONICA',
                   style: pw.TextStyle(
                     fontSize: 10,
                     fontWeight: pw.FontWeight.bold,
@@ -114,7 +118,7 @@ class PdfReceiptGenerator extends ReceiptGenerator {
               ),
               pw.Center(
                 child: pw.Text(
-                  'No. ${order.orderNumber.toString().padLeft(6, '0')}',
+                  invoice.sale.invoiceId,
                   style: pw.TextStyle(
                     fontSize: 14,
                     fontWeight: pw.FontWeight.bold,
@@ -125,15 +129,15 @@ class PdfReceiptGenerator extends ReceiptGenerator {
 
               // Fecha y vendedor
               pw.Text(
-                'Fecha: ${DateFormat('yyyy-MM-dd HH:mm').format(order.createdAt ?? DateTime.now())}',
+                'Fecha: ${DateFormat('yyyy-MM-dd HH:mm').format((invoice.sale.createdAt ?? DateTime.now()).toLocal())}',
                 style: const pw.TextStyle(fontSize: 9),
               ),
               pw.Text(
-                'Vendedor: ${sellerName ?? order.sellerId}',
+                'Vendedor: ${invoice.sale.sellerName}',
                 style: const pw.TextStyle(fontSize: 9),
               ),
               pw.Text(
-                'Estado: ${order.status.label}',
+                'Estado: ${invoice.sale.statusLabel}',
                 style: const pw.TextStyle(fontSize: 9),
               ),
               pw.SizedBox(height: 8),
@@ -147,29 +151,35 @@ class PdfReceiptGenerator extends ReceiptGenerator {
                 ),
               ),
               pw.Text(
-                order.customerName?.isNotEmpty == true
-                    ? order.customerName!
-                    : 'Cliente ocasional',
+                invoice.customer.name,
                 style: pw.TextStyle(
                   fontSize: 10,
                   fontWeight: pw.FontWeight.bold,
                 ),
               ),
-              if (order.customerPhone?.isNotEmpty == true)
+              if (invoice.customer.phone?.isNotEmpty == true)
                 pw.Text(
-                  'Tel: ${order.customerPhone}',
+                  'Tel: ${invoice.customer.phone}',
                   style: const pw.TextStyle(fontSize: 9),
                 ),
-              if (order.customerAddress?.isNotEmpty == true)
+              if (invoice.customer.address?.isNotEmpty == true)
                 pw.Text(
-                  'Dir: ${order.customerAddress}',
+                  'Dir: ${invoice.customer.address}',
                   style: const pw.TextStyle(fontSize: 9),
                 ),
+              pw.SizedBox(height: 4),
+              pw.Text(
+                'Forma de pago: ${invoice.saleTypeLabel}',
+                style: pw.TextStyle(
+                  fontSize: 9,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
               pw.SizedBox(height: 8),
 
               pw.Divider(height: 1),
 
-              // Encabezados de ítems
+              // Encabezados de items
               pw.Padding(
                 padding: const pw.EdgeInsets.symmetric(vertical: 4),
                 child: pw.Row(
@@ -201,56 +211,198 @@ class PdfReceiptGenerator extends ReceiptGenerator {
                 ),
               ),
 
-              // Ítems
-              ...items.map((item) => _buildItemRow(item)),
+              // Items
+              ...invoice.items.map((item) => _buildItemRow(item)),
 
               pw.Divider(height: 1),
               pw.SizedBox(height: 4),
 
               // Totales
-              _buildTotalRow('Subtotal:', order.subtotal),
-              if (order.discountAmount > 0)
-                _buildTotalRow('Descuento:', -order.discountAmount),
-              if (order.deliveryFee > 0)
-                _buildTotalRow('Domicilio:', order.deliveryFee),
-              _buildTotalRow('TOTAL:', order.total, isBold: true, fontSize: 11),
+              _buildTotalRow('Subtotal:', invoice.subtotal),
+              if (invoice.discountAmount > 0)
+                _buildTotalRow('Descuento:', -invoice.discountAmount),
+              if (invoice.deliveryFee > 0)
+                _buildTotalRow('Domicilio:', invoice.deliveryFee),
+              _buildTotalRow(
+                'TOTAL:',
+                invoice.total,
+                isBold: true,
+                fontSize: 11,
+              ),
 
               pw.SizedBox(height: 8),
 
-              // Tipo de venta y entrega
-              pw.Text(
-                'Venta: ${order.saleType.label}',
-                style: const pw.TextStyle(fontSize: 9),
+              // Pagos / Abonos
+              pw.Center(
+                child: pw.Text(
+                  'PAGOS / ABONOS',
+                  style: pw.TextStyle(
+                    fontSize: 10,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
               ),
+              pw.SizedBox(height: 4),
+
+              if (invoice.payments.isEmpty)
+                pw.Center(
+                  child: pw.Text(
+                    'No hay abonos registrados',
+                    style: const pw.TextStyle(fontSize: 9),
+                    textAlign: pw.TextAlign.center,
+                  ),
+                )
+              else ...[
+                ...invoice.payments.map((payment) {
+                  final date = payment.createdAt != null
+                      ? DateFormat('yyyy-MM-dd').format(
+                          payment.createdAt!.toLocal(),
+                        )
+                      : 'N/A';
+                  return pw.Padding(
+                    padding: const pw.EdgeInsets.symmetric(vertical: 1),
+                    child: pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                      children: [
+                        pw.Expanded(
+                          flex: 4,
+                          child: pw.Text(
+                            date,
+                            style: const pw.TextStyle(fontSize: 9),
+                          ),
+                        ),
+                        pw.Expanded(
+                          flex: 4,
+                          child: pw.Text(
+                            payment.methodLabel,
+                            style: const pw.TextStyle(fontSize: 9),
+                          ),
+                        ),
+                        pw.Expanded(
+                          flex: 3,
+                          child: pw.Text(
+                            '\$${_formatMoney(payment.amount)}',
+                            style: pw.TextStyle(
+                              fontSize: 9,
+                              fontWeight: pw.FontWeight.bold,
+                            ),
+                            textAlign: pw.TextAlign.right,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+                pw.Divider(height: 1),
+                pw.SizedBox(height: 4),
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+                  children: [
+                    pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                      children: [
+                        pw.Text(
+                          'Total abonado:',
+                          style: pw.TextStyle(
+                            fontSize: 9,
+                            fontWeight: pw.FontWeight.bold,
+                          ),
+                        ),
+                        pw.Text(
+                          '\$${_formatMoney(invoice.totalPaid)}',
+                          style: pw.TextStyle(
+                            fontSize: 9,
+                            fontWeight: pw.FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    pw.SizedBox(height: 2),
+                    if (invoice.balance > 0)
+                      pw.Row(
+                        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                        children: [
+                          pw.Text(
+                            'Saldo pendiente:',
+                            style: pw.TextStyle(
+                              fontSize: 9,
+                              fontWeight: pw.FontWeight.bold,
+                            ),
+                          ),
+                          pw.Text(
+                            '\$${_formatMoney(invoice.balance)}',
+                            style: pw.TextStyle(
+                              fontSize: 9,
+                              fontWeight: pw.FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      )
+                    else
+                      pw.Row(
+                        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                        children: [
+                          pw.Text(
+                            'Estado:',
+                            style: pw.TextStyle(
+                              fontSize: 9,
+                              fontWeight: pw.FontWeight.bold,
+                            ),
+                          ),
+                          pw.Text(
+                            'PAGADO',
+                            style: pw.TextStyle(
+                              fontSize: 9,
+                              fontWeight: pw.FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
+              ],
+
+              pw.SizedBox(height: 8),
+
+              // Entrega
               pw.Text(
-                'Entrega: ${order.deliveryType.label}',
+                'Entrega: ${invoice.deliveryTypeLabel}',
                 style: const pw.TextStyle(fontSize: 9),
               ),
 
-              if (order.notes?.isNotEmpty == true) ...[
+              if (invoice.notes?.isNotEmpty == true) ...[
                 pw.SizedBox(height: 8),
                 pw.Text(
                   'Notas:',
                   style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
                 ),
-                pw.Text(order.notes!, style: const pw.TextStyle(fontSize: 9)),
+                pw.Text(
+                  invoice.notes!,
+                  style: const pw.TextStyle(fontSize: 9),
+                ),
               ],
 
+              // Pie: centrado y negrita
               pw.SizedBox(height: 16),
-              pw.Center(
+              pw.Container(
+                width: double.infinity,
                 child: pw.Text(
-                  invoiceFooter ?? 'Gracias por su compra',
-                  style: const pw.TextStyle(fontSize: 9),
+                  invoice.footer,
+                  style: pw.TextStyle(
+                    fontSize: 9,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
                   textAlign: pw.TextAlign.center,
                 ),
               ),
-              if (legalText != null && legalText.isNotEmpty) ...[
+              if (invoice.legalText?.isNotEmpty == true) ...[
                 pw.SizedBox(height: 4),
-                pw.Center(
+                pw.Container(
+                  width: double.infinity,
                   child: pw.Text(
-                    legalText,
+                    invoice.legalText!,
                     style: pw.TextStyle(
-                      fontSize: 8,
+                      fontSize: 9,
                       fontWeight: pw.FontWeight.bold,
                     ),
                     textAlign: pw.TextAlign.center,
@@ -258,33 +410,277 @@ class PdfReceiptGenerator extends ReceiptGenerator {
                 ),
               ],
 
-              // Pie de página fijo con créditos del desarrollador.
+              // Pie de pagina fijo con creditos del desarrollador.
               pw.SizedBox(height: 12),
-              pw.Center(
+              pw.Container(
+                width: double.infinity,
                 child: pw.Text(
-                  'Desarrollado por:',
-                  style: const pw.TextStyle(fontSize: 4),
+                  invoice.developerFooterTitle,
+                  style: pw.TextStyle(
+                    fontSize: 7,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
                   textAlign: pw.TextAlign.center,
                 ),
               ),
+              pw.Container(
+                width: double.infinity,
+                child: pw.Text(
+                  invoice.developerFooterName,
+                  style: pw.TextStyle(
+                    fontSize: 7,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                  textAlign: pw.TextAlign.center,
+                ),
+              ),
+              pw.Container(
+                width: double.infinity,
+                child: pw.Text(
+                  invoice.developerFooterPhone,
+                  style: pw.TextStyle(
+                    fontSize: 7,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                  textAlign: pw.TextAlign.center,
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    return pdf;
+  }
+
+  @override
+  Future<pw.Document> generateCashCountReceipt(CashCountReceiptData data) async {
+    final font = await _loadFont();
+    final boldFont = await _loadBoldFont();
+    final theme = pw.ThemeData.withFont(base: font, bold: boldFont);
+
+    final cashCount = data.cashCount;
+    final config = data.invoiceConfig;
+
+    final pdf = pw.Document(theme: theme);
+
+    pdf.addPage(
+      pw.Page(
+        pageFormat: _pageFormat,
+        build: (context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+            children: [
+              // Logo
+              if (config.logoBase64.isNotEmpty)
+                pw.Center(
+                  child: pw.Image(
+                    pw.MemoryImage(base64Decode(config.logoBase64)),
+                    height: 60,
+                    fit: pw.BoxFit.contain,
+                  ),
+                ),
+              if (config.logoBase64.isNotEmpty)
+                pw.SizedBox(height: 8),
+
+              // Encabezado del negocio
+              pw.Container(
+                width: double.infinity,
+                child: pw.Text(
+                  config.businessName,
+                  style: pw.TextStyle(
+                    fontSize: 14,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                  textAlign: pw.TextAlign.center,
+                ),
+              ),
+              if (config.businessNit.trim().isNotEmpty)
+                pw.Container(
+                  width: double.infinity,
+                  child: pw.Text(
+                    'NIT: ${config.businessNit}',
+                    style: pw.TextStyle(
+                      fontSize: 9,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                    textAlign: pw.TextAlign.center,
+                  ),
+                ),
+              if (config.businessAddress.trim().isNotEmpty)
+                pw.Container(
+                  width: double.infinity,
+                  child: pw.Text(
+                    config.businessAddress,
+                    style: pw.TextStyle(
+                      fontSize: 9,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                    textAlign: pw.TextAlign.center,
+                  ),
+                ),
+              if (config.businessPhone.trim().isNotEmpty)
+                pw.Container(
+                  width: double.infinity,
+                  child: pw.Text(
+                    'Tel: ${config.businessPhone}',
+                    style: pw.TextStyle(
+                      fontSize: 9,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                    textAlign: pw.TextAlign.center,
+                  ),
+                ),
+              pw.SizedBox(height: 8),
+
+              // Titulo
               pw.Center(
+                child: pw.Text(
+                  'CONTEO DE CAJA',
+                  style: pw.TextStyle(
+                    fontSize: 12,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+              ),
+              pw.SizedBox(height: 8),
+
+              // Fecha y responsable
+              pw.Text(
+                'Fecha: ${DateFormat('yyyy-MM-dd HH:mm').format((cashCount.createdAt ?? DateTime.now()).toLocal())}',
+                style: const pw.TextStyle(fontSize: 9),
+              ),
+              pw.Text(
+                'Responsable: ${data.responsibleName}',
+                style: const pw.TextStyle(fontSize: 9),
+              ),
+              pw.SizedBox(height: 8),
+
+              pw.Divider(height: 1),
+
+              // Encabezados
+              pw.Padding(
+                padding: const pw.EdgeInsets.symmetric(vertical: 4),
+                child: pw.Row(
+                  children: [
+                    pw.Expanded(
+                      flex: 4,
+                      child: pw.Text(
+                        'DENOM',
+                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                      ),
+                    ),
+                    pw.Expanded(
+                      flex: 2,
+                      child: pw.Text(
+                        'CANT',
+                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                        textAlign: pw.TextAlign.center,
+                      ),
+                    ),
+                    pw.Expanded(
+                      flex: 3,
+                      child: pw.Text(
+                        'TOTAL',
+                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                        textAlign: pw.TextAlign.right,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Filas
+              ...cashCount.denominations
+                  .where((d) => d.quantity > 0)
+                  .map((d) => _buildCashCountDenominationRow(d)),
+
+              pw.Divider(height: 1),
+              pw.SizedBox(height: 4),
+
+              // Totales
+              _buildTotalRow('Total billetes:', cashCount.totalBills),
+              _buildTotalRow('Total monedas:', cashCount.totalCoins),
+              _buildTotalRow(
+                'TOTAL EFECTIVO:',
+                cashCount.total,
+                isBold: true,
+                fontSize: 11,
+              ),
+
+              if (cashCount.notes?.trim().isNotEmpty == true) ...[
+                pw.SizedBox(height: 8),
+                pw.Text(
+                  'Notas:',
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+                pw.Text(
+                  cashCount.notes!,
+                  style: const pw.TextStyle(fontSize: 9),
+                ),
+              ],
+
+              // Pie
+              pw.SizedBox(height: 16),
+              pw.Container(
+                width: double.infinity,
+                child: pw.Text(
+                  config.invoiceFooter.trim().isNotEmpty
+                      ? config.invoiceFooter
+                      : 'Conserve este recibo',
+                  style: pw.TextStyle(
+                    fontSize: 9,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                  textAlign: pw.TextAlign.center,
+                ),
+              ),
+              if (config.legalText.trim().isNotEmpty) ...[
+                pw.SizedBox(height: 4),
+                pw.Container(
+                  width: double.infinity,
+                  child: pw.Text(
+                    config.legalText,
+                    style: pw.TextStyle(
+                      fontSize: 9,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                    textAlign: pw.TextAlign.center,
+                  ),
+                ),
+              ],
+              pw.SizedBox(height: 12),
+              pw.Container(
+                width: double.infinity,
+                child: pw.Text(
+                  'Desarrollado por',
+                  style: pw.TextStyle(
+                    fontSize: 7,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                  textAlign: pw.TextAlign.center,
+                ),
+              ),
+              pw.Container(
+                width: double.infinity,
                 child: pw.Text(
                   'Juan D. Carmona',
-                  style: const pw.TextStyle(fontSize: 4),
+                  style: pw.TextStyle(
+                    fontSize: 7,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
                   textAlign: pw.TextAlign.center,
                 ),
               ),
-              pw.Center(
-                child: pw.Text(
-                  'juan.carmona.valdes@gmail.com',
-                  style: const pw.TextStyle(fontSize: 4),
-                  textAlign: pw.TextAlign.center,
-                ),
-              ),
-              pw.Center(
+              pw.Container(
+                width: double.infinity,
                 child: pw.Text(
                   '3194643984',
-                  style: const pw.TextStyle(fontSize: 4),
+                  style: pw.TextStyle(
+                    fontSize: 7,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
                   textAlign: pw.TextAlign.center,
                 ),
               ),
@@ -326,7 +722,7 @@ class PdfReceiptGenerator extends ReceiptGenerator {
               ),
               pw.SizedBox(height: 8),
 
-              // Información compacta
+              // Informacion compacta
               if (config != null) ...[
                 pw.Text(
                   config.connectionType.label,
@@ -354,7 +750,7 @@ class PdfReceiptGenerator extends ReceiptGenerator {
                 style: const pw.TextStyle(fontSize: 9),
               ),
               pw.Text(
-                DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now()),
+                DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now().toLocal()),
                 style: const pw.TextStyle(fontSize: 9),
               ),
               pw.SizedBox(height: 8),
@@ -372,7 +768,7 @@ class PdfReceiptGenerator extends ReceiptGenerator {
               ),
               pw.SizedBox(height: 8),
 
-              // Información de debug
+              // Informacion de debug
               if (debugInfo != null && debugInfo.isNotEmpty) ...[
                 pw.Divider(height: 1),
                 pw.SizedBox(height: 4),
@@ -388,23 +784,23 @@ class PdfReceiptGenerator extends ReceiptGenerator {
                     .where((l) => l.isNotEmpty)
                     .map(
                       (line) =>
-                          pw.Text(line, style: const pw.TextStyle(fontSize: 8)),
+                          pw.Text(line, style: const pw.TextStyle(fontSize: 9)),
                     ),
                 pw.SizedBox(height: 8),
               ],
 
-              // Líneas de prueba
+              // Lineas de prueba
               pw.Center(
                 child: pw.Text(
                   'ABC abc 123 !@#\$%',
-                  style: const pw.TextStyle(fontSize: 8),
+                  style: const pw.TextStyle(fontSize: 9),
                   textAlign: pw.TextAlign.center,
                 ),
               ),
               pw.Center(
                 child: pw.Text(
                   '12345678901234567890123456789012',
-                  style: const pw.TextStyle(fontSize: 8),
+                  style: const pw.TextStyle(fontSize: 9),
                   textAlign: pw.TextAlign.center,
                 ),
               ),
@@ -417,46 +813,70 @@ class PdfReceiptGenerator extends ReceiptGenerator {
     return pdf;
   }
 
-  pw.Widget _buildItemRow(OrderItem item) {
-    final name = item.productName ?? 'Producto';
-    final qty = item.quantity.toStringAsFixed(item.quantity % 1 == 0 ? 0 : 1);
+  pw.Widget _buildCashCountDenominationRow(CashCountDenomination denom) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.symmetric(vertical: 2),
+      child: pw.Row(
+        children: [
+          pw.Expanded(
+            flex: 4,
+            child: pw.Text(
+              '\$${_formatMoney(denom.value.toDouble())}',
+              style: const pw.TextStyle(fontSize: 9),
+            ),
+          ),
+          pw.Expanded(
+            flex: 2,
+            child: pw.Text(
+              denom.quantity.toString(),
+              style: const pw.TextStyle(fontSize: 9),
+              textAlign: pw.TextAlign.center,
+            ),
+          ),
+          pw.Expanded(
+            flex: 3,
+            child: pw.Text(
+              '\$${_formatMoney(denom.subtotal)}',
+              style: pw.TextStyle(
+                fontSize: 9,
+                fontWeight: pw.FontWeight.bold,
+              ),
+              textAlign: pw.TextAlign.right,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  pw.Widget _buildItemRow(InvoiceItem item) {
+    final qty = item.quantity.toString();
 
     return pw.Padding(
       padding: const pw.EdgeInsets.symmetric(vertical: 2),
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+      child: pw.Row(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          pw.Row(
-            children: [
-              pw.Expanded(
-                flex: 2,
-                child: pw.Text(qty, style: const pw.TextStyle(fontSize: 9)),
-              ),
-              pw.Expanded(
-                flex: 5,
-                child: pw.Text(
-                  _truncate(name, 18),
-                  style: const pw.TextStyle(fontSize: 9),
-                ),
-              ),
-              pw.Expanded(
-                flex: 3,
-                child: pw.Text(
-                  '\$${_formatMoney(item.subtotal)}',
-                  style: const pw.TextStyle(fontSize: 9),
-                  textAlign: pw.TextAlign.right,
-                ),
-              ),
-            ],
+          pw.Expanded(
+            flex: 2,
+            child: pw.Text(qty, style: const pw.TextStyle(fontSize: 9)),
           ),
-          if (item.quantity != 1)
-            pw.Padding(
-              padding: const pw.EdgeInsets.only(left: 28),
-              child: pw.Text(
-                'x \$${_formatMoney(item.unitPrice)}',
-                style: const pw.TextStyle(fontSize: 8),
-              ),
+          pw.Expanded(
+            flex: 5,
+            child: pw.Text(
+              item.fullDescription,
+              style: const pw.TextStyle(fontSize: 9),
+              softWrap: true,
             ),
+          ),
+          pw.Expanded(
+            flex: 3,
+            child: pw.Text(
+              '\$${_formatMoney(item.lineTotal)}',
+              style: const pw.TextStyle(fontSize: 9),
+              textAlign: pw.TextAlign.right,
+            ),
+          ),
         ],
       ),
     );
@@ -507,8 +927,4 @@ class PdfReceiptGenerator extends ReceiptGenerator {
         .replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (match) => '.');
   }
 
-  String _truncate(String text, int maxLength) {
-    if (text.length <= maxLength) return text;
-    return '${text.substring(0, maxLength - 1)}~';
-  }
 }

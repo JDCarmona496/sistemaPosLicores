@@ -168,7 +168,6 @@ class _DeliverySignatureDialogState
       await repository.recordDeliveryEvidence(
         orderId: widget.order.id,
         signatureBase64: signatureUrl,
-        deliveredAt: DateTime.now(),
       );
 
       // 4. Capturar coordenada actual del domiciliario y actualizar cliente.

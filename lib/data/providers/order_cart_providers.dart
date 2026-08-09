@@ -158,6 +158,7 @@ class CurrentOrderCartNotifier
   void addItem({
     required String productId,
     required String productName,
+    String? productPresentation,
     required double price,
     required int quantity,
     required OrderItemPriceType priceType,
@@ -178,6 +179,8 @@ class CurrentOrderCartNotifier
       id: _nextItemId(),
       orderId: '',
       productId: productId,
+      productName: productName,
+      productPresentation: productPresentation,
       quantity: quantity,
       unitPrice: price,
       discountAmount: discountAmount,
@@ -210,6 +213,7 @@ class CurrentOrderCartNotifier
   void incrementItem({
     required String productId,
     String? productName,
+    String? productPresentation,
     required double price,
     required OrderItemPriceType priceType,
   }) {
@@ -228,6 +232,7 @@ class CurrentOrderCartNotifier
     addItem(
       productId: productId,
       productName: productName,
+      productPresentation: productPresentation,
       price: price,
       quantity: 1,
       priceType: priceType,

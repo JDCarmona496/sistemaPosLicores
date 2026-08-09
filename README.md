@@ -29,6 +29,7 @@ Aplicación multiplataforma (iOS, Android, Web, Windows) para la gestión integr
 | BD Local | Drift (SQLite) |
 | Impresión | flutter_thermal_printer |
 | Escaneo | mobile_scanner |
+| Gráficos | fl_chart |
 
 ## Requisitos
 
@@ -49,7 +50,12 @@ cd applicoresestacion
 
 1. Crear proyecto en [supabase.com](https://supabase.com)
 2. Ejecutar el schema SQL en `opencode/licoreria-database-schema.sql`
-3. Configurar las credenciales en `lib/config/app_config.dart`:
+3. Ejecutar las migraciones de `opencode/migrations/` en orden cronológico:
+   - `20260808_shifts_rls.sql`
+   - `20260808_cash_counts.sql`
+   - `20260808_reports_rpc.sql`
+   - `20260808_server_time_triggers.sql`
+4. Configurar las credenciales en `lib/config/app_config.dart`:
 
 ```dart
 static const String supabaseUrl = 'https://xxxxx.supabase.co';
@@ -195,6 +201,11 @@ flutter build windows --release
 | **Admin** | Acceso completo: inventario, proveedores, financiero, reportes, configuración |
 | **Seller** | Ventas, clientes, inventario básico, gastos del día |
 | **Delivery** | Ver pedidos asignados, actualizar estados, tomar foto de entrega |
+
+## Notas Importantes
+
+- **Módulo de Reportes**: implementado con `fl_chart`. Consulta las funciones RPC de reportes en `opencode/migrations/20260808_reports_rpc.sql`.
+- **Fecha y hora**: la fuente de verdad es el servidor de Supabase (`now()`). La app sincroniza con `ServerTimeService` y muestra los timestamps en hora local usando `.toLocal()`.
 
 ## Documentación
 

@@ -88,6 +88,7 @@ class _OrderCatalogPanelState extends ConsumerState<OrderCatalogPanel> {
     ref.read(currentOrderCartProvider.notifier).incrementItem(
           productId: product.id,
           productName: product.name,
+          productPresentation: product.presentation,
           price: price,
           priceType: _defaultPriceType,
         );

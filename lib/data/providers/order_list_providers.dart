@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/models/order.dart';
@@ -247,10 +248,30 @@ class OrdersNotifier extends StateNotifier<OrdersState> {
   }) async {
     try {
       await _repository.markItemsDelivered(orderId: orderId, items: items);
-      await loadOrders();
     } catch (e) {
-      throw Exception('Error al registrar entrega: ${e.toString()}');
+      final errorMessage = e.toString().toLowerCase();
+      if (errorMessage.contains('has no field "order_id"') ||
+          errorMessage.contains('has no field order_id') ||
+          errorMessage.contains("has no field 'order_id'")) {
+        debugPrint(
+            '[OrdersNotifier] Fallback a entrega directa por error de trigger: $e');
+        try {
+          await _repository.markItemsDeliveredDirect(
+              orderId: orderId, items: items);
+          debugPrint(
+              '[OrdersNotifier] Entrega directa completada para orden $orderId');
+        } catch (fallbackError) {
+          debugPrint(
+              '[OrdersNotifier] ERROR en entrega directa: $fallbackError');
+          throw Exception(
+            'Error al registrar entrega (fallback): $fallbackError',
+          );
+        }
+      } else {
+        rethrow;
+      }
     }
+    await loadOrders();
   }
 
   Future<void> cancelOrder({

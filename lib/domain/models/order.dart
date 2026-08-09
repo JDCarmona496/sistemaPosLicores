@@ -12,6 +12,7 @@ enum OrderStatus {
   inTransit,
   delivered,
   partiallyDelivered,
+  completed,
   cancelled,
   returned,
 }
@@ -31,6 +32,8 @@ extension OrderStatusX on OrderStatus {
         return 'Entregado';
       case OrderStatus.partiallyDelivered:
         return 'Entrega parcial';
+      case OrderStatus.completed:
+        return 'Completado';
       case OrderStatus.cancelled:
         return 'Cancelado';
       case OrderStatus.returned:

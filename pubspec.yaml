@@ -37,7 +37,10 @@ dependencies:
   pdf: ^3.10.0
 
   # Escaneo de códigos de barras
-  mobile_scanner: ^7.3.0
+  mobile_scanner: ^7.4.0
+
+  # Gráficos y reportes
+  fl_chart: ^1.2.0
 
   # UI Components
   cupertino_icons: ^1.0.8

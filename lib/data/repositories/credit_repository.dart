@@ -13,18 +13,25 @@ import 'package:applicoresestacion/domain/models/payment.dart';
 class CreditRepository {
   SupabaseClient get _client => SupabaseConfig.client;
 
-  /// Devuelve todos los pedidos a crédito no cancelados, con sus pagos.
+  /// Devuelve todos los pedidos a crédito no cancelados, con sus pagos e ítems.
   Future<List<CreditAccount>> getCreditAccounts() async {
     final orders = await _getCreditOrders();
     if (orders.isEmpty) return [];
 
     final orderIds = orders.map((o) => o.id).toList();
     final payments = await _getPaymentsForOrders(orderIds);
+    final items = await _getItemsForOrders(orderIds);
 
     return orders.map((order) {
       final orderPayments =
           payments.where((p) => p.orderId == order.id).toList();
-      return CreditAccount(order: order, payments: orderPayments);
+      final orderItems =
+          items.where((i) => i.orderId == order.id).toList();
+      return CreditAccount(
+        order: order,
+        payments: orderPayments,
+        items: orderItems,
+      );
     }).toList();
   }
 

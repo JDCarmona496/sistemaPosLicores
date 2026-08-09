@@ -36,21 +36,29 @@ class PaymentRepository {
     String? notes,
   }) async {
     try {
-      final data = await _client
-          .from('payments')
-          .insert({
-            'order_id': orderId,
-            'customer_id': customerId,
-            'payment_method': paymentMethod.name,
-            'amount': amount,
-            'reference': reference,
-            'received_by': receivedBy,
-            'notes': notes,
-          })
-          .select()
-          .single();
+      final paymentId = await _client.rpc<String>(
+        'record_payment',
+        params: {
+          'p_order_id': orderId,
+          'p_customer_id': customerId,
+          'p_payment_method': paymentMethod.name,
+          'p_amount': amount,
+          'p_reference': reference,
+          'p_received_by': receivedBy,
+          'p_notes': notes,
+        },
+      );
 
-      return Payment.fromJson(data);
+      return Payment(
+        id: paymentId,
+        orderId: orderId,
+        customerId: customerId,
+        paymentMethod: paymentMethod,
+        amount: amount,
+        reference: reference,
+        receivedBy: receivedBy,
+        notes: notes,
+      );
     } on PostgrestException catch (e) {
       throw _handleError(e, 'registrar el pago');
     } catch (e) {

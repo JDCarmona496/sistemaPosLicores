@@ -578,6 +578,7 @@ class _DeliveryOrderDetailViewState
       case OrderStatus.partiallyDelivered:
         return Colors.teal;
       case OrderStatus.delivered:
+      case OrderStatus.completed:
         return Colors.green;
       case OrderStatus.cancelled:
         return Colors.red;

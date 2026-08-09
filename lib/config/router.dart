@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../data/providers/auth_state_provider.dart';
+import '../domain/models/user.dart';
 import '../ui/features/auth/views/login_view.dart';
 import '../ui/features/dashboard/views/dashboard_view.dart';
 import '../ui/features/orders/views/orders_view.dart';
 import '../ui/features/orders/views/order_detail_view.dart';
 import '../ui/features/orders/views/order_create_view.dart';
+import '../ui/features/orders/views/order_edit_view.dart';
 import '../ui/features/products/views/products_view.dart';
 import '../ui/features/products/views/product_detail_view.dart';
 import '../ui/features/products/views/product_form_view.dart';
@@ -17,6 +19,10 @@ import '../ui/features/delivery/views/delivery_view.dart';
 import '../ui/features/delivery/views/delivery_order_detail_view.dart';
 import '../ui/features/credits/views/credits_view.dart';
 import '../ui/features/reports/views/reports_view.dart';
+import '../ui/features/users/views/users_view.dart';
+import '../ui/features/users/views/user_form_view.dart';
+import '../ui/features/cash_count/views/cash_count_view.dart';
+import '../ui/features/cash_count/views/cash_counts_list_view.dart';
 import '../ui/features/settings/views/settings_view.dart';
 import '../ui/features/settings/views/printer_settings_view.dart';
 import '../ui/features/settings/views/brand_settings_view.dart';
@@ -25,36 +31,44 @@ import '../ui/features/settings/views/invoice_settings_view.dart';
 import '../ui/features/settings/views/delivery_settings_view.dart';
 import '../ui/features/settings/views/supabase_health_check_view.dart';
 
-final GoRouter router = GoRouter(
-  initialLocation: '/',
-  debugLogDiagnostics: true,
-  errorBuilder: (context, state) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Error de navegación')),
-      body: Center(
-        child: Text('Ruta no encontrada o error: ${state.error}\n${state.matchedLocation}'),
-      ),
-    );
-  },
-  redirect: (context, state) {
-    final session = Supabase.instance.client.auth.currentSession;
-    final isLoggedIn = session != null;
-    final isLoginRoute = state.matchedLocation == '/login';
-    final isHealthCheckRoute = state.matchedLocation == '/supabase-check';
+GoRouter createRouter(AuthStateNotifier authStateNotifier) {
+  return GoRouter(
+    initialLocation: '/',
+    debugLogDiagnostics: true,
+    refreshListenable: authStateNotifier,
+    errorBuilder: (context, state) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Error de navegación')),
+        body: Center(
+          child: Text('Ruta no encontrada o error: ${state.error}\n${state.matchedLocation}'),
+        ),
+      );
+    },
+    redirect: (context, state) {
+      final isLoggedIn = authStateNotifier.isAuthenticated;
+      final isLoginRoute = state.matchedLocation == '/login';
+      final isHealthCheckRoute = state.matchedLocation == '/supabase-check';
+      final isAdminOnlyRoute = state.matchedLocation.startsWith('/users');
+      final isAdmin = authStateNotifier.user?.role == UserRole.admin;
 
-    if (isHealthCheckRoute) return null;
+      if (authStateNotifier.isLoading) return null;
+      if (isHealthCheckRoute) return null;
 
-    if (!isLoggedIn && !isLoginRoute) {
-      return '/login';
-    }
+      if (!isLoggedIn && !isLoginRoute) {
+        return '/login';
+      }
 
-    if (isLoggedIn && isLoginRoute) {
-      return '/dashboard';
-    }
+      if (isLoggedIn && isLoginRoute) {
+        return '/dashboard';
+      }
 
-    return null;
-  },
-  routes: [
+      if (isLoggedIn && isAdminOnlyRoute && !isAdmin) {
+        return '/dashboard';
+      }
+
+      return null;
+    },
+    routes: [
     GoRoute(
       path: '/',
       redirect: (_, _) => '/dashboard',
@@ -78,6 +92,14 @@ final GoRouter router = GoRouter(
           path: 'create',
           name: 'order-create',
           builder: (context, state) => const OrderCreateView(),
+        ),
+        GoRoute(
+          path: 'edit/:id',
+          name: 'order-edit',
+          builder: (context, state) {
+            final id = state.pathParameters['id']!;
+            return OrderEditView(orderId: id);
+          },
         ),
         GoRoute(
           path: ':id',
@@ -176,6 +198,36 @@ final GoRouter router = GoRouter(
       builder: (context, state) => const ReportsView(),
     ),
     GoRoute(
+      path: '/users',
+      name: 'users',
+      builder: (context, state) => const UsersView(),
+      routes: [
+        GoRoute(
+          path: 'create',
+          name: 'user-create',
+          builder: (context, state) => const UserFormView(),
+        ),
+        GoRoute(
+          path: 'edit/:id',
+          name: 'user-edit',
+          builder: (context, state) {
+            final id = state.pathParameters['id']!;
+            return UserFormView(userId: id);
+          },
+        ),
+      ],
+    ),
+    GoRoute(
+      path: '/cash-count',
+      name: 'cash-count',
+      builder: (context, state) => const CashCountView(),
+    ),
+    GoRoute(
+      path: '/cash-counts',
+      name: 'cash-counts',
+      builder: (context, state) => const CashCountsListView(),
+    ),
+    GoRoute(
       path: '/settings',
       name: 'settings',
       builder: (context, state) => const SettingsView(),
@@ -213,4 +265,5 @@ final GoRouter router = GoRouter(
       builder: (context, state) => const SupabaseHealthCheckView(),
     ),
   ],
-);
+  );
+}

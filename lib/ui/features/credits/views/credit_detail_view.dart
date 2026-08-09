@@ -6,6 +6,7 @@ import 'package:applicoresestacion/data/providers/user_providers.dart';
 import 'package:applicoresestacion/domain/models/credit_account.dart';
 import 'package:applicoresestacion/domain/models/order.dart';
 import 'package:applicoresestacion/domain/models/payment.dart';
+import 'package:applicoresestacion/domain/models/user.dart';
 import 'package:applicoresestacion/ui/features/orders/views/widgets/payment_form_dialog.dart';
 
 class CreditDetailView extends ConsumerWidget {
@@ -302,14 +303,19 @@ class CreditDetailView extends ConsumerWidget {
     double balance, {
     bool fullPayment = false,
   }) async {
-    final userAsync = ref.read(currentUserProvider);
-    final user = userAsync.valueOrNull;
-    if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se pudo obtener el usuario actual')),
-      );
+    final User user;
+    try {
+      user = await ref.read(currentUserProvider.future);
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No se pudo obtener el usuario actual')),
+        );
+      }
       return;
     }
+
+    if (!context.mounted) return;
 
     final payment = await showDialog<Payment>(
       context: context,
@@ -364,6 +370,7 @@ class CreditDetailView extends ConsumerWidget {
   Color _statusColor(OrderStatus status) {
     switch (status) {
       case OrderStatus.delivered:
+      case OrderStatus.completed:
         return Colors.green;
       case OrderStatus.cancelled:
         return Colors.red;

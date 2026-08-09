@@ -4,9 +4,16 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../domain/exceptions/invoice_validation_exception.dart';
+import '../../domain/models/cash_count.dart';
+import '../../domain/models/cash_count_receipt_data.dart';
 import '../../domain/models/order.dart';
 import '../../domain/models/order_item.dart';
+import '../../domain/models/payment.dart';
 import '../../domain/models/printer_config.dart';
+import '../../domain/models/validated_invoice.dart';
+import '../../domain/services/invoice_builder.dart';
+import '../services/auth_service.dart';
 import '../services/local_storage_service.dart';
 import '../services/printer/bluetooth_printer_service.dart';
 import '../services/printer/esc_pos_receipt_generator.dart';
@@ -330,9 +337,11 @@ final printTicketProvider = Provider<Future<PrinterResult> Function(Uint8List)>(
 ///
 /// Selecciona automáticamente el formato (PDF para Windows nativo,
 /// ESC/POS para Bluetooth/USB/Serial).
+///
+/// [payments] se incluye en el recibo para mostrar abonos y saldo pendiente.
 final printOrderReceiptProvider =
-    Provider<Future<PrinterResult> Function(Order, List<OrderItem>)>((ref) {
-  return (order, items) async {
+    Provider<Future<PrinterResult> Function(Order, List<OrderItem>, {List<Payment> payments})>((ref) {
+  return (order, items, {List<Payment> payments = const []}) async {
     debugPrint('[printOrderReceiptProvider] START order=${order.id} items=${items.length}');
     final service = ref.read(printerServiceProvider);
     if (service == null) {
@@ -358,34 +367,38 @@ final printOrderReceiptProvider =
     statusNotifier.setStatus(PrinterConnectionStatus.connected);
 
     final invoiceConfig = ref.read(invoiceConfigProvider);
-    final receiptParams = (
-      businessName: invoiceConfig.businessName,
-      businessNit: invoiceConfig.businessNit,
-      businessAddress: invoiceConfig.businessAddress,
-      businessPhone: invoiceConfig.businessPhone,
-      sellerName: invoiceConfig.sellerName,
-      invoiceFooter: invoiceConfig.invoiceFooter,
-      legalText: invoiceConfig.legalText,
-      logoBase64: invoiceConfig.logoBase64,
-    );
+
+    ValidatedInvoice invoice;
+    try {
+      final currentUser = await AuthService().getCurrentUser();
+      final configuredSeller = invoiceConfig.sellerName.trim();
+      final sellerName = configuredSeller.isNotEmpty
+          ? configuredSeller
+          : currentUser.fullName;
+
+      invoice = const InvoiceBuilder().build(
+        order: order,
+        items: items,
+        payments: payments,
+        invoiceConfig: invoiceConfig,
+        sellerName: sellerName,
+      );
+    } on InvoiceValidationException catch (e) {
+      debugPrint('[printOrderReceiptProvider] Validacion fallida: $e');
+      return PrinterResult.error(e.message);
+    } catch (e) {
+      debugPrint('[printOrderReceiptProvider] Error construyendo factura: $e');
+      return PrinterResult.error(
+        'No se pudo construir la factura: ${e.toString()}',
+      );
+    }
 
     if (service.supportsPdf) {
       debugPrint('[printOrderReceiptProvider] Generating PDF...');
       final generator = PdfReceiptGenerator(
         paperWidthMm: config.paperWidthMm,
       );
-      final document = await generator.generateOrderReceipt(
-        order: order,
-        items: items,
-        businessName: receiptParams.businessName,
-        businessNit: receiptParams.businessNit,
-        businessAddress: receiptParams.businessAddress,
-        businessPhone: receiptParams.businessPhone,
-        sellerName: receiptParams.sellerName,
-        invoiceFooter: receiptParams.invoiceFooter,
-        legalText: receiptParams.legalText,
-        logoBase64: receiptParams.logoBase64,
-      );
+      final document = await generator.generateOrderReceipt(invoice);
       debugPrint('[printOrderReceiptProvider] Printing PDF...');
       final result = await service.printPdf(document);
       debugPrint('[printOrderReceiptProvider] result=$result');
@@ -396,21 +409,75 @@ final printOrderReceiptProvider =
       final generator = EscPosReceiptGenerator(
         paperWidthMm: config.paperWidthMm,
       );
-      final bytes = await generator.generateOrderReceipt(
-        order: order,
-        items: items,
-        businessName: receiptParams.businessName,
-        businessNit: receiptParams.businessNit,
-        businessAddress: receiptParams.businessAddress,
-        businessPhone: receiptParams.businessPhone,
-        sellerName: receiptParams.sellerName,
-        invoiceFooter: receiptParams.invoiceFooter,
-        legalText: receiptParams.legalText,
-        logoBase64: receiptParams.logoBase64,
-      );
+      final bytes = await generator.generateOrderReceipt(invoice);
       debugPrint('[printOrderReceiptProvider] Printing ${bytes.length} bytes...');
       final result = await service.printBytes(bytes);
       debugPrint('[printOrderReceiptProvider] result=$result');
+      _updateStatusFromResult(statusNotifier, result);
+      return result;
+    }
+  };
+});
+
+/// Provider para imprimir el recibo de un conteo de efectivo.
+///
+/// Usa la impresora configurada y el formato adecuado (PDF o ESC/POS).
+final printCashCountReceiptProvider =
+    Provider<Future<PrinterResult> Function(CashCount)>((ref) {
+  return (cashCount) async {
+    debugPrint('[printCashCountReceiptProvider] START cashCount=${cashCount.id}');
+    final service = ref.read(printerServiceProvider);
+    if (service == null) {
+      debugPrint('[printCashCountReceiptProvider] No hay impresora configurada');
+      return const PrinterResult.error('No hay impresora configurada');
+    }
+
+    final statusNotifier = ref.read(printerConnectionStatusProvider.notifier);
+    final config = ref.read(printerConfigProvider);
+    if (config == null) {
+      return const PrinterResult.error('No hay configuración de impresora');
+    }
+
+    if (!service.isConnected) {
+      statusNotifier.setStatus(PrinterConnectionStatus.connecting);
+      final connectResult = await _ensureConnected(service, config, maxAttempts: 2);
+      if (!connectResult.success) {
+        statusNotifier.setStatus(PrinterConnectionStatus.error);
+        return connectResult;
+      }
+    }
+
+    statusNotifier.setStatus(PrinterConnectionStatus.connected);
+
+    final invoiceConfig = ref.read(invoiceConfigProvider);
+    final currentUser = await AuthService().getCurrentUser();
+    final configuredSeller = invoiceConfig.sellerName.trim();
+    final responsibleName = configuredSeller.isNotEmpty
+        ? configuredSeller
+        : currentUser.fullName;
+
+    final data = CashCountReceiptData(
+      cashCount: cashCount,
+      invoiceConfig: invoiceConfig,
+      responsibleName: responsibleName,
+    );
+
+    if (service.supportsPdf) {
+      debugPrint('[printCashCountReceiptProvider] Generating PDF...');
+      final generator = PdfReceiptGenerator(paperWidthMm: config.paperWidthMm);
+      final document = await generator.generateCashCountReceipt(data);
+      debugPrint('[printCashCountReceiptProvider] Printing PDF...');
+      final result = await service.printPdf(document);
+      debugPrint('[printCashCountReceiptProvider] result=$result');
+      _updateStatusFromResult(statusNotifier, result);
+      return result;
+    } else {
+      debugPrint('[printCashCountReceiptProvider] Generating ESC/POS bytes...');
+      final generator = EscPosReceiptGenerator(paperWidthMm: config.paperWidthMm);
+      final bytes = await generator.generateCashCountReceipt(data);
+      debugPrint('[printCashCountReceiptProvider] Printing ${bytes.length} bytes...');
+      final result = await service.printBytes(bytes);
+      debugPrint('[printCashCountReceiptProvider] result=$result');
       _updateStatusFromResult(statusNotifier, result);
       return result;
     }
@@ -536,9 +603,14 @@ String _buildStaticDebugInfo(PrinterConfig config) {
 /// Abstracción común para los generadores de recibo.
 ///
 /// Permite que la UI no distinga entre PDF y ESC/POS cuando solo necesita
-/// conocer el ancho de papel.
+/// conocer el ancho de papel. Ambos renderizan a partir de una
+/// [ValidatedInvoice] ya validada.
 abstract class ReceiptGenerator {
   final int paperWidthMm;
 
   const ReceiptGenerator({required this.paperWidthMm});
+
+  Future<dynamic> generateOrderReceipt(ValidatedInvoice invoice);
+
+  Future<dynamic> generateCashCountReceipt(CashCountReceiptData data);
 }
